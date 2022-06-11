@@ -54,31 +54,36 @@ class EulerBernoulli(Beam):
 		Ix = self.section.Ix
 		Iy = self.section.Iy
 		Iz = self.section.Iz
-		
-		k1 = E*A/L
-		k2 = E*Iz/(L**3)
-		k3 = E*Iy/(L**3)
-		k4 = G*Ix/L
 
-		K[0, :, 0, :] = np.array([[k1,     0,       0,  0,         0,         0],
-								  [ 0,  12*k2,       0,  0,         0,    6*L*k2],
-								  [ 0,      0,   12*k3,  0,     -6*k3,         0],
-								  [ 0,      0,       0, k4,         0,         0],
-								  [ 0,      0, -6*L*k3,  0, 4*L**2*k3,         0],
-								  [ 0, 6*L*k2,       0,  0,         0, 4*L**2*k2]])
-		K[0, :, 1, :] = np.array([[-k1,       0,       0,   0,         0,          0],
-								  [  0,  -12*k2,       0,   0,         0,     6*L*k2],
-								  [  0,       0,  -12*k3,   0,     -6*k3,          0],
-								  [  0,       0,       0, -k4,         0,          0],
-								  [  0,       0,  6*L*k3,   0, 2*L**2*k3,          0],
-								  [  0, -6*L*k2,       0,   0,         0, 2*L**2*k2]])
-		K[1, :, 0, :] = K[0, :, 1, :].T
-		K[1, :, 1, :] = np.array([[k1,       0,       0,  0,         0,          0],
-								  [ 0,   12*k2,       0,  0,         0,    -6*L*k2],
-								  [ 0,       0,   12*k3,  0,      6*k3,          0],
-								  [ 0,       0,       0, k4,         0,          0],
-								  [ 0,       0,  6*L*k3,  0, 4*L**2*k3,          0],
-								  [ 0, -6*L*k2,       0,  0,         0, 4*L**2*k2]])
+		Kx = (E*A/L) * (2*np.eye(2)-1)
+		Kt = (G*Ix/L) * (2*np.eye(2)-1)
+		Ky = (E*Iz/L**3) * np.array([[ 12,    6*L,  -12,    6*L],
+									 [6*L, 4*L**2, -6*L, 2*L**2],
+									 [-12,   -6*L,   12,   -6*L],
+									 [6*L, 2*L**2, -6*L, 4*L**2]])
+		Kz = (E*Iy/L**3) * np.array([[  12,   -6*L,  -12,   -6*L],
+									 [-6*L, 4*L**2,  6*L, 2*L**2],
+									 [ -12,    6*L,   12,    6*L],
+									 [-6*L, 2*L**2,  6*L, 4*L**2]])
+
+
+		K = np.zeros((2, 6, 2, 6))
+		for i in range(2):
+			for j in range(2):
+				K[i, 0, j, 0] = Kx[i, j]
+		for i in range(2):
+			for j in range(2):
+				K[i, 3, j, 3] = Kt[i, j]
+		for i in range(2):
+			for j in range(2):
+				for wa, a in enumerate([1, 5]):
+					for wb, b in enumerate([1, 5]):
+						K[i, a, j, b] = Ky[2*i+wa, 2*j+wb]
+		for i in range(2):
+			for j in range(2):
+				for wa, a in enumerate([2, 4]):
+					for wb, b in enumerate([2, 4]):
+						K[i, a, j, b] = Kz[2*i+wa, 2*j+wb]
 		# K = K.reshape((12, 12))
 		return K
 
@@ -86,3 +91,6 @@ class EulerBernoulli(Beam):
 class Timoshenko(Beam):
 	def __init__(self, p0, p1):
 		super().__init__(p0, p1)
+
+
+
