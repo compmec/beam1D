@@ -35,7 +35,7 @@ class Section(object):
 		return self._I[2]
 
 	@property
-	def A(self) -> np.ndarray:
+	def I(self) -> np.ndarray:
 		return self._I
 
 
@@ -53,7 +53,7 @@ class Section(object):
 
 	@Ix.setter
 	def Ix(self, value:float):
-		self._A[0] = value
+		self._I[0] = value
 
 	@Iy.setter
 	def Iy(self, value:float):
