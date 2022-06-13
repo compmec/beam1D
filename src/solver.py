@@ -49,15 +49,23 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray):
         for j, (c, d) in enumerate(unknown):
             Kuu[i, j] = K[a, b, c, d]
 
-    Uu = la.solve(Kuu, Fk - Kku.T @ Uk)
+    B = Fk - Kku.T @ Uk
+    if la.det(Kuu) != 0:
+        Uu = la.solve(Kuu, B)
+    else:
+        w, P = la.eigh(Kuu)
+        mask = np.abs(w) > 1e-9  # tolerance
+        w[mask] = 1/w[mask]
+        Uu = P @ (w * (P.T @ B))
+    
     Fu = Kkk @ Uk + Kku @ Uu
 
     
     for i, (a, b) in enumerate(known):
-        F[a, b] -= Fu[i]
+        F[a, b] += Fu[i]
     for i, (a, b) in enumerate(unknown):
         U[a, b] = Uu[i]
-                
+    U = np.array(U, dtype="float64")
 
     return U, F
 
