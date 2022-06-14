@@ -1,7 +1,10 @@
+import sys
+sys.path.insert(1, '../src')
 import numpy as np
 from material import Isotropic
+import pytest
 
-def main():
+def test_main():
 	
 	Es = [100, 200, 3, 45, 900, 20, 66]
 	nus = [0.3, 0.1, 0.05, 0.001, 0.489, 0.45]
@@ -47,4 +50,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	pytest.main()
