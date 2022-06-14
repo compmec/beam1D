@@ -53,11 +53,8 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray):
     if la.det(Kuu) != 0:
         Uu = la.solve(Kuu, B)
     else:
-        w, P = la.eigh(Kuu)
-        mask = np.abs(w) > 1e-9  # tolerance
-        w[mask] = 1/w[mask]
-        Uu = P @ (w * (P.T @ B))
-    
+        Uu = la.lstsq(Kuu, B)[0]
+
     Fu = Kkk @ Uk + Kku @ Uu
 
     
@@ -66,7 +63,8 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray):
     for i, (a, b) in enumerate(unknown):
         U[a, b] = Uu[i]
     U = np.array(U, dtype="float64")
-
+    U[np.abs(U) < 1e-10] = 0
+    
     return U, F
 
 
