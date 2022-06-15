@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(1, '../src')
 import numpy as np
 from material import Isotropic
 from section import Circle
@@ -5,7 +7,12 @@ from beam import EulerBernoulli
 from solver import solve
 import pytest
 
+@pytest.mark.dependency()
+def test_begin():
+    pass
+
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_tractionX():
 	ntests = 10
 	for i in range(ntests):
@@ -44,6 +51,7 @@ def test_tractionX():
 		np.testing.assert_almost_equal(Ftest, Fgood)
 		
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_tractionY():
 	ntests = 10
 	for i in range(ntests):
@@ -82,6 +90,7 @@ def test_tractionY():
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_tractionZ():
 	ntests = 10
 	for i in range(ntests):
@@ -116,8 +125,10 @@ def test_tractionZ():
 						  [0, 0, P, 0, 0, 0]])
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
-		
+
+
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_tractionX", "test_tractionY"])
 def test_tractionXY():
 	ntests = 10
 	for i in range(ntests):
@@ -159,6 +170,8 @@ def test_tractionXY():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_tractionY", "test_tractionZ"])
 def test_tractionYZ():
 	ntests = 10
 	for i in range(ntests):
@@ -200,6 +213,8 @@ def test_tractionYZ():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_tractionX", "test_tractionZ"])
 def test_tractionXZ():
 	ntests = 10
 	for i in range(ntests):
@@ -244,6 +259,7 @@ def test_tractionXZ():
 
 		
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_tractionXY", "test_tractionYZ", "test_tractionXZ"])
 def test_tractionR():
 	ntests = 10
 	for i in range(ntests):
@@ -284,6 +300,7 @@ def test_tractionR():
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_torsionXcircle():
 	ntests = 10
 	for i in range(ntests):
@@ -322,6 +339,7 @@ def test_torsionXcircle():
 		np.testing.assert_almost_equal(Ftest, Fgood)	
 
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_torsionYcircle():
 	ntests = 10
 	for i in range(ntests):
@@ -360,6 +378,7 @@ def test_torsionYcircle():
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_torsionZcircle():
 	ntests = 10
 	for i in range(ntests):
@@ -398,6 +417,7 @@ def test_torsionZcircle():
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
 @pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_torsionXcircle", "test_torsionYcircle"])
 def test_torsionXYcircle():
 	ntests = 10
 	for i in range(ntests):
@@ -439,6 +459,8 @@ def test_torsionXYcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_torsionYcircle", "test_torsionZcircle"])
 def test_torsionYZcircle():
 	ntests = 10
 	for i in range(ntests):
@@ -479,6 +501,8 @@ def test_torsionYZcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_torsionXcircle", "test_torsionZcircle"])
 def test_torsionXZcircle():
 	ntests = 10
 	for i in range(ntests):
@@ -519,6 +543,8 @@ def test_torsionXZcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_torsionXYcircle", "test_torsionYZcircle", "test_torsionXZcircle"])
 def test_torsionRcircle():
 	ntests = 10
 	for i in range(ntests):
@@ -558,6 +584,11 @@ def test_torsionRcircle():
 
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
+
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_tractionR", "test_torsionRcircle"])
+def test_end():
+	pass
 
 if __name__ == "__main__":
 	pytest.main()
