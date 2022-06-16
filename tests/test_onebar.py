@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(1, '../src')
+sys.path.insert(1, '../src/')
+sys.path.insert(1, 'C:/Users/carlo/Documents/Git/beam1D/src/')
 import numpy as np
 from material import Isotropic
 from section import Circle
@@ -26,7 +27,7 @@ def test_tractionX():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = (L, 0, 0)
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -65,7 +66,7 @@ def test_tractionY():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = (0, L, 0)
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -97,14 +98,14 @@ def test_tractionZ():
 		E = 1 + np.random.rand()
 		nu = 0.49*np.random.rand()
 		d = 1 + np.random.rand()
-		L = 2*np.random.rand()-1
+		L = 1 + np.random.rand()
 		P = 2*np.random.rand()-1
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = (0, 0, L)
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -145,7 +146,7 @@ def test_tractionXY():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L * r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -188,7 +189,7 @@ def test_tractionYZ():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L * r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -231,7 +232,7 @@ def test_tractionXZ():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L * r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -268,14 +269,14 @@ def test_tractionR():
 		E = 1 + np.random.rand()
 		nu = 0.49*np.random.rand()
 		d = 1 + np.random.rand()
-		L = 2*np.random.rand()-1
+		L = 1 + np.random.rand()
 		P = 2*np.random.rand()-1
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L*r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -314,7 +315,7 @@ def test_torsionXcircle():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = (L, 0, 0)
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -353,7 +354,7 @@ def test_torsionYcircle():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = (0, L, 0)
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -392,7 +393,7 @@ def test_torsionZcircle():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = (0, 0, L)
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -424,7 +425,7 @@ def test_torsionXYcircle():
 		E = 1 + np.random.rand()
 		nu = 0.49*np.random.rand()
 		d = 1 + np.random.rand()
-		L = 2*np.random.rand()-1
+		L = 1 + np.random.rand()
 		T = 2*np.random.rand()-1
 		rx, ry = np.random.rand(2)
 		r = np.array([rx, ry, 0])
@@ -435,7 +436,7 @@ def test_torsionXYcircle():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L*r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -467,7 +468,7 @@ def test_torsionYZcircle():
 		E = 1 + np.random.rand()
 		nu = 0.49*np.random.rand()
 		d = 1 + np.random.rand()
-		L = 2*np.random.rand()-1
+		L = 1 + np.random.rand()
 		T = 2*np.random.rand()-1
 		ry, rz = np.random.rand(2)
 		r = np.array([0, ry, rz])
@@ -477,7 +478,7 @@ def test_torsionYZcircle():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L*r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -509,7 +510,7 @@ def test_torsionXZcircle():
 		E = 1 + np.random.rand()
 		nu = 0.49*np.random.rand()
 		d = 1 + np.random.rand()
-		L = 2*np.random.rand()-1
+		L = 1 + np.random.rand()
 		T = 2*np.random.rand()-1
 		rx, rz = np.random.rand(2)
 		r = np.array([rx, 0, rz])
@@ -519,7 +520,7 @@ def test_torsionXZcircle():
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L*r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
@@ -554,14 +555,14 @@ def test_torsionRcircle():
 		E = 1 + np.random.rand()
 		nu = 0.49*np.random.rand()
 		d = 1 + np.random.rand()
-		L = 2*np.random.rand()-1
+		L = 1 + np.random.rand()
 		T = 2*np.random.rand()-1
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
 		B = L*r
-		bar = EulerBernoulli(A, B)
+		bar = EulerBernoulli([A, B])
 		bar.material = steel
 		bar.section = circle
 
