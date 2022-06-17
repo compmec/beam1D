@@ -4,7 +4,7 @@ class Material(object):
 	def __init__(self):
 		super().__init__(self)
 
-class Isotropic(object):
+class Isotropic(Material):
 	def __doc__(self):
 		"""
 		Receives the configuration material.
