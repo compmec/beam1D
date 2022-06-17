@@ -4,9 +4,8 @@ Each point has 6 unknowns:
 
 """
 import numpy as np
-from matplotlib import pyplot as plt
-from material import Material
-from section import Section
+from compmec.strct.material import Material
+from compmec.strct.section import Section
 
 class Structural1D(object):
     def __init__(self, path):

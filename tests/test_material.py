@@ -1,7 +1,5 @@
-import sys
-sys.path.insert(1, '../src')
 import numpy as np
-from material import Isotropic
+from compmec.strct.material import Isotropic
 import pytest
 
 def test_main():

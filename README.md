@@ -1,5 +1,9 @@
 # Structures
 
+[![PyPi Version](https://img.shields.io/pypi/v/compmec-strct.svg?style=flat-square)](https://pypi.org/project/compmec-strct/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/compmec-strct.svg?style=flat-square)](https://pypi.org/project/compmec-strct/)
+![Tests](https://github.com/compmec/strct/actions/workflows/tests.yml/badge.svg)
+
 Solves struture problems using FEM. 
 
 * 1D Elements
