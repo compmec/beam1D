@@ -4,6 +4,7 @@ from compmec.strct.section import Circle
 from compmec.strct.beam import EulerBernoulli
 from compmec.strct.solver import solve
 import pytest
+from usefulfunc import *
 
 def get_randombase():
     r = np.random.rand(3)
@@ -47,11 +48,11 @@ def test_begin():
 def test_all():
     ntests = 100
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
         G = E / (2*(1+nu))
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
+        d = random_between(1, 2)
+        L = random_between(1, 2)
         
         Pall = 2*np.random.rand(6) - 1
         r, v, w = get_randombase()        
@@ -91,5 +92,4 @@ def test_end():
     pass
 
 if __name__ == "__main__":
-    test_all()
-    # pytest.main()
+    pytest.main()

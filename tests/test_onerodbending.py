@@ -4,6 +4,7 @@ from compmec.strct.section import Circle
 from compmec.strct.beam import EulerBernoulli
 from compmec.strct.solver import solve
 import pytest
+from usefulfunc import *
 
 @pytest.mark.dependency()
 def test_begin():
@@ -14,11 +15,11 @@ def test_begin():
 def test_bendingXtoY():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -52,11 +53,11 @@ def test_bendingXtoY():
 def test_bendingXtoZ():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -90,15 +91,13 @@ def test_bendingXtoZ():
 def test_bendingXtoYZ():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
-        theta = 2*np.pi*np.random.rand()
-        c, s = np.cos(theta), np.sin(theta)
-        r = np.array([0, c, s])
-        rx = np.array([0, -s, c])
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
+        r = random_unit_vector([False, True, True])
+        rx = np.cross(r, (1, 0, 0))
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -122,9 +121,9 @@ def test_bendingXtoYZ():
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
-        Ugood[1, 3:] = tr * rx
+        Ugood[1, 3:] = -tr * rx
         Fgood[0, :3] = -P * r
-        Fgood[0, 3:] = -Mr * rx
+        Fgood[0, 3:] = Mr * rx
         Fgood[1, :3] = P * r
         
         np.testing.assert_almost_equal(Utest, Ugood)
@@ -136,11 +135,11 @@ def test_bendingXtoYZ():
 def test_bendingYtoX():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -173,11 +172,11 @@ def test_bendingYtoX():
 def test_bendingYtoZ():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -211,15 +210,13 @@ def test_bendingYtoZ():
 def test_bendingYtoXZ():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
-        theta = 2*np.pi*np.random.rand()
-        c, s = np.cos(theta), np.sin(theta)
-        r = np.array([c, 0, s])
-        rx = np.array([s, 0, -c])
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
+        r = random_unit_vector([True, False, True])
+        rx = np.cross(r, (0, 1, 0))
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -243,9 +240,9 @@ def test_bendingYtoXZ():
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
-        Ugood[1, 3:] = tr * rx
+        Ugood[1, 3:] = -tr * rx
         Fgood[0, :3] = -P * r
-        Fgood[0, 3:] = -Mr * rx
+        Fgood[0, 3:] = Mr * rx
         Fgood[1, :3] = P * r
         
         np.testing.assert_almost_equal(Utest, Ugood)
@@ -256,11 +253,11 @@ def test_bendingYtoXZ():
 def test_bendingZtoX():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -293,11 +290,11 @@ def test_bendingZtoX():
 def test_bendingZtoY():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -331,15 +328,13 @@ def test_bendingZtoY():
 def test_bendingZtoXY():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
-        theta = 2*np.pi*np.random.rand()
-        c, s = np.cos(theta), np.sin(theta)
-        r = np.array([c, s, 0])
-        rx = np.array([-s, c, 0])
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
+        r = random_unit_vector([True, True, False])
+        rx = np.cross(r, (0, 0, 1))
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -363,9 +358,9 @@ def test_bendingZtoXY():
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
-        Ugood[1, 3:] = tr * rx
+        Ugood[1, 3:] = -tr * rx
         Fgood[0, :3] = -P * r
-        Fgood[0, 3:] = -Mr * rx
+        Fgood[0, 3:] = Mr * rx
         Fgood[1, :3] = P * r
         
         np.testing.assert_almost_equal(Utest, Ugood)
@@ -377,15 +372,13 @@ def test_bendingZtoXY():
 def test_bendingXYtoXY():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
-        theta = 2*np.pi*np.random.rand()
-        c, s = np.cos(theta), np.sin(theta)
-        r = np.array([c, s, 0])
-        v = np.array([-s, c, 0])
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
+        r = random_unit_vector([True, True, False])
+        v = np.cross(r, (0, 0, 1))
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -409,9 +402,9 @@ def test_bendingXYtoXY():
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = uv * v
-        Ugood[1, 5] = tz
+        Ugood[1, 5] = -tz
         Fgood[0, :3] = -P * v
-        Fgood[0, 5] = -Mz
+        Fgood[0, 5] = Mz
         Fgood[1, :3] = P * v
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
@@ -421,15 +414,13 @@ def test_bendingXYtoXY():
 def test_bendingXZtoXZ():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
-        theta = 2*np.pi*np.random.rand()
-        c, s = np.cos(theta), np.sin(theta)
-        r = np.array([c, 0, s])
-        v = np.array([s, 0, -c])
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
+        r = random_unit_vector([True, False, True])
+        v = np.cross(r, (0, 1, 0))
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -453,9 +444,9 @@ def test_bendingXZtoXZ():
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = uv * v
-        Ugood[1, 4] = ty
+        Ugood[1, 4] = -ty
         Fgood[0, :3] = -P * v
-        Fgood[0, 4] = -My
+        Fgood[0, 4] = My
         Fgood[1, :3] = P * v
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
@@ -466,15 +457,13 @@ def test_bendingXZtoXZ():
 def test_bendingYZtoYZ():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
-        theta = 2*np.pi*np.random.rand()
-        c, s = np.cos(theta), np.sin(theta)
-        r = np.array([0, c, s])
-        v = np.array([0, s, -c])
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
+        r = random_unit_vector([False, True, True])
+        v = np.cross(r, (1, 0, 0))
 
         steel = Isotropic(E=E, nu=nu)
         circle = Circle(R=d/2, nu=nu)
@@ -526,17 +515,14 @@ def test_bendingYZtoXYZ():
 def test_bendingXYZtoXYZ():
     ntests = 10
     for i in range(ntests):
-        E = 1 + np.random.rand()
-        nu = 0.49*np.random.rand()
-        d = 1 + np.random.rand()
-        L = 1 + np.random.rand()
-        P = 2*np.random.rand()-1
-        theta = 2*np.pi*np.random.rand()
-        r = np.random.rand(3)
-        r /= np.linalg.norm(r)
-        v = np.random.rand(3)
-        v -= np.sum(r*v) * r
-        v /= np.linalg.norm(v)
+        E = random_between(1, 2)
+        nu = random_between(0, 0.49)
+        d = random_between(1, 2)
+        L = random_between(1, 2)
+        P = random_between(-1, 1)
+        r = random_unit_vector()
+        v = random_vector()
+        v = normalize(v-projection(v, r))
         w = np.cross(r, v)
         
         steel = Isotropic(E=E, nu=nu)

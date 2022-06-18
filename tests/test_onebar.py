@@ -4,6 +4,7 @@ from compmec.strct.section import Circle
 from compmec.strct.beam import EulerBernoulli
 from compmec.strct.solver import solve
 import pytest
+from usefulfunc import *
 
 @pytest.mark.dependency()
 def test_begin():
@@ -14,11 +15,11 @@ def test_begin():
 def test_tractionX():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		P = 2*np.random.rand()-1
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		P = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -30,14 +31,11 @@ def test_tractionX():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 0] = 0
 		U[0, :] = 0
 		F[1, 0] = P
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		ux = (4*P*L)/(np.pi*d**2*E)
 		Ugood = np.array([[0, 0, 0, 0, 0, 0],
@@ -53,11 +51,11 @@ def test_tractionX():
 def test_tractionY():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		P = 2*np.random.rand()-1
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		P = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -69,14 +67,11 @@ def test_tractionY():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 1] = 0
 		U[0, :] = 0
 		F[1, 1] = P
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		uy = (4*P*L)/(np.pi*d**2*E)
 		Ugood = np.array([[0, 0, 0, 0, 0, 0],
@@ -92,11 +87,11 @@ def test_tractionY():
 def test_tractionZ():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		P = 2*np.random.rand()-1
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		P = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -108,8 +103,6 @@ def test_tractionZ():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 2] = 0
 		U[0, :] = 0
 		F[1, 2] = P
 
@@ -124,20 +117,17 @@ def test_tractionZ():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
-
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_tractionX", "test_tractionY"])
 def test_tractionXY():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		P = 2*np.random.rand()-1
-		rx, ry = np.random.rand(2)
-		r = np.array([rx, ry, 0])
-		r /= np.linalg.norm(r)
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		P = random_between(-1, 1)
+		r = random_unit_vector([True, True, False])
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -149,14 +139,11 @@ def test_tractionXY():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 0] = 0
 		U[0, :] = 0
 		F[1, :3] = P * r
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		ur = (4*P*L)/(np.pi*d**2*E)
 		Ugood = np.zeros((2, 6))
@@ -173,14 +160,12 @@ def test_tractionXY():
 def test_tractionYZ():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		P = 2*np.random.rand()-1
-		ry, rz = np.random.rand(2)
-		r = np.array([0, ry, rz])
-		r /= np.linalg.norm(r)
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		P = random_between(-1, 1)
+		r = random_unit_vector([False, True, True])
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -192,14 +177,11 @@ def test_tractionYZ():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 0] = 0
 		U[0, :] = 0
 		F[1, :3] = P * r
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		ur = (4*P*L)/(np.pi*d**2*E)
 		Ugood = np.zeros((2, 6))
@@ -216,14 +198,12 @@ def test_tractionYZ():
 def test_tractionXZ():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		P = 2*np.random.rand()-1
-		rx, rz = np.random.rand(2)
-		r = np.array([rx, 0, rz])
-		r /= np.linalg.norm(r)
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		P = random_between(-1, 1)
+		r = random_unit_vector([True, False, True])
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -235,14 +215,11 @@ def test_tractionXZ():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 0] = 0
 		U[0, :] = 0
 		F[1, :3] = P * r
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		ur = (4*P*L)/(np.pi*d**2*E)
 		Ugood = np.zeros((2, 6))
@@ -254,20 +231,18 @@ def test_tractionXZ():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
-
 		
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_tractionXY", "test_tractionYZ", "test_tractionXZ"])
 def test_tractionR():
 	ntests = 10
 	for i in range(ntests):
-		r = np.random.rand(3)  # random direction
-		r /= np.linalg.norm(r)  # To r a unit vector  
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		P = 2*np.random.rand()-1
+		r = random_unit_vector()
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		P = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -279,8 +254,6 @@ def test_tractionR():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, :3] = 0
 		U[0, :] = 0
 		F[1, :3] = P * r
 
@@ -302,11 +275,11 @@ def test_tractionR():
 def test_torsionXcircle():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		T = 2*np.random.rand()-1
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		T = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -318,14 +291,11 @@ def test_torsionXcircle():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 3] = 0
 		U[0, :] = 0
 		F[1, 3] = T
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		tx = 64*T*L*(1+nu)/(np.pi*E*d**4)
 		Ugood = np.array([[0, 0, 0, 0, 0, 0],
@@ -341,11 +311,11 @@ def test_torsionXcircle():
 def test_torsionYcircle():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		T = 2*np.random.rand()-1
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		T = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -357,14 +327,11 @@ def test_torsionYcircle():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 4] = 0
 		U[0, :] = 0
 		F[1, 4] = T
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		ty = 64*T*L*(1+nu)/(np.pi*E*d**4)
 		Ugood = np.array([[0, 0, 0, 0, 0, 0],
@@ -380,11 +347,11 @@ def test_torsionYcircle():
 def test_torsionZcircle():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		T = 2*np.random.rand()-1
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		T = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -396,14 +363,11 @@ def test_torsionZcircle():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 5] = 0
 		U[0, :] = 0
 		F[1, 5] = T
 
 		K = bar.stiffness_matrix()
 		Utest, Ftest = solve(K, F, U)
-
 
 		tz = 64*T*L*(1+nu)/(np.pi*E*d**4)
 		Ugood = np.array([[0, 0, 0, 0, 0, 0],
@@ -419,16 +383,13 @@ def test_torsionZcircle():
 def test_torsionXYcircle():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		T = 2*np.random.rand()-1
-		rx, ry = np.random.rand(2)
-		r = np.array([rx, ry, 0])
-		r /= np.linalg.norm(r)
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		T = random_between(-1, 1)
+		r = random_unit_vector([True, True, False])
 		
-
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
 		A = (0, 0, 0)
@@ -439,8 +400,6 @@ def test_torsionXYcircle():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 3:] = 0
 		U[0, :] = 0
 		F[1, 3:] = T * r
 
@@ -462,14 +421,12 @@ def test_torsionXYcircle():
 def test_torsionYZcircle():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		T = 2*np.random.rand()-1
-		ry, rz = np.random.rand(2)
-		r = np.array([0, ry, rz])
-		r /= np.linalg.norm(r)
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		T = random_between(-1, 1)
+		r = random_unit_vector([False, True, True])
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -481,8 +438,6 @@ def test_torsionYZcircle():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 3:] = 0
 		U[0, :] = 0
 		F[1, 3:] = T * r
 
@@ -504,14 +459,12 @@ def test_torsionYZcircle():
 def test_torsionXZcircle():
 	ntests = 10
 	for i in range(ntests):
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		T = 2*np.random.rand()-1
-		rx, rz = np.random.rand(2)
-		r = np.array([rx, 0, rz])
-		r /= np.linalg.norm(r)
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		T = random_between(-1, 1)
+		r = random_unit_vector([True, False, True])
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -523,8 +476,6 @@ def test_torsionXZcircle():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 3:] = 0
 		U[0, :] = 0
 		F[1, 3:] = T * r
 
@@ -546,14 +497,12 @@ def test_torsionXZcircle():
 def test_torsionRcircle():
 	ntests = 10
 	for i in range(ntests):
-		r = np.random.rand(3)  # random direction
-		r = np.array([1, 1, 0], dtype="float64")
-		r /= np.linalg.norm(r)  # To r a unit vector  
-		E = 1 + np.random.rand()
-		nu = 0.49*np.random.rand()
-		d = 1 + np.random.rand()
-		L = 1 + np.random.rand()
-		T = 2*np.random.rand()-1
+		r = random_unit_vector()
+		E = random_between(1, 2)
+		nu = random_between(0, 0.49)
+		d = random_between(1, 2)
+		L = random_between(1, 2)
+		T = random_between(-1, 1)
 
 		steel = Isotropic(E=E, nu=nu)
 		circle = Circle(R=d/2, nu=nu)
@@ -565,8 +514,6 @@ def test_torsionRcircle():
 
 		U = np.empty((2, 6), dtype="object")
 		F = np.zeros((2, 6))
-
-		# U[0, 3:] = 0
 		U[0, :] = 0
 		F[1, 3:] = T * r
 
@@ -590,4 +537,3 @@ def test_end():
 
 if __name__ == "__main__":
 	pytest.main()
-	# main()
