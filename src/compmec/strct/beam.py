@@ -111,22 +111,22 @@ class Beam(Structural1D):
         self._w = np.cross(self._v, self.r)
 
     def set_random_v(self):
-        if np.abs(self.p[2]) > self.L * Beam.cos8:
-            self.v = np.random.rand(3)
-        else:
+        if np.abs(self.p[2]) < self.L * Beam.cos8:
             self.v = (0, 0, 1)
-
+        else:
+            v = np.random.rand(3)
+            self.v = v - np.inner(v, self.p) * self.p / (self.L**2)
+            
     def global_stiffness_matrix(self):
         Kloc = self.local_stiffness_matrix()
         R33 = self.rotation_matrix33()
-        Rexp = np.zeros((12, 12), dtype="float64")
-        Rexp[:3, :3] = R33[:, :].T
-        Rexp[3:6, 3:6] = R33[:, :].T
-        Rexp[6:9, 6:9] = R33[:, :].T
-        Rexp[9:, 9:] = R33[:, :].T
-        Klocexp = Kloc.reshape((12, 12))
-        Kgloexp = Rexp @ Klocexp @ Rexp.T
-        Kglo = Kgloexp.reshape((2, 6, 2, 6))
+        Kglo = np.zeros((2, 6, 2, 6), dtype="float64")
+        for i in range(2):
+            for j in range(2):
+                Kglo[i, :3, j, :3] = R33.T @ Kloc[i, :3, j, :3] @ R33
+                Kglo[i, :3, j, 3:] = R33.T @ Kloc[i, :3, j, 3:] @ R33
+                Kglo[i, 3:, j, :3] = R33.T @ Kloc[i, 3:, j, :3] @ R33
+                Kglo[i, 3:, j, 3:] = R33.T @ Kloc[i, 3:, j, 3:] @ R33
         return Kglo
 
 class EulerBernoulli(Beam):
@@ -163,25 +163,17 @@ class EulerBernoulli(Beam):
                                      [ -12,    6*L,   12,    6*L],
                                      [-6*L, 2*L**2,  6*L, 4*L**2]])
 
-
         K = np.zeros((2, 6, 2, 6))
-        for i in range(2):
-            for j in range(2):
-                K[i, 0, j, 0] = Kx[i, j]
-        for i in range(2):
-            for j in range(2):
-                K[i, 3, j, 3] = Kt[i, j]
+        K[:, 0, :, 0] = Kx
+        K[:, 3, :, 3] = Kt
         for i in range(2):
             for j in range(2):
                 for wa, a in enumerate([1, 5]):
                     for wb, b in enumerate([1, 5]):
                         K[i, a, j, b] = Ky[2*i+wa, 2*j+wb]
-        for i in range(2):
-            for j in range(2):
                 for wa, a in enumerate([2, 4]):
                     for wb, b in enumerate([2, 4]):
                         K[i, a, j, b] = Kz[2*i+wa, 2*j+wb]
-        # K = K.reshape((12, 12))
         return K
 
 
