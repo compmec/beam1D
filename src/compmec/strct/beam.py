@@ -22,6 +22,11 @@ class Structural1D(object):
         self._p = p1 - p0 
         self._L = np.sqrt(np.sum(self._p**2))
 
+    def path(self, t:float) -> np.ndarray:
+        if t < 0 or t > 1:
+            raise ValueError("t in path must be in [0, 1]")
+        return self._path(t)
+
     @property
     def p(self) -> np.ndarray:
         return self._p
@@ -74,32 +79,42 @@ class Cable(Structural1D):
         super().__init__(path)
 
 class Beam(Structural1D):
+    cos8 = 0.99
     def __init__(self, path):
         """
         vertical is the perpendicular direction to the line
         ver
         """
         super().__init__(path)
+        self.set_random_v()
         
+    @property
+    def r(self) -> np.ndarray:
+        return self._p/self.L
 
     @property
     def v(self) -> np.ndarray:
-        if self._v is None:
-            raise Exception("Cannot give v because it's None")
         return self._v
+
+    @property
+    def w(self) -> np.ndarray:
+        return self._w
 
     @v.setter
     def v(self, value: np.ndarray) -> None:
-        if np.sum(value * self.r) != 0:
-            raise Exception("vertical must perpendicular to the beams line")
-        self._v = value
-        self._v /= np.sqrt(np.sum(self._v**2))
+        value /= np.linalg.norm(value)
+        Lcostheta = np.inner(self.p, value) 
+        if np.abs(Lcostheta) > self.L * Beam.cos8:
+            raise ValueError("The received vector v must not be colinear to p")
+        self._v = value - Lcostheta * self.p/(self.L**2)
+        self._v /= np.linalg.norm(self._v)
+        self._w = np.cross(self._v, self.r)
 
     def set_random_v(self):
-        self._v = np.random.rand(3)
-        self._v -= np.sum(self._v*self.p) * self.p
-        self._v /= np.sqrt(np.sum(self._v**2))
-    
+        if np.abs(self.p[2]) > self.L * Beam.cos8:
+            self.v = np.random.rand(3)
+        else:
+            self.v = (0, 0, 1)
 
     def global_stiffness_matrix(self):
         Kloc = self.local_stiffness_matrix()
