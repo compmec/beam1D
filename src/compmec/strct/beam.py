@@ -102,7 +102,8 @@ class Beam(Structural1D):
 
     @v.setter
     def v(self, value: np.ndarray) -> None:
-        value /= np.linalg.norm(value)
+        value = np.array(value, dtype="float64")
+        value /= np.sqrt(np.sum(value**2))
         Lcostheta = np.inner(self.p, value) 
         if np.abs(Lcostheta) > self.L * Beam.cos8:
             raise ValueError("The received vector v must not be colinear to p")
@@ -116,6 +117,9 @@ class Beam(Structural1D):
         else:
             v = np.random.rand(3)
             self.v = v - np.inner(v, self.p) * self.p / (self.L**2)
+            
+    def rotation_matrix33(self):
+        return np.array([self.r, self.w, self.v])
             
     def global_stiffness_matrix(self):
         Kloc = self.local_stiffness_matrix()
