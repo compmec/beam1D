@@ -74,7 +74,8 @@ class Retangular(Section):
 		b is the lower base
 		h is the height
 		"""
-		self.Ax = a*b
+		super().__init__()
+		self.Ax = b*h
 		k = 10*(1+nu)/(12+11*nu)
 		self.Ay = k * self.Ax
 		self.Az = k * self.Ax
@@ -88,7 +89,7 @@ class ThinHollowSquare(Section):
 		Docs
 		"""
 	def __init__(self, side:float, nu:float):
-
+		super().__init__()
 		k = 20*(1+nu)/(4+3*nu)
 
 class Circle(Section):
