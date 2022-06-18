@@ -10,14 +10,16 @@ from compmec.strct.section import Section
 class Structural1D(object):
     def __init__(self, path):
         if isinstance(path, (tuple, list)):
-            self._p0 = np.array(path[0])
-            self._p1 = np.array(path[1])
+            p0 = np.array(path[0]) 
+            p1 = np.array(path[1]) 
+            self._path = lambda t: (1-t)*p0 + t*p1 
         elif callable(path):
-            self._p0 = np.array(path(0))
-            self._p1 = np.array(path(1))
+             self._path = path
         else:
             raise TypeError("Not expected received argument")
-        self._p = self._p1 - self._p0
+        p0 = np.array(self.path(0)) 
+        p1 = np.array(self.path(1)) 
+        self._p = p1 - p0 
         self._L = np.sqrt(np.sum(self._p**2))
 
     @property
