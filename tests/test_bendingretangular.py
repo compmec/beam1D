@@ -19,7 +19,6 @@ def test_bendingX():
         nu = random_between(0, 0.49)
         h = random_between(1, 2)
         b = random_between(1, 2)
-        b = h = 1
         L = random_between(1, 2)
         Py = random_between(-1, 1)
         Pz = random_between(-1, 1)
@@ -41,8 +40,8 @@ def test_bendingX():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        Iz = b*h**3/12
-        Iy = b**3*h/12
+        Iz = b**3*h/12
+        Iy = b*h**3/12
         uy = Py*L**3/(3*E*Iz)
         uz = Pz*L**3/(3*E*Iy)
         ty = Pz*L**2/(2*E*Iy)
@@ -66,7 +65,6 @@ def test_bendingY():
         nu = random_between(0, 0.49)
         h = random_between(1, 2)
         b = random_between(1, 2)
-        b = h = 1
         L = random_between(1, 2)
         Px = random_between(-1, 1)
         Pz = random_between(-1, 1)
@@ -88,8 +86,8 @@ def test_bendingY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        Iz = b*h**3/12
-        Ix = b**3*h/12
+        Iz = b**3*h/12
+        Ix = b*h**3/12
         ux = Px*L**3/(3*E*Iz)
         uz = Pz*L**3/(3*E*Ix)
         tx = Pz*L**2/(2*E*Ix)
@@ -112,7 +110,6 @@ def test_bendingXY():
         nu = random_between(0, 0.49)
         h = random_between(1, 2)
         b = random_between(1, 2)
-        b = h = 1
         L = random_between(1, 2)
         Pw = random_between(-1, 1)
         Pv = random_between(-1, 1)
@@ -137,8 +134,8 @@ def test_bendingXY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        Iz = b*h**3/12
-        Ir = b**3*h/12
+        Iz = b**3*h/12
+        Ir = b*h**3/12
         uw = Pw*L**3/(3*E*Iz)
         uv = Pv*L**3/(3*E*Ir)
         tw = Pv*L**2/(2*E*Ir)
