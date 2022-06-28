@@ -1,8 +1,6 @@
 import numpy as np
+from compmec.strct.__classes__ import Material
 
-class Material(object):
-	def __init__(self):
-		super().__init__(self)
 
 class Isotropic(Material):
 	def __doc__(self):

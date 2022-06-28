@@ -4,70 +4,7 @@ Each point has 6 unknowns:
 
 """
 import numpy as np
-from compmec.strct.material import Material
-from compmec.strct.section import Section
-
-class Structural1D(object):
-    def __init__(self, path):
-        if isinstance(path, (tuple, list)):
-            p0 = np.array(path[0]) 
-            p1 = np.array(path[1]) 
-            self._path = lambda t: (1-t)*p0 + t*p1 
-        elif callable(path):
-             self._path = path
-        else:
-            raise TypeError("Not expected received argument")
-        p0 = np.array(self.path(0)) 
-        p1 = np.array(self.path(1)) 
-        self._p = p1 - p0 
-        self._L = np.sqrt(np.sum(self._p**2))
-
-    def path(self, t:float) -> np.ndarray:
-        if t < 0 or t > 1:
-            raise ValueError("t in path must be in [0, 1]")
-        return self._path(t)
-
-    @property
-    def p(self) -> np.ndarray:
-        return self._p
-
-    @property
-    def L(self) -> float:
-        return self._L
-
-    @property
-    def material(self) -> Material:
-        return self._material
-
-
-    @material.setter
-    def material(self, value:Material):
-        self._material = value
-
-    @property
-    def section(self) -> Section:
-        return self._section
-
-    @section.setter
-    def section(self, value : Section):
-        self._section = value
-
-    def rotation_matrix33(self):
-        px, py, pz = self.p
-        cos = px/self.L
-        pyz = py**2 + pz**2
-        if cos == 1:
-            return np.eye(3)
-        elif cos == -1:
-            return -np.eye(3)
-        R33 = np.array([[0, 0, 0],
-                        [0, pz**2, -py*pz],
-                        [0, -py*pz, py**2]], dtype="float64")
-        R33 *= (1-cos)/pyz
-        R33 += np.array([[px, py, pz],
-                         [-py, px, 0],
-                         [-pz, 0, px]])/self.L
-        return R33
+from compmec.strct.__classes__ import Structural1D
 
 class Truss(Structural1D):
     def __init__(self, path):
@@ -111,17 +48,17 @@ class Beam(Structural1D):
         self._v /= np.linalg.norm(self._v)
         self._w = np.cross(self._v, self.r)
 
-    def set_random_v(self):
+    def set_random_v(self) -> np.ndarray:
         if np.abs(self.p[2]) < self.L * Beam.cos8:
             self.v = (0, 0, 1)
         else:
             v = np.random.rand(3)
             self.v = v - np.inner(v, self.p) * self.p / (self.L**2)
             
-    def rotation_matrix33(self):
+    def rotation_matrix33(self) -> np.ndarray:
         return np.array([self.r, self.w, self.v])
             
-    def global_stiffness_matrix(self):
+    def global_stiffness_matrix(self) -> np.ndarray:
         Kloc = self.local_stiffness_matrix()
         R33 = self.rotation_matrix33()
         Kglo = np.zeros((2, 6, 2, 6), dtype="float64")
@@ -137,10 +74,10 @@ class EulerBernoulli(Beam):
     def __init__(self, path):
         super().__init__(path)
 
-    def stiffness_matrix(self):
+    def stiffness_matrix(self) -> np.ndarray:
         return self.global_stiffness_matrix()
 
-    def local_stiffness_matrix(self):
+    def local_stiffness_matrix(self) -> np.ndarray:
         """
         With two points we will have a matrix [12 x 12]
         But we are going to divide the matrix into [x, y, z] coordinates
