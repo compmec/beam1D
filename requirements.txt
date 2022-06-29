@@ -1,5 +1,4 @@
 tox==3.24.4
 numpy==1.21.2
 meshio==5.3.4
-dmsh==0.2.19
-optimesh==0.9.4
+pygmsh==7.1.17
