@@ -85,7 +85,7 @@ class Square(Section):
 		self.__compute_inertias()
 
 	def __compute_areas(self):
-		k = 20*(1+nu)/(4+3*nu)
+		k = 20*(1+self.nu)/(4+3*self.nu)
 		raise NotImplementedError("Areas for a square are not defined")
 
 	def __compute_inertias(self):
@@ -211,8 +211,8 @@ class PerfilI(Section):
 		n = b/h
 		pt1 = 12+72*m + 150*m**2 + 90*m**3
 		pt2 = 11+66*m + 135*m**2 + 90*m**3
-		pt3 = 10*n**2 * ((3+nu)*m + 3*m**2)
-		self.k = 10*(1+nu)*(1+3*m)**2/(pt1 + nu * pt2 + pt3)
+		pt3 = 10*n**2 * ((3+self.nu)*m + 3*m**2)
+		self.k = 10*(1+self.nu)*(1+3*m)**2/(pt1 + self.nu * pt2 + pt3)
 
 class General(Section):
 	def __init__(self, curves: list):

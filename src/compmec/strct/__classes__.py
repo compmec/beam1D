@@ -2,71 +2,71 @@ import numpy as np
 
 
 class Material(object):
-	def __init__(self):
-		super().__init__(self)
+    def __init__(self):
+        super().__init__(self)
 
 class Section(object):
-	def __init__(self):
-		self._A = np.zeros(3, dtype="float64")
-		self._I = np.zeros(3, dtype="float64")
+    def __init__(self):
+        self._A = np.zeros(3, dtype="float64")
+        self._I = np.zeros(3, dtype="float64")
 
-	@property
-	def Ax(self) -> float:
-		return self._A[0]
+    @property
+    def Ax(self) -> float:
+        return self._A[0]
 
-	@property
-	def Ay(self) -> float:
-		return self._A[1]
+    @property
+    def Ay(self) -> float:
+        return self._A[1]
 
-	@property
-	def Az(self) -> float:
-		return self._Az[2]
+    @property
+    def Az(self) -> float:
+        return self._Az[2]
 
-	@property
-	def A(self) -> np.ndarray:
-		return self._A
-	
-	
-	@property
-	def Ix(self) -> float:
-		return self._I[0]
+    @property
+    def A(self) -> np.ndarray:
+        return self._A
+    
+    
+    @property
+    def Ix(self) -> float:
+        return self._I[0]
 
-	@property
-	def Iy(self) -> float:
-		return self._I[1]
+    @property
+    def Iy(self) -> float:
+        return self._I[1]
 
-	@property
-	def Iz(self) -> float:
-		return self._I[2]
+    @property
+    def Iz(self) -> float:
+        return self._I[2]
 
-	@property
-	def I(self) -> np.ndarray:
-		return self._I
+    @property
+    def I(self) -> np.ndarray:
+        return self._I
 
 
-	@Ax.setter
-	def Ax(self, value:float):
-		self._A[0] = value
+    @Ax.setter
+    def Ax(self, value:float):
+        self._A[0] = value
 
-	@Ay.setter
-	def Ay(self, value:float):
-		self._A[1] = value
+    @Ay.setter
+    def Ay(self, value:float):
+        self._A[1] = value
 
-	@Az.setter
-	def Az(self, value:float):
-		self._A[2] = value
+    @Az.setter
+    def Az(self, value:float):
+        self._A[2] = value
 
-	@Ix.setter
-	def Ix(self, value:float):
-		self._I[0] = value
+    @Ix.setter
+    def Ix(self, value:float):
+        self._I[0] = value
 
-	@Iy.setter
-	def Iy(self, value:float):
-		self._I[1] = value
+    @Iy.setter
+    def Iy(self, value:float):
+        self._I[1] = value
 
-	@Iz.setter
-	def Iz(self, value:float):
-		self._I[2] = value
+    @Iz.setter
+    def Iz(self, value:float):
+        self._I[2] = value
 
     def triangular_mesh(self, elementsize:float):
         raise NotImplementedError("This function must be redefined by child class")
