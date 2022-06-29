@@ -68,6 +68,14 @@ class Section(object):
 	def Iz(self, value:float):
 		self._I[2] = value
 
+    def triangular_mesh(self, elementsize:float):
+        raise NotImplementedError("This function must be redefined by child class")
+
+    def mesh(self, elementsize:float = None):
+        if elementsize is None:
+            elementsize = 0.1*np.sqrt(self.Ax)
+        return self.triangular_mesh(elementsize)
+
 
 class Structural1D(object):
     def __init__(self, path):
@@ -131,9 +139,4 @@ class Structural1D(object):
                          [-pz, 0, px]])/self.L
         return R33
 
-    def triangular_mesh(self, elementsize:float)
-
-    def mesh(self, elementsize:float = None):
-        if elementsize is None:
-            elementsize = 0.1*np.sqrt(self.Ax)
-        return self.triangular_mesh(elementsize)
+    
