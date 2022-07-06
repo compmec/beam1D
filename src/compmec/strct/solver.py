@@ -8,7 +8,7 @@ In the end we have a linear system which is given by
 
 """
 
-def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray):
+def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> tuple(np.ndarray, np.ndarray):
     """
     K is a big matrix of shape (npts, 6, npts, 6)
     F is a matrix of shape (npts, 6)
