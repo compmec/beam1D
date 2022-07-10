@@ -5,12 +5,14 @@ from compmec.strct.solver import solve
 
 class Geometry1D(object):
 
-    def __init__(self, dim: int):
-        self.dim = dim
+    def __init__(self):
+        self._dim = None
         self._points = None
 
     @property
     def dim(self):
+        if self._dim is None:
+            raise ValueError("Dimension was not set")
         return self._dim
 
     @property
@@ -119,12 +121,12 @@ class StaticForce(object):
         if key[3] == "z":
             return pos+2
 
-    def add_conc_force_at(self, point: int | tuple, values: dict) -> None:
+    def add_charge(self, point: int | tuple, values: dict) -> None:
         if not isinstance(values, dict):
             raise TypeError("Values must be a dictionary")
         if isinstance(point, int):
             if not Geometry1D.index_exists(point):
-                raise Value(f"Index {point} of points doesn't exist!")
+                raise ValueError(f"Index {point} of points doesn't exist!")
             return self._add_charge_at_index(point, values)
         elif isinstance(point, tuple):
             if isinstance(point[0], Structural1D):
@@ -148,8 +150,8 @@ class StaticForce(object):
             position = self.key2pos(key)
             self._charges.append((index, position, value))
 
-    def __mount_F(self) -> np.ndarray:
-        F = np.zeros((Geometry1D.npts, 6))
+    def __mount_F(self, dofs: list) -> np.ndarray:
+        F = np.zeros((Geometry1D.npts, len(dofs)))
         for i, j, c in self._charges:
             F[i, j] += c
         return F
@@ -178,37 +180,19 @@ class StaticBoundaryCondition(object):
         if key[3] == "z":
             return pos+2
 
-    def add_BC_at_element(self, element: Structural1D, position: float, values: dict):
-        if not isinstance(element, Structural1D):
-            raise TypeError("Element must be a Structural1D")
-        if not isinstance(position, float):
-            raise TypeError("Position must be a float")
-        if not isinstance(values, dict):
-            raise TypeError("Values must be a dictionary")
-        if position < 0 or 1 < position:
-            print("The position value must be in [0, 1]")
-        return self._add_BC_at_element(self, element, position, values)
-
-    def _add_BC_at_element(self, element: Structural1D, position: float, values: dict):
-        point = element.path(position)
-        index = Geometry1D.find_point_at(point)
-        if index is None:
-            index = Geometry1D.create_point(point)
-        self._add_BC_at_point(index, values)
-
-    def add_BC_at_point(self, point: int | tuple, values: dict):
+    def add_BC(self, point: int | tuple, values: dict):
         index = Geometry1D.index_point_at(point)
         if not isinstance(values, dict):
             raise TypeError("Values must be dict")
-        return self._add_BC_at_point(self, index, values)        
+        return self._add_BC(self, index, values)        
 
-    def _add_BC_at_point(self, index: int, values: dict):
+    def _add_BC(self, index: int, values: dict):
         for key, value in values.items():
             bcpos = self.key2pos(key)
             self._BCs.append( (index, bcpos, value) )
 
-    def __mount_U(self) -> np.ndarray:
-        U = np.empty((Geometry1D.npts, 6), dtype="object")
+    def __mount_U(self, dofs: list) -> np.ndarray:
+        U = np.empty((Geometry1D.npts, len(dofs)), dtype="object")
         for i, j, u in self._BCs:
             U[i, j] = u
         return U
@@ -225,7 +209,7 @@ class StaticStructure(object):
     @elements.setter
     def elements(self, value: list | tuple):
         if len(self._elements):
-            raise Value("There are elements. Cannot subscribe. Use add_element(element) instead")
+            raise ValueError("There are elements. Cannot subscribe. Use add_element(element) instead")
         if not isinstance(value, (tuple, list)):
             raise TypeError("To set elements, it must be a list/tuple")
         for item in value:
@@ -241,10 +225,9 @@ class StaticStructure(object):
     def _add_element(self, value: Structural1D) -> None:
         self._elements.append(value)
 
-    def __mount_K(self, dofs = None) -> np.ndarray:
+    def __mount_K(self, dofs: list) -> np.ndarray:
         npts = Geometry1D.npts
-        dofs = 6
-        K = np.zeros((npts, dofs, npts, dofs))
+        K = np.zeros((npts, len(dofs), npts, len(dofs)))
         for element in self._elements:
             Kloc = element.stiffness_matrix()
             ind0 = Geometry1D.find_point_at(element.path(0))
