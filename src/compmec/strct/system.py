@@ -97,9 +97,9 @@ class Geometry1D(object):
     def index_exists(self, index: int) -> bool:
         return index < self.npts
 
-class StaticForce(object):
-    def __init__(self, dim: int):
-        self._charges = []
+class StaticLoad(object):
+    def __init__(self):
+        self._loads = []
 
     def key2pos(self, key: str) -> int:
         if not isinstance(key, str):
@@ -134,13 +134,13 @@ class StaticForce(object):
         elif pos == 5:
             return "Mz"
 
-    def add_charge(self, point: tuple, values: dict) -> None:
+    def add_loads(self, point: tuple, values: dict) -> None:
         if not isinstance(values, dict):
             raise TypeError("Values must be a dictionary")
         if isinstance(point, int):
             if not Geometry1D.index_exists(point):
                 raise ValueError(f"Index {point} of points doesn't exist!")
-            return self._add_charge_at_index(point, values)
+            return self._add_loads_at_index(point, values)
         elif isinstance(point, tuple):
             if isinstance(point[0], Structural1D):
                 if len(point) != 2:
@@ -153,15 +153,15 @@ class StaticForce(object):
                 position = point[1]
                 point = element.path(position)
             index = Geometry1D.index_point_at(point)
-            return self._add_charge_at_index(index, values)
+            return self._add_loads_at_index(index, values)
         else:
             raise TypeError("Point must be int or tuple")
         
 
-    def _add_charge_at_index(self, index: int, values: dict):
+    def _add_loads_at_index(self, index: int, values: dict):
         for key, value in values:
             position = self.key2pos(key)
-            self._charges.append((index, position, value))
+            self._loads.append((index, position, value))
 
 
 class StaticBoundaryCondition(object):
@@ -244,7 +244,7 @@ class StaticStructure(object):
 
     
 
-class StaticSystem(Geometry1D, StaticForce, StaticBoundaryCondition, StaticStructure):
+class StaticSystem(Geometry1D, StaticLoad, StaticBoundaryCondition, StaticStructure):
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(StaticSystem, cls).__new__(cls)
@@ -258,7 +258,7 @@ class StaticSystem(Geometry1D, StaticForce, StaticBoundaryCondition, StaticStruc
         for index, position, value in self._BCs:
             if position not in dofs:
                 dofs.append(position)
-        for index, position, value in self._charges:
+        for index, position, value in self._loads:
             if position not in dofs:
                 dofs.append(position)
         return dofs
@@ -271,8 +271,8 @@ class StaticSystem(Geometry1D, StaticForce, StaticBoundaryCondition, StaticStruc
 
     def __mount_F(self, dofs: list) -> np.ndarray:
         F = np.zeros((Geometry1D.npts, len(dofs)))
-        for index, position, charge in self._charges:
-            F[index, position] += charge
+        for index, position, loads in self._loads:
+            F[index, position] += loads
         return F
 
     def __mount_K(self, dofs: list) -> np.ndarray:
