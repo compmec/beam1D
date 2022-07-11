@@ -87,56 +87,46 @@ class Structural1D(object):
              self._path = path
         else:
             raise TypeError("Not expected received argument")
-        p0 = np.array(self.path(0)) 
-        p1 = np.array(self.path(1)) 
-        self._p = p1 - p0 
-        self._L = np.sqrt(np.sum(self._p**2))
+        self._ts = []
+        self.addt(0.)
+        self.addt(1.)
 
-    def path(self, t:float) -> np.ndarray:
+    def path(self, t: float) -> np.ndarray:
         if t < 0 or t > 1:
             raise ValueError("t in path must be in [0, 1]")
+        if t not in self._ts:
+            self.addt(t)
         return self._path(t)
 
-    @property
-    def p(self) -> np.ndarray:
-        return self._p
+    def addt(self, t: float):
+        self._ts.append(t)
+        self._ts.sort()
 
     @property
-    def L(self) -> float:
-        return self._L
+    def ts(self):
+        return np.array(self._ts)
 
     @property
     def material(self) -> Material:
         return self._material
 
-
-    @material.setter
-    def material(self, value:Material):
-        self._material = value
-
     @property
     def section(self) -> Section:
         return self._section
+
+    @property
+    def points(self) -> np.ndarray:
+        return np.array([self.path(ti) for ti in self._ts])
 
     @section.setter
     def section(self, value : Section):
         self._section = value
 
-    def rotation_matrix33(self):
-        px, py, pz = self.p
-        cos = px/self.L
-        pyz = py**2 + pz**2
-        if cos == 1:
-            return np.eye(3)
-        elif cos == -1:
-            return -np.eye(3)
-        R33 = np.array([[0, 0, 0],
-                        [0, pz**2, -py*pz],
-                        [0, -py*pz, py**2]], dtype="float64")
-        R33 *= (1-cos)/pyz
-        R33 += np.array([[px, py, pz],
-                         [-py, px, 0],
-                         [-pz, 0, px]])/self.L
-        return R33
+    @material.setter
+    def material(self, value:Material):
+        self._material = value
+
+    def stiffness_matrix(self) -> np.ndarray:
+        return self.global_stiffness_matrix()
 
     

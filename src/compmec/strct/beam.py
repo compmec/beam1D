@@ -6,6 +6,25 @@ Each point has 6 unknowns:
 import numpy as np
 from compmec.strct.__classes__ import Structural1D
 
+def compute_rvw(p0: np.ndarray, p1: np.ndarray) -> np.ndarray:
+    dp = np.array(p1 - p0)
+    L = np.linalg.norm(dp)
+    r = dp/L
+    v = (0, 0, 1)
+    cosangle = np.inner(r, v)
+    if cosangle > 0.99:  # 0.99 is the cos of 8 degrees
+        v = (0, 1, 0)
+        cosangle = np.inner(r, v)
+    v -= cosangle * r
+    v /= np.linalg.norm(v)
+    w = np.cross(v, r)
+    R = np.zeros((3, 3))
+    R[:, 0] = r
+    R[:, 1] = w
+    R[:, 2] = v
+    return R.T
+
+
 class Truss(Structural1D):
     def __init__(self, path):
         super().__init__(path)
@@ -16,94 +35,33 @@ class Cable(Structural1D):
         super().__init__(path)
 
 class Beam(Structural1D):
-    cos8 = 0.99
     def __init__(self, path):
-        """
-        vertical is the perpendicular direction to the line
-        ver
-        """
-        super().__init__(path)
-        self.set_random_v()
-        
-    @property
-    def r(self) -> np.ndarray:
-        return self._p/self.L
+        super().__init__(path)   
 
-    @property
-    def v(self) -> np.ndarray:
-        return self._v
+    def local_stiffness_matrix_Kx(self, L: float) -> np.ndarray:
+        raise NotImplementedError("This function must be overwritten by the child")
 
-    @property
-    def w(self) -> np.ndarray:
-        return self._w
+    def local_stiffness_matrix_Kt(self, L: float) -> np.ndarray:
+        raise NotImplementedError("This function must be overwritten by the child")
 
-    @v.setter
-    def v(self, value: np.ndarray) -> None:
-        value = np.array(value, dtype="float64")
-        value /= np.sqrt(np.sum(value**2))
-        Lcostheta = np.inner(self.p, value) 
-        if np.abs(Lcostheta) > self.L * Beam.cos8:
-            raise ValueError("The received vector v must not be colinear to p")
-        self._v = value - Lcostheta * self.p/(self.L**2)
-        self._v /= np.linalg.norm(self._v)
-        self._w = np.cross(self._v, self.r)
+    def local_stiffness_matrix_Ky(self, L: float) -> np.ndarray:
+        raise NotImplementedError("This function must be overwritten by the child")
 
-    def set_random_v(self) -> np.ndarray:
-        if np.abs(self.p[2]) < self.L * Beam.cos8:
-            self.v = (0, 0, 1)
-        else:
-            v = np.random.rand(3)
-            self.v = v - np.inner(v, self.p) * self.p / (self.L**2)
-            
-    def rotation_matrix33(self) -> np.ndarray:
-        return np.array([self.r, self.w, self.v])
-            
-    def global_stiffness_matrix(self) -> np.ndarray:
-        Kloc = self.local_stiffness_matrix()
-        R33 = self.rotation_matrix33()
-        Kglo = np.zeros((2, 6, 2, 6), dtype="float64")
-        for i in range(2):
-            for j in range(2):
-                Kglo[i, :3, j, :3] = R33.T @ Kloc[i, :3, j, :3] @ R33
-                Kglo[i, :3, j, 3:] = R33.T @ Kloc[i, :3, j, 3:] @ R33
-                Kglo[i, 3:, j, :3] = R33.T @ Kloc[i, 3:, j, :3] @ R33
-                Kglo[i, 3:, j, 3:] = R33.T @ Kloc[i, 3:, j, 3:] @ R33
-        return Kglo
+    def local_stiffness_matrix_Kz(self, L: float) -> np.ndarray:
+        raise NotImplementedError("This function must be overwritten by the child")
 
-class EulerBernoulli(Beam):
-    def __init__(self, path):
-        super().__init__(path)
-
-    def stiffness_matrix(self) -> np.ndarray:
-        return self.global_stiffness_matrix()
-
-    def local_stiffness_matrix(self) -> np.ndarray:
+    def local_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
         """
         With two points we will have a matrix [12 x 12]
         But we are going to divide the matrix into [x, y, z] coordinates
         That means, our matrix is in fact [4, 3, 4, 3]
         Or also  [2, 6, 2, 6]
         """
-        L = self.L
-        K = np.zeros((2, 6, 2, 6))
-        E = self.material.E
-        G = self.material.G
-        A = self.section.Ax
-        Ix = self.section.Ix
-        Iy = self.section.Iy
-        Iz = self.section.Iz
-
-        Kx = (E*A/L) * (2*np.eye(2)-1)
-        Kt = (G*Ix/L) * (2*np.eye(2)-1)
-        Ky = (E*Iz/L**3) * np.array([[ 12,    6*L,  -12,    6*L],
-                                     [6*L, 4*L**2, -6*L, 2*L**2],
-                                     [-12,   -6*L,   12,   -6*L],
-                                     [6*L, 2*L**2, -6*L, 4*L**2]])
-        Kz = (E*Iy/L**3) * np.array([[  12,   -6*L,  -12,   -6*L],
-                                     [-6*L, 4*L**2,  6*L, 2*L**2],
-                                     [ -12,    6*L,   12,    6*L],
-                                     [-6*L, 2*L**2,  6*L, 4*L**2]])
-
+        L = np.linalg.norm(p1-p0)
+        Kx = self.local_stiffness_matrix_Kx(L)
+        Kt = self.local_stiffness_matrix_Kt(L)
+        Ky = self.local_stiffness_matrix_Ky(L)
+        Kz = self.local_stiffness_matrix_Kz(L)
         K = np.zeros((2, 6, 2, 6))
         K[:, 0, :, 0] = Kx
         K[:, 3, :, 3] = Kt
@@ -116,6 +74,65 @@ class EulerBernoulli(Beam):
                     for wb, b in enumerate([2, 4]):
                         K[i, a, j, b] = Kz[2*i+wa, 2*j+wb]
         return K
+    
+    def global_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
+        Kloc = self.local_stiffness_matrix(p0, p1)
+        R33 = compute_rvw(p0, p1)
+        Kglo = np.zeros((2, 6, 2, 6), dtype="float64")
+        for i in range(2):
+            for j in range(2):
+                Kglo[i, :3, j, :3] = R33.T @ Kloc[i, :3, j, :3] @ R33
+                Kglo[i, :3, j, 3:] = R33.T @ Kloc[i, :3, j, 3:] @ R33
+                Kglo[i, 3:, j, :3] = R33.T @ Kloc[i, 3:, j, :3] @ R33
+                Kglo[i, 3:, j, 3:] = R33.T @ Kloc[i, 3:, j, 3:] @ R33
+        return Kglo
+
+    def stiffness_matrix(self) -> np.ndarray:
+        points = [self.path(ti) for ti in self.ts]
+        npts = len(points)
+        Kglobal = np.zeros((npts, 6, npts, 6))
+        for i in range(npts-1):
+            p0, p1 = points[i], points[i+1]
+            Kgloone = self.global_stiffness_matrix(p0, p1)
+            Kglobal[i:i+2, :, i:i+2, :] += Kgloone
+        return Kglobal
+
+
+class EulerBernoulli(Beam):
+    def __init__(self, path):
+        super().__init__(path)
+
+    def local_stiffness_matrix_Kx(self, L: float) -> np.ndarray:
+        E = self.material.E
+        A = self.section.Ax 
+        Kx = (E*A/L) * (2*np.eye(2)-1) 
+        return Kx 
+ 
+    def local_stiffness_matrix_Kt(self, L: float) -> np.ndarray: 
+        G = self.material.G
+        Ix = self.section.Ix
+        Kt = (G*Ix/L) * (2*np.eye(2)-1) 
+        return Kt 
+         
+    def local_stiffness_matrix_Ky(self, L: float) -> np.ndarray: 
+        E = self.material.E
+        Iz = self.section.Iz
+        Ky = np.array([[ 12,    6*L,  -12,    6*L], 
+                       [6*L, 4*L**2, -6*L, 2*L**2], 
+                       [-12,   -6*L,   12,   -6*L], 
+                       [6*L, 2*L**2, -6*L, 4*L**2]]) 
+        return (E*Iz/L**3) * Ky 
+ 
+    def local_stiffness_matrix_Kz(self, L: float) -> np.ndarray: 
+        E = self.material.E
+        Iy = self.section.Iy 
+        Kz = np.array([[  12,   -6*L,  -12,   -6*L], 
+                       [-6*L, 4*L**2,  6*L, 2*L**2], 
+                       [ -12,    6*L,   12,    6*L], 
+                       [-6*L, 2*L**2,  6*L, 4*L**2]]) 
+        return (E*Iy/L**3) * Kz 
+
+    
 
 
 class Timoshenko(Beam):
