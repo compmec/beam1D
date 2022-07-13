@@ -88,6 +88,9 @@ def test_example4():
 
 
 def test_example5():
+    q0 = -0.1
+    L = 1000
+    EI = 210e+3 * np.pi * (8**4)/64
     A = (0, 0)
     B = (1000, 0)
     beamAB = EulerBernoulli([A, B])
@@ -98,8 +101,14 @@ def test_example5():
     system.add_BC(A, {"ux": 0,
                       "uy": 0,
                       "tz": 0})
-    system.add_dist_load(beamAB, (0, 1), {"Fy": (-10, -10)})
+    system.add_dist_load(beamAB, (0, 1), {"Fy": (q0, q0)})
     system.run()
+    Usolu = system.solution
+    Ugood = np.zeros((2, 6))
+    Ugood[1, 1] = q0*L**4/(6*EI)  # q0*L**4/(8*EI) for many intermediate points
+    Ugood[1, 5] = q0*L**3/(4*EI)  # q0*L**3/(6*EI) for many intermediate points
+    np.testing.assert_almost_equal(Usolu, Ugood)
+    
 
 def test_example6():
     A = (0, 0)
