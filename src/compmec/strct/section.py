@@ -30,7 +30,9 @@ class Retangular(Section):
     def __compute_inertias(self):
         self.Iy = self.b*self.h**3/12
         self.Iz = self.h*self.b**3/12
-        raise NotImplementedError("Torsion for a retangular is not defined yet")
+        self.Ix = self.Iy + self.Iz
+        print("Warning: Inertia for torsional of retangular is not yet defined")
+        # raise NotImplementedError("Torsion for a retangular is not defined yet")
 
 class HollowRetangular(Section):
     def __init__(self, be: float, he:float, bi:float, hi:float, nu:float):

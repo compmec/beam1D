@@ -6,8 +6,12 @@ Each point has 6 unknowns:
 import numpy as np
 from compmec.strct.__classes__ import Structural1D
 
-def compute_rvw(p0: np.ndarray, p1: np.ndarray) -> np.ndarray:
-    dp = np.array(p1 - p0)
+def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
+    np0 = np.zeros(3)
+    np1 = np.zeros(3)
+    np0[:len(p0)] = p0
+    np1[:len(p1)] = p1
+    dp = np.array(np1 - np0)
     L = np.linalg.norm(dp)
     r = dp/L
     v = (0, 0, 1)

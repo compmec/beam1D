@@ -1,6 +1,7 @@
 
 import numpy as np
 from numpy import linalg as la
+from typing import Tuple
 
 """
 In the end we have a linear system which is given by
@@ -8,7 +9,7 @@ In the end we have a linear system which is given by
 
 """
 
-def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> tuple(np.ndarray, np.ndarray):
+def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     K is a big matrix of shape (npts, 6, npts, 6)
     F is a matrix of shape (npts, 6)
@@ -20,7 +21,6 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> tuple(np.ndarray, np.
          []]
     """
     npts = F.shape[0]
-    
     known = []
     unknown = []
     for i in range(npts):

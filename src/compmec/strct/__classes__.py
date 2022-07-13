@@ -87,28 +87,34 @@ class Structural1D(object):
              self._path = path
         else:
             raise TypeError("Not expected received argument")
-        self._ts = []
-        self.addt(0.)
-        self.addt(1.)
+        self._ts = [0, 1]
 
     def path(self, t: float) -> np.ndarray:
+        try:
+            t = float(t)
+        except Exception as e:
+            raise TypeError(f"The parameter t must be a float. Could not convert {type(t)}")
         if t < 0 or t > 1:
             raise ValueError("t in path must be in [0, 1]")
         if t not in self._ts:
             self.addt(t)
         return self._path(t)
 
+    @property
+    def ts(self) -> np.ndarray:
+        return np.array(self._ts)
+
     def addt(self, t: float):
         self._ts.append(t)
         self._ts.sort()
 
     @property
-    def ts(self):
-        return np.array(self._ts)
-
-    @property
     def material(self) -> Material:
         return self._material
+
+    @material.setter
+    def material(self, value:Material):
+        self._material = value
 
     @property
     def section(self) -> Section:
