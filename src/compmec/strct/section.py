@@ -88,10 +88,18 @@ class Square(Section):
 
     def __compute_areas(self):
         k = 20*(1+self.nu)/(4+3*self.nu)
-        raise NotImplementedError("Areas for a square are not defined")
+        self.Ax = self.b**2
+        self.Ay = k * self.Ax
+        self.Az = k * self.Ax
+        print("Warning: Areas for a square is not yet well defined")
+        # raise NotImplementedError("Areas for a square are not defined")
 
     def __compute_inertias(self):
-        raise NotImplementedError("Inertias for a square are not defined")
+        print("Warning: Inertias for a square is not yet well defined")
+        self.Iy = self.b**4/12
+        self.Iz = self.Iy
+        self.Ix = 2*self.Iy
+        # raise NotImplementedError("Inertias for a square are not defined")
 
 class HollowSquare(Section):
     def __doc__(self):
