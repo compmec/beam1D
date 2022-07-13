@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Iterable, Union, Tuple
+from typing import Iterable, Type, Union, Tuple
 from compmec.strct.__classes__ import Structural1D
 from compmec.strct.solver import solve
 
@@ -158,6 +158,38 @@ class StaticLoad(object):
             if not isinstance(item, (float, int)):
                 raise TypeError(f"Every item in dictionary must be a float, not {type(item)}")
         return self._add_load_at_index(index, values)
+
+    def add_dist_load(self, indexs: Iterable[int], values: dict, Ls: Iterable[float]):
+        if not isinstance(indexs, (tuple, list)):
+            raise TypeError("Indexs must be tuple/list")
+        for index in indexs:
+            try:
+                int(index)
+            except Exception as e:
+                raise TypeError(f"Cannot convert index into int. Type = {type(index)}")
+        if not isinstance(values, dict):
+            raise TypeError("Values must be a dict")
+        if not isinstance(Ls, (tuple, list)):
+            raise TypeError("Ls must be a tuple/list")
+        for Li in Ls:
+            try:
+                float(Li)
+            except Exception as e:
+                raise TypeError(f"Cannot convert index into float. Type = {type(Li)}")
+        self._add_dist_load(indexs, values, Ls)
+
+    def _add_dist_load(self, indexs: Iterable[int], values: dict, Ls: Iterable[float]):
+        npts = len(indexs)
+        concload = np.zeros(npts)
+        for key, values in values.items():
+            position = self.key2pos(key)
+            concload[:] = 0
+            for i, Li in enumerate(Ls):
+                qa, qb = values[i], values[i+1]
+                concload[i] += Li*(2*qa+qb)/6
+                concload[i] += Li*(qa+2*qb)/6
+            for i, index in enumerate(indexs):
+                self._loads.append((index, position, concload[i]))
         
     def _add_load_at_index(self, index: int, values: dict):
         for key, value in values.items():
@@ -253,8 +285,49 @@ class StaticSystem():
 
 
     def add_load(self, point: tuple, loads: dict):
+        """
+        Add a load in a specific point.
+        Example:
+            point = (1.0, 3.5, -2.0)
+            system.add_load(point, {"Fx": -30})
+        The available loads are combinations of ("F", "M") and ("x", "y", "z", "n", "v", "w").
+        Example:
+            Fx: Force in x direction
+            Mn: Momentum in normal direction
+        """
         index = self._geometry.index_point_at(point)
         self._loads.add_load(index, loads)
+
+    def add_dist_load(self, element: Structural1D, interval: Iterable[float], values: dict):
+        """
+        Add a distribueted load in a interval.
+        Example:
+            beamAB = EulerBernoulli([A, B])
+            interval = (0.2, 0.5, 0.7)
+            loadsFy = (10, -30, 30) 
+            system.add_dist_load(beamAB, interval, {"Fy": loadsFy})
+        All the values inside interval must be in [0, 1]
+        The available loads are the same as 'add_load' function:
+            ("Fx", "Fy", "Fz", "Fn", "Fv", "Fw",
+             "Mx", "My", "Mz", "Mn", "Mv", "Mw")
+        The quantities of the interval must be tha same as each load.
+        The loads are linear defined. That means:
+            At (0.5) the value of "Fy" is -30
+            At (0.6) the value of "Fy" is 0
+            At (0.7) the value of "Fy" is 30
+        """
+        if not isinstance(element, Structural1D):
+            raise TypeError("Element must be Structural1D")
+        try:
+            for t in interval:
+                float(t)
+        except Exception as e:
+            raise TypeError("Interval must be a tuple of floats")
+        points = [element.path(t) for t in interval]
+        indexs = [self._geometry.index_point_at(point) for point in points]
+        npts = len(points)
+        Ls = [np.linalg.norm(points[i+1]-points[i]) for i in range(npts-1)]
+        self._loads.add_dist_load(indexs, values, Ls)
 
     def add_BC(self, point: tuple, bcvals: dict):
         index = self._geometry.index_point_at(point)
