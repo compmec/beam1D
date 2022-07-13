@@ -53,7 +53,7 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> Tuple[np.ndarray, np.
     if la.det(Kuu) != 0:
         Uu = la.solve(Kuu, B)
     else:
-        Uu = la.lstsq(Kuu, B)[0]
+        Uu = la.lstsq(Kuu, B, rcond=1e-10)[0]
 
     Fu = Kkk @ Uk + Kku @ Uu
 

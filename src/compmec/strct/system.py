@@ -234,7 +234,7 @@ class StaticStructure(object):
     def _add_element(self, value: Structural1D) -> None:
         self._elements.append(value)
 
-class StaticSystem(Geometry1D, StaticLoad, StaticBoundaryCondition, StaticStructure):
+class StaticSystem():
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(StaticSystem, cls).__new__(cls)
@@ -250,6 +250,7 @@ class StaticSystem(Geometry1D, StaticLoad, StaticBoundaryCondition, StaticStruct
     def add_element(self, element: Structural1D):
         self._structure.add_element(element)
         self.__getpointsfrom(element)
+
 
     def add_load(self, point: tuple, loads: dict):
         index = self._geometry.index_point_at(point)
@@ -295,15 +296,19 @@ class StaticSystem(Geometry1D, StaticLoad, StaticBoundaryCondition, StaticStruct
         K = np.zeros((npts, len(dofs), npts, len(dofs)))
         for element in self._structure.elements:
             Kloc = element.stiffness_matrix()
-            ind0 = self._geometry.find_point(element.path(0))
-            ind1 = self._geometry.find_point(element.path(1))
-            K[ind0, :, ind0, :] += Kloc[0, :, 0, :]
-            K[ind0, :, ind1, :] += Kloc[0, :, 1, :]
-            K[ind1, :, ind0, :] += Kloc[1, :, 0, :]
-            K[ind1, :, ind1, :] += Kloc[1, :, 1, :]
+            inds = []
+            for t in element.ts:
+                searchpoint = element.path(t)
+                newind = self._geometry.find_point(searchpoint)
+                inds.append(newind)
+            for i, indi in enumerate(inds):
+                for j, indj in enumerate(inds):
+                    K[indi, :, indj, :] += Kloc[i, :, j, :]
         return K
 
     def run(self):
+        for element in self._structure.elements:
+            self.__getpointsfrom(element)
         dofs = self.__dofs()
         K = self.__mount_K(dofs)
         F = self.__mount_F(dofs)
