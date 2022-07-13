@@ -45,5 +45,29 @@ def test_example2():
     Ugood[1, 5] = -32*10*(1000**2)/(np.pi* 210e+3 * 8**4)
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+
+def test_example3():
+    A = (0, 0)
+    B = (1000, 0)
+    beamAB = EulerBernoulli([A, B])
+    beamAB.section = Circle(R=8/2, nu=0.3)
+    beamAB.material = Isotropic(E=210e+3, nu=0.3)
+    C = beamAB.path(0.6)
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_load(C, {"Fy": -10})
+    system.run()
+    Usolu = system.solution
+    Ugood = np.zeros((3, 6))
+    Ugood[1, 1] = -64*10*(600**3)/(3*np.pi* 210e+3 * 8**4)
+    Ugood[1, 5] = -32*10*(600**2)/(np.pi* 210e+3 * 8**4)
+    Ugood[2, 5] = Ugood[1, 5]
+    Ugood[2, 1] = Ugood[1, 1] + 400 * Ugood[1, 5]
+    np.testing.assert_almost_equal(Usolu, Ugood)
+
+
 if __name__ == "__main__":
     pytest.main()
