@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from compmec.strct.beam import EulerBernoulli
 from compmec.strct.material import Isotropic
-from compmec.strct.section import Circle
+from compmec.strct.section import Circle, Square
 from compmec.strct.system import StaticSystem
 
 
@@ -68,6 +68,49 @@ def test_example3():
     Ugood[2, 1] = Ugood[1, 1] + 400 * Ugood[1, 5]
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+
+def test_example4():
+    A = (0, 0)
+    B = (1000, 0)
+    beamAB = EulerBernoulli([A, B])
+    beamAB.section = Circle(R=8/2, nu=0.3)
+    beamAB.material = Isotropic(E=210e+3, nu=0.3)
+    C = beamAB.path(0.3)
+    D = beamAB.path(0.7)
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_load(C, {"Fy": -10})
+    system.add_load(D, {"Fy": -25})
+    system.run()
+    
+
+def test_example9():
+    A = (0, 0)
+    B = (1000, 0)
+    C = (500, 500)
+    beamAB = EulerBernoulli([A, B])
+    beamAC = EulerBernoulli([A, C])
+    beamBC = EulerBernoulli([B, C])
+    circle = Circle(R=8/2, nu=0.3)
+    square = Square(b=8, nu=0.3)
+    steel = Isotropic(E=210e+3, nu=0.3)
+    beamAB.section = square
+    beamBC.section = circle
+    beamAC.section = circle
+    for beam in [beamAB, beamBC, beamAC]:
+        beam.material = steel
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0})
+    system.add_BC(B, {"uy": 0})
+    system.add_load(C, {"Fx": 15,
+                        "Fy": -10})
+    system.run()
+    
 
 if __name__ == "__main__":
     pytest.main()
