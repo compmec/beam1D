@@ -85,7 +85,63 @@ def test_example4():
     system.add_load(C, {"Fy": -10})
     system.add_load(D, {"Fy": -25})
     system.run()
-    
+
+
+def test_example5():
+    A = (0, 0)
+    B = (1000, 0)
+    beamAB = EulerBernoulli([A, B])
+    beamAB.section = Circle(R=8/2, nu=0.3)
+    beamAB.material = Isotropic(E=210e+3, nu=0.3)
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_dist_load(beamAB, (0, 1), {"Fy": (-10, -10)})
+    system.run()
+
+def test_example6():
+    A = (0, 0)
+    B = (1000, 0)
+    beamAB = EulerBernoulli([A, B])
+    beamAB.section = Circle(R=8/2, nu=0.3)
+    beamAB.material = Isotropic(E=210e+3, nu=0.3)
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_dist_load(beamAB, (0.3, 0.7), {"Fy": (-10, -10)})
+    system.run()
+
+def test_example7():
+    A = (0, 0)
+    B = (1000, 0)
+    beamAB = EulerBernoulli([A, B])
+    beamAB.section = Circle(R=8/2, nu=0.3)
+    beamAB.material = Isotropic(E=210e+3, nu=0.3)
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_dist_load(beamAB, (0, 1), {"Fy": (-10, 0)})
+    system.run()
+
+def test_example8():
+    A = (0, 0)
+    B = (1000, 0)
+    beamAB = EulerBernoulli([A, B])
+    beamAB.section = Circle(R=8/2, nu=0.3)
+    beamAB.material = Isotropic(E=210e+3, nu=0.3)
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_dist_load(beamAB, (0, 0.3, 0.7, 1), {"Fy": (0, -10, -10, 0)})
+    system.run()
 
 def test_example9():
     A = (0, 0)
@@ -113,4 +169,5 @@ def test_example9():
     
 
 if __name__ == "__main__":
-    pytest.main()
+    # pytest.main()
+    test_example5()
