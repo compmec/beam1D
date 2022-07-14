@@ -187,7 +187,7 @@ class StaticLoad(object):
             for i, Li in enumerate(Ls):
                 qa, qb = values[i], values[i+1]
                 concload[i] += Li*(2*qa+qb)/6
-                concload[i] += Li*(qa+2*qb)/6
+                concload[i+1] += Li*(qa+2*qb)/6
             for i, index in enumerate(indexs):
                 self._loads.append((index, position, concload[i]))
         
@@ -323,11 +323,51 @@ class StaticSystem():
                 float(t)
         except Exception as e:
             raise TypeError("Interval must be a tuple of floats")
+        
+        interval, values = self.__compute_dist_points(element.ts, interval, values)
         points = [element.path(t) for t in interval]
         indexs = [self._geometry.index_point_at(point) for point in points]
         npts = len(points)
         Ls = [np.linalg.norm(points[i+1]-points[i]) for i in range(npts-1)]
         self._loads.add_dist_load(indexs, values, Ls)
+
+    def __compute_dist_points(self, ts: Iterable[float], interval: Iterable[float], values: dict):
+        """
+        There's an element with the ts values:
+            ts = [0, 0.2, 0.4, 0.6, 0.8, 1]
+        And then there are the inteval values like
+            interval = [0.1, 0.5, 0.7]
+        Then we want to make a new interval
+            newinterval = [0.1, 0.2, 0.4, 0.5, 0.6, 0.7]
+        And we have to adapt also the new values, at forces.
+        If we had
+            values = {"Fx": [2, 10, 6]}
+        Then we want
+            newvalues = {"Fx": [2, 4, 8, 10, 8, 6]}
+        """
+        ts = np.array(ts)
+        interval = list(interval)
+        newinterval = interval.copy()
+        mask = (ts - min(interval))*(max(interval) - ts) > 0
+        newinterval.extend(ts[mask])
+        newinterval.sort()
+        npts = len(newinterval)
+        for key, vals in values.items():
+            newvals = np.zeros(npts)
+            for i, t in enumerate(newinterval):
+                if t in interval:
+                    indvalue = interval.index(t)
+                    newvals[i] = vals[indvalue]
+                else:
+                    indvalue = 0
+                    while not (interval[indvalue] < t < interval[indvalue+1]):
+                        indvalue += 1 
+                    ta, tb = interval[indvalue], interval[indvalue+1]
+                    qa, qb = vals[indvalue], vals[indvalue+1]
+                    newvals[i] = (qa*(tb-t) + qb*(t-ta))/(tb-ta)
+            values[key] = newvals
+        return newinterval, values
+        
 
     def add_BC(self, point: tuple, bcvals: dict):
         index = self._geometry.index_point_at(point)

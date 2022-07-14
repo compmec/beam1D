@@ -50,11 +50,11 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> Tuple[np.ndarray, np.
             Kuu[i, j] = K[a, b, c, d]
 
     B = Fk - Kku.T @ Uk
-    if la.det(Kuu) != 0:
+    try:
         Uu = la.solve(Kuu, B)
-    else:
+    except np.linalg.LinAlgError as e:
         Uu = la.lstsq(Kuu, B, rcond=1e-10)[0]
-
+        
     Fu = Kkk @ Uk + Kku @ Uu
 
     

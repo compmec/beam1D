@@ -82,9 +82,19 @@ def test_example4():
     system.add_BC(A, {"ux": 0,
                       "uy": 0,
                       "tz": 0})
-    system.add_load(C, {"Fy": -10})
-    system.add_load(D, {"Fy": -25})
+    system.add_load(C, {"Fy": -12})
+    system.add_load(D, {"Fy": -24})
     system.run()
+    Usolu = system.solution
+    EI = 210e+3 * np.pi * 8**4 / 64
+    Ugood = np.zeros((4, 6))
+    Ugood[1, 1] = -0.756e+9/EI
+    Ugood[2, 1] = -3.068e+9/EI
+    Ugood[3, 1] = -4.994e+9/EI
+    Ugood[1, 5] = -4.5e+6/EI
+    Ugood[2, 5] = -6.42e+6/EI
+    Ugood[3, 5] = -6.42e+6/EI
+    np.testing.assert_almost_equal(Usolu, Ugood)
 
 
 def test_example5():
@@ -169,14 +179,41 @@ def test_example9():
         beam.material = steel
     system = StaticSystem()
     system.add_element(beamAB)
+    system.add_element(beamBC)
+    system.add_element(beamAC)
     system.add_BC(A, {"ux": 0,
                       "uy": 0})
     system.add_BC(B, {"uy": 0})
     system.add_load(C, {"Fx": 15,
                         "Fy": -10})
     system.run()
+
+def test_example10():
+    A = (300, 0)
+    B = (0, 500)
+    C = (300, 500)
+    beamAC = EulerBernoulli([A, C])
+    beamBC = EulerBernoulli([B, C])
+    circle = Circle(R=8/2, nu=0.3)
+    steel = Isotropic(E=210e+3, nu=0.3)
+    beamAC.section = circle
+    beamBC.section = circle
+    beamAC.material = steel
+    beamBC.material = steel
+    system = StaticSystem()
+    system.add_element(beamAC)
+    system.add_element(beamBC)
+    system.add_BC(A, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_BC(B, {"ux": 0,
+                      "uy": 0,
+                      "tz": 0})
+    system.add_dist_load(beamBC, (0, 1), {"Fy": (-0.1, -0.1)})
+    system.add_dist_load(beamAC, (0, 1), {"Fx": (-0.1, -0.1)})
+    system.run()
     
 
 if __name__ == "__main__":
-    # pytest.main()
-    test_example5()
+    pytest.main()
+        
