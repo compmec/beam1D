@@ -27,9 +27,11 @@ class AxonometricProjector(object):
         self.vertical = np.array(self.vertical)
 
     def __call__(self, point3D: Tuple[float, float, float]) -> Tuple[float, float, float]:
-        if len(point)!= 3:
-            raise ValueError("not len 3")
         point3D = np.array(point3D)
+        if point3D.ndim != 1:
+            raise ValueError("Point3D must be a 1D-array")
+        if len(point3D) != 3:
+            raise ValueError("Point3D must have lenght = 3")
         horizontal = self.horizontal
         vertical = self.vertical
         if np.abs(np.inner(horizontal, vertical)) > 0.01:  # cos 82 degrees
@@ -83,9 +85,9 @@ class Projector(object):
     def __init__(self, projectionname: str):
         if not isinstance(projectionname, str):
             raise TypeError(f"The received projectionname is type {type(projectionname)}, not 'str'")
-        if projectionname in AxonometricProjector.axonometricnames:
+        if projectionname in AxonometricProjector.names:
             self.projector = AxonometricProjector(projectionname)
-        elif projectionname in Projector.perspectivenames:
+        elif projectionname in PerspectiveProjector.names:
             self.projector = AxonometricProjector(projectionname)
         else:
             raise ValueError(f"The received projectionname is unknown. Must be in {Projector.axonometricnames+Projector.perspectivenames}")
