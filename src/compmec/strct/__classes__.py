@@ -80,8 +80,10 @@ class Section(object):
 class Structural1D(object):
     def __init__(self, path):
         if isinstance(path, (tuple, list)):
-            p0 = np.array(path[0]) 
-            p1 = np.array(path[1]) 
+            p0 = np.zeros(3)
+            p1 = np.zeros(3)
+            p0[:len(path[0])] = path[0]
+            p1[:len(path[1])] = path[1]
             self._path = lambda t: (1-t)*p0 + t*p1 
         # elif callable(path):
         #      self._path = path
