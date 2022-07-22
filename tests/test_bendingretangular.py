@@ -1,7 +1,7 @@
 import numpy as np
 from compmec.strct.material import Isotropic
 from compmec.strct.section import Retangular
-from compmec.strct.beam import EulerBernoulli
+from compmec.strct.element import EulerBernoulli
 from compmec.strct.solver import solve
 from usefulfunc import *
 import pytest
