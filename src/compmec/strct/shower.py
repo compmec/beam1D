@@ -130,13 +130,14 @@ class ShowerStaticSystem(Shower):
             newcurve = self.getonesplinecurve(element, deformed)
             curves.append(newcurve)
         return curves
+            
 
-    def plot2D(self, projector: str = "xy", field: Optional[str] = None, deformed: Optional[bool]=False, axes=None):
+    def plot2D(self, projector: str = "xy", fieldname: Optional[str] = None, deformed: Optional[bool]=False, axes=None):
         all3Dcurves = self.getallsplinecurves(deformed)
         if axes is None:
             axes = plt.gca()
         projector = Projector(projector)
-        npts = 10
+        npts = 65
         tplot = np.linspace(0, 1, npts)
         for curve in all3Dcurves:
             all3Dpoints = curve(tplot)
@@ -146,19 +147,20 @@ class ShowerStaticSystem(Shower):
             axes.plot(all2Dpoints[:, 0], all2Dpoints[:, 1], color="k", label="original")
 
     def plot3D(self, fieldname: Optional[str] = None, deformed: Optional[bool]=False, axes=None):
-        all3Dcurves = self.getallsplinecurves(deformed)
         if axes is None:
             plt.figure()
             axes = plt.gca()
-        npts = 10
+        npts = 65
         tplot = np.linspace(0, 1, npts)
         if fieldname is not None:
             cmap = plt.get_cmap("bwr")
-        for curve in all3Dcurves:
-            all3Dpoints = curve(tplot)
+        for element in self.__system._structure.elements:
+            curve = self.getonesplinecurve(element)
+            points3D = curve(tplot)
             if fieldname is None:
-                axes.plot(all3Dpoints[:, 0], all3Dpoints[:, 1], all3Dpoints[:, 2], color="k")
+                axes.plot(points3D[:, 0], points3D[:, 1], points3D[:, 2], color="k")
             else:
+                fieldvalues = compute_field(fieldname, element)
                 raise NotImplementedError("Field is not yet implemented")
                 axes.scatter(p[:, 0], p[:, 1], p[:, 2], cmap=cmap, c=fieldvalues)
     
