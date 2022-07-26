@@ -92,6 +92,13 @@ class Structural1D(object):
         self._ts = [0, 1]
 
     def path(self, t: float) -> np.ndarray:
+        try:  # If we receive an vector as input
+            res = []
+            for ti in t:
+                res.append(self.path(ti))
+            return np.array(res)
+        except Exception as e:
+            pass  # We didn't receive a vector
         try:
             t = float(t)
         except Exception as e:
