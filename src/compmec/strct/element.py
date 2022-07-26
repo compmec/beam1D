@@ -16,7 +16,7 @@ def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
     r = dp/L
     v = (0, 0, 1)
     cosangle = np.inner(r, v)
-    if cosangle > 0.99:  # 0.99 is the cos of 8 degrees
+    if np.abs(cosangle) > 0.99:  # 0.99 is the cos of 8 degrees
         v = (0, 1, 0)
         cosangle = np.inner(r, v)
     v -= cosangle * r

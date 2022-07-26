@@ -1,5 +1,5 @@
 import numpy as np
-from compmec.nurbs.interpolate import curve_spline
+from compmec.nurbs import SplineCurve, SplineBaseFunction
 
 class Material(object):
     def __init__(self):
@@ -80,24 +80,18 @@ class Section(object):
 class Structural1D(object):
     def __init__(self, path):
         if isinstance(path, (tuple, list)):
-            p0 = np.zeros(3)
-            p1 = np.zeros(3)
-            p0[:len(path[0])] = path[0]
-            p1[:len(path[1])] = path[1]
-            self._path = lambda t: (1-t)*p0 + t*p1 
-            # self._path = curve_spline(p=1, u=[(0, 1)], points=[(p0, p1)]) 
+            U = [0, 0, 1, 1]  # p = 1, n = 2
+            N = SplineBaseFunction(U)
+            P = np.zeros((2, 3))
+            P[0, :len(path[0])] += path[0]
+            P[1, :len(path[1])] += path[1]
+            curve = SplineCurve(N, P)
+            self._path = curve
         else:
             raise TypeError("Not expected received argument")
         self._ts = [0, 1]
 
     def path(self, t: float) -> np.ndarray:
-        try:  # If we receive an vector as input
-            res = []
-            for ti in t:
-                res.append(self.path(ti))
-            return np.array(res)
-        except Exception as e:
-            pass  # We didn't receive a vector
         try:
             t = float(t)
         except Exception as e:
@@ -106,7 +100,10 @@ class Structural1D(object):
             raise ValueError("t in path must be in [0, 1]")
         if t not in self._ts:
             self.addt(t)
-        return self._path(t)
+        result = self._path(t)
+        if result.ndim == 2:
+            result = result.reshape(3)
+        return result
 
     @property
     def ts(self) -> np.ndarray:
