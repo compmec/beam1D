@@ -1,5 +1,5 @@
 import numpy as np
-
+from compmec.nurbs.interpolate import curve_spline
 
 class Material(object):
     def __init__(self):
@@ -85,8 +85,7 @@ class Structural1D(object):
             p0[:len(path[0])] = path[0]
             p1[:len(path[1])] = path[1]
             self._path = lambda t: (1-t)*p0 + t*p1 
-        # elif callable(path):
-        #      self._path = path
+            # self._path = curve_spline(p=1, u=[(0, 1)], points=[(p0, p1)]) 
         else:
             raise TypeError("Not expected received argument")
         self._ts = [0, 1]

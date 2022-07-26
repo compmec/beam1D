@@ -6,7 +6,10 @@ from compmec.strct.solver import solve
 import pytest
 from usefulfunc import *
 
-@pytest.mark.dependency()
+@pytest.mark.dependency(
+	depends=["tests/test_material.py::test_end"],
+    scope='session'
+)
 def test_begin():
     pass
 

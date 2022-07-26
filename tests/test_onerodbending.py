@@ -6,7 +6,10 @@ from compmec.strct.solver import solve
 import pytest
 from usefulfunc import *
 
-@pytest.mark.dependency()
+@pytest.mark.dependency(
+	depends=["tests/test_onebar.py::test_end"],
+    scope='session'
+)
 def test_begin():
     pass
 
@@ -554,8 +557,7 @@ def test_bendingXYZtoXYZ():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
-@pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_bendingXYZtoXYZ"])
+@pytest.mark.dependency(depends=["test_begin", "test_bendingXYZtoXYZ"])
 def test_end():
     pass
 
