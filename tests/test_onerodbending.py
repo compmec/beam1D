@@ -7,7 +7,7 @@ import pytest
 from usefulfunc import *
 
 @pytest.mark.dependency(
-	depends=["tests/test_onebar.py::test_end"],
+	depends=["tests/test_material.py::test_end"],
     scope='session'
 )
 def test_begin():
@@ -52,7 +52,7 @@ def test_bendingXtoY():
         np.testing.assert_almost_equal(Ftest, Fgood)
         
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingXtoZ():
     ntests = 10
     for i in range(ntests):
@@ -134,7 +134,7 @@ def test_bendingXtoYZ():
 
 
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingYtoX():
     ntests = 10
     for i in range(ntests):
@@ -171,7 +171,7 @@ def test_bendingYtoX():
         np.testing.assert_almost_equal(Ftest, Fgood)
         
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingYtoZ():
     ntests = 10
     for i in range(ntests):
@@ -252,7 +252,7 @@ def test_bendingYtoXZ():
         np.testing.assert_almost_equal(Ftest, Fgood)
         
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingZtoX():
     ntests = 10
     for i in range(ntests):
@@ -289,7 +289,7 @@ def test_bendingZtoX():
         np.testing.assert_almost_equal(Ftest, Fgood)
         
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingZtoY():
     ntests = 10
     for i in range(ntests):
