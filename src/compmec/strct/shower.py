@@ -6,7 +6,6 @@ from compmec.strct.system import StaticSystem
 from typing import List, Tuple, Iterable, Optional
 from compmec.strct.__classes__ import Structural1D
 from compmec.nurbs import SplineCurve
-from compmec.strct.postrait import splinecurve_element, elementsolution
 
 class AxonometricProjector(object):
 
@@ -113,34 +112,23 @@ class ShowerStaticSystem(Shower):
         self.__system = system
     
     def getonesplinecurve(self, element: Structural1D, deformed: bool=False):
-        ts = element.ts
-        points = element.points
         if not deformed:
-            return splinecurve_element(4, ts, points)
-        solution = elementsolution(self.__system, element)
-        return splinecurve_element(4, ts, points, solution)
-        
-    def getallsplinecurves(self, deformed: bool=False) -> List[SplineCurve]:
-        """
-        This function get all spline curves
-        If there are nelem elements, then there's nlem curves as return
-        """
-        curves = []
-        for element in self.__system._structure.elements:
-            newcurve = self.getonesplinecurve(element, deformed)
-            curves.append(newcurve)
-        return curves
+            return element.path
+        raise NotImplementedError("Deformed: Should be implemented")
             
 
     def plot2D(self, projector: str = "xy", fieldname: Optional[str] = None, deformed: Optional[bool]=False, axes=None):
-        all3Dcurves = self.getallsplinecurves(deformed)
         if axes is None:
             axes = plt.gca()
+        if fieldname is not None:
+            cmap = plt.get_cmap("bwr")
         projector = Projector(projector)
         npts = 65
         tplot = np.linspace(0, 1, npts)
-        for curve in all3Dcurves:
-            all3Dpoints = curve(tplot)
+        for element in self.__system._structure.elements:
+            curve3D = self.getonesplinecurve(element, deformed)
+            all3Dpoints = curve3D(tplot)
+            print("curve = ", type(curve3D))
             all2Dpoints = np.zeros((npts, 2))
             for j, point3D in enumerate(all3Dpoints):
                 all2Dpoints[j] = projector(point3D)
@@ -155,13 +143,14 @@ class ShowerStaticSystem(Shower):
         if fieldname is not None:
             cmap = plt.get_cmap("bwr")
         for element in self.__system._structure.elements:
-            curve = self.getonesplinecurve(element)
-            points3D = curve(tplot)
+            curve3D = self.getonesplinecurve(element, deformed)
+            print("curve = ", type(curve3D))
+            points3D = curve3D(tplot)
             if fieldname is None:
                 axes.plot(points3D[:, 0], points3D[:, 1], points3D[:, 2], color="k")
             else:
-                fieldvalues = compute_field(fieldname, element)
                 raise NotImplementedError("Field is not yet implemented")
+                fieldvalues = compute_field(fieldname, element)
                 axes.scatter(p[:, 0], p[:, 1], p[:, 2], cmap=cmap, c=fieldvalues)
     
 
