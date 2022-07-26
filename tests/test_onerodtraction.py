@@ -273,8 +273,7 @@ def test_tractionR():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
-@pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_tractionR"])
+@pytest.mark.dependency(depends=["test_begin", "test_tractionR"])
 def test_end():
 	pass
 

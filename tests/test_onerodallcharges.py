@@ -39,7 +39,12 @@ def compute_U_analitic(stiffvals, force, vectors):
     Uglo[1, 3:] = R33 @ (tr, tv, tw)
     return Uglo
 
-@pytest.mark.dependency()
+@pytest.mark.dependency(
+	# depends=["tests/test_onerodbending.py::test_end",
+    #          "tests/test_onerodtraction.py::test_end",
+    #          "tests/test_onerodtorsion.py::test_end"],
+    scope='session'
+)
 def test_begin():
     pass
 
@@ -86,8 +91,7 @@ def test_all():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
-@pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_all"])
+@pytest.mark.dependency(depends=["test_begin", "test_all"])
 def test_end():
     pass
 

@@ -7,7 +7,10 @@ from compmec.strct.system import StaticSystem
 from compmec.strct.shower import ShowerStaticSystem
 from matplotlib import pyplot as plt
 
-@pytest.mark.dependency()
+@pytest.mark.dependency(
+	# depends=["tests/test_onerodallcharges.py::test_end"],
+    scope='session'
+)
 def test_begin():
 	pass
 

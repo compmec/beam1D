@@ -1,4 +1,3 @@
-import numpy as np
 from compmec.strct.material import Isotropic
 import pytest
 
