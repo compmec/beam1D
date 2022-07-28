@@ -27,3 +27,12 @@ def test_Structural1Dlinearpath():
 @pytest.mark.dependency(depends=["test_begin", "test_Structural1Dlinearpath"])
 def test_end():
 	pass
+
+
+def main():
+    test_begin()
+    test_Structural1Dlinearpath()
+    test_end()
+
+if __name__ == "__main__":
+    main()

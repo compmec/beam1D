@@ -1,5 +1,5 @@
 import numpy as np
-from compmec.nurbs import SplineCurve, SplineBaseFunction
+from geomdl import BSpline
 
 class Material(object):
     def __init__(self):
@@ -20,7 +20,7 @@ class Section(object):
 
     @property
     def Az(self) -> float:
-        return self._Az[2]
+        return self._A[2]
 
     @property
     def A(self) -> np.ndarray:
@@ -80,12 +80,15 @@ class Section(object):
 class Structural1D(object):
     def __init__(self, path):
         if isinstance(path, (tuple, list)):
-            U = [0, 0, 1, 1]  # p = 1, n = 2
-            N = SplineBaseFunction(U)
-            P = np.zeros((2, 3))
-            P[0, :len(path[0])] += path[0]
-            P[1, :len(path[1])] += path[1]
-            curve = SplineCurve(N, P)
+            P = [[0, 0, 0],
+                 [0, 0, 0]]
+            for i, p in enumerate(path):
+                for j, v in enumerate(p):
+                    P[i][j] = v
+            curve = BSpline.Curve()
+            curve.degree = 1
+            curve.ctrlpts = P
+            curve.knotvector = [0, 0, 1, 1]
             self.__curve = curve
         else:
             raise TypeError("Not expected received argument")
@@ -100,10 +103,8 @@ class Structural1D(object):
             raise ValueError("t in path must be in [0, 1]")
         if t not in self._ts:
             self.addt(t)
-        result = self.__curve(t)
-        if result.ndim == 2:
-            result = result.reshape(3)
-        return result
+        result = self.__curve.evaluate_single(t)
+        return tuple(result)
 
     def defo(self, t: float) -> np.ndarray:
         try:

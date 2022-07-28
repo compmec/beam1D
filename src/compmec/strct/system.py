@@ -325,10 +325,10 @@ class StaticSystem():
             raise TypeError("Interval must be a tuple of floats")
         
         interval, values = self.__compute_dist_points(element.ts, interval, values)
-        points = [element.path(t) for t in interval]
-        indexs = [self._geometry.index_point_at(point) for point in points]
-        npts = len(points)
-        Ls = [np.linalg.norm(points[i+1]-points[i]) for i in range(npts-1)]
+        points3D = np.array([element.path(t) for t in interval])
+        npts, dim = points3D.shape
+        indexs = [self._geometry.index_point_at(point) for point in points3D]
+        Ls = [np.linalg.norm(points3D[i+1]-points3D[i]) for i in range(npts-1)]
         self._loads.add_dist_load(indexs, values, Ls)
 
     def __compute_dist_points(self, ts: Iterable[float], interval: Iterable[float], values: dict):
