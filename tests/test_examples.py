@@ -7,13 +7,15 @@ from compmec.strct.system import StaticSystem
 from compmec.strct.shower import ShowerStaticSystem
 from matplotlib import pyplot as plt
 
+@pytest.mark.order(10)
 @pytest.mark.dependency(
-	# depends=["tests/test_onerodallcharges.py::test_end"],
+	depends=["tests/test_onerodallcharges.py::test_end"],
     scope='session'
 )
 def test_begin():
 	pass
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example1():
@@ -34,6 +36,7 @@ def test_example1():
     Ugood[1, 0] = 4*10*1000/(210e+3 * np.pi*8**2 )
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example2():
@@ -55,6 +58,7 @@ def test_example2():
     Ugood[1, 5] = -32*10*(1000**2)/(np.pi* 210e+3 * 8**4)
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example3():
@@ -79,6 +83,7 @@ def test_example3():
     Ugood[2, 1] = Ugood[1, 1] + 400 * Ugood[1, 5]
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example4():
@@ -108,6 +113,7 @@ def test_example4():
     Ugood[3, 5] = -6.42e+6/EI
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example5():
@@ -131,7 +137,8 @@ def test_example5():
     Ugood[1, 1] = q0*L**4/(6*EI)  # q0*L**4/(8*EI) for many intermediate points
     Ugood[1, 5] = q0*L**3/(4*EI)  # q0*L**3/(6*EI) for many intermediate points
     np.testing.assert_almost_equal(Usolu, Ugood)
-    
+
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example6():
@@ -148,6 +155,7 @@ def test_example6():
     system.add_dist_load(beamAB, (0.3, 0.7), {"Fy": (-10, -10)})
     system.run()
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example7():
@@ -164,6 +172,7 @@ def test_example7():
     system.add_dist_load(beamAB, (0, 1), {"Fy": (-10, 0)})
     system.run()
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example8():
@@ -180,6 +189,7 @@ def test_example8():
     system.add_dist_load(beamAB, (0, 0.3, 0.7, 1), {"Fy": (0, -10, -10, 0)})
     system.run()
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example9():
@@ -210,6 +220,7 @@ def test_example9():
     # shower = ShowerStaticSystem(system)
     # shower.plot2D("xy", deformed=True)
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example10():
@@ -237,6 +248,7 @@ def test_example10():
     system.add_dist_load(beamAC, (0, 1), {"Fx": (-0.1, -0.1)})
     system.run()
 
+@pytest.mark.order(10)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_end():

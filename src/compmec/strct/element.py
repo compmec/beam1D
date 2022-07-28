@@ -61,7 +61,7 @@ class Beam(Structural1D):
         That means, our matrix is in fact [4, 3, 4, 3]
         Or also  [2, 6, 2, 6]
         """
-        L = np.linalg.norm(p1-p0)
+        L = np.linalg.norm(np.array(p1)-np.array(p0))
         Kx = self.local_stiffness_matrix_Kx(L)
         Kt = self.local_stiffness_matrix_Kt(L)
         Ky = self.local_stiffness_matrix_Ky(L)
@@ -100,6 +100,8 @@ class Beam(Structural1D):
             Kgloone = self.global_stiffness_matrix(p0, p1)
             Kglobal[i:i+2, :, i:i+2, :] += Kgloone
         return Kglobal
+
+    
 
 
 class EulerBernoulli(Beam):

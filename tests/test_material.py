@@ -1,10 +1,12 @@
 from compmec.strct.material import Isotropic
 import pytest
 
+@pytest.mark.order(1)
 @pytest.mark.dependency()
 def test_begin():
 	pass
 
+@pytest.mark.order(1)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_main():
@@ -50,6 +52,7 @@ def test_main():
 			assert (mat.Lame1 - L) < 1e-6
 			assert (mat.Lame2 - G) < 1e-6
 
+@pytest.mark.order(1)
 @pytest.mark.dependency(depends=["test_main"])
 def test_end():
 	pass

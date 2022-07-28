@@ -6,13 +6,15 @@ from compmec.strct.solver import solve
 import pytest
 from usefulfunc import *
 
+@pytest.mark.order(2)
 @pytest.mark.dependency(
-	depends=["tests/test_material.py::test_end"],
-    scope='session'
-)
+	depends=["tests/test_material.py::test_end",
+             "tests/test_structural1D.py::test_end"],
+    scope='session')
 def test_begin():
     pass
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_torsionXcircle():
@@ -49,6 +51,7 @@ def test_torsionXcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)	
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_torsionXcircle"])
 def test_torsionYcircle():
@@ -85,6 +88,7 @@ def test_torsionYcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_torsionXcircle"])
 def test_torsionZcircle():
@@ -121,6 +125,7 @@ def test_torsionZcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_torsionXcircle", "test_torsionYcircle"])
 def test_torsionXYcircle():
@@ -159,6 +164,7 @@ def test_torsionXYcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_torsionYcircle", "test_torsionZcircle"])
 def test_torsionYZcircle():
@@ -197,6 +203,7 @@ def test_torsionYZcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_torsionXcircle", "test_torsionZcircle"])
 def test_torsionXZcircle():
@@ -235,6 +242,7 @@ def test_torsionXZcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_torsionXYcircle", "test_torsionYZcircle", "test_torsionXZcircle"])
 def test_torsionRcircle():
@@ -273,6 +281,7 @@ def test_torsionRcircle():
 		np.testing.assert_almost_equal(Utest, Ugood)
 		np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_torsionRcircle"])
 def test_end():

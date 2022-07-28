@@ -6,13 +6,15 @@ from compmec.strct.solver import solve
 import pytest
 from usefulfunc import *
 
+@pytest.mark.order(2)
 @pytest.mark.dependency(
-	depends=["tests/test_material.py::test_end"],
-    scope='session'
-)
+	depends=["tests/test_material.py::test_end",
+             "tests/test_structural1D.py::test_end"],
+    scope='session')
 def test_begin():
     pass
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_bendingXtoY():
@@ -50,7 +52,9 @@ def test_bendingXtoY():
                           [0, P, 0, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
-        
+
+
+@pytest.mark.order(2)   
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingXtoZ():
@@ -89,6 +93,7 @@ def test_bendingXtoZ():
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingXtoY", "test_bendingXtoZ"])
 def test_bendingXtoYZ():
@@ -133,6 +138,7 @@ def test_bendingXtoYZ():
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingYtoX():
@@ -169,7 +175,8 @@ def test_bendingYtoX():
                           [P, 0, 0, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
-        
+
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingYtoZ():
@@ -208,6 +215,7 @@ def test_bendingYtoZ():
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingYtoX", "test_bendingYtoZ"])
 def test_bendingYtoXZ():
@@ -250,7 +258,9 @@ def test_bendingYtoXZ():
         
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
-        
+
+
+@pytest.mark.order(2)      
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingZtoX():
@@ -287,7 +297,9 @@ def test_bendingZtoX():
                           [P, 0, 0, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
-        
+
+
+@pytest.mark.order(2)  
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingZtoY():
@@ -326,6 +338,7 @@ def test_bendingZtoY():
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingZtoX", "test_bendingZtoY"])
 def test_bendingZtoXY():
@@ -370,6 +383,7 @@ def test_bendingZtoXY():
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingXtoY", "test_bendingYtoX"])
 def test_bendingXYtoXY():
@@ -412,6 +426,7 @@ def test_bendingXYtoXY():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingXtoZ", "test_bendingZtoX"])
 def test_bendingXZtoXZ():
@@ -455,6 +470,7 @@ def test_bendingXZtoXZ():
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingYtoZ", "test_bendingYtoX"])
 def test_bendingYZtoYZ():
@@ -497,22 +513,25 @@ def test_bendingYZtoYZ():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
-
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingXYtoXY", "test_bendingXtoYZ", "test_bendingYtoXZ"])
 def test_bendingXYtoXYZ():
     pass
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingXZtoXZ", "test_bendingXtoYZ", "test_bendingZtoXY"])
 def test_bendingXZtoXYZ():
     pass
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingYZtoYZ", "test_bendingZtoXY", "test_bendingYtoXZ"])
 def test_bendingYZtoXYZ():
     pass
 
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingXYtoXYZ", "test_bendingXZtoXYZ", "test_bendingYZtoXYZ"])
 def test_bendingXYZtoXYZ():
@@ -557,6 +576,7 @@ def test_bendingXYZtoXYZ():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
+@pytest.mark.order(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXYZtoXYZ"])
 def test_end():
     pass

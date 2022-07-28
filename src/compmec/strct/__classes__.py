@@ -86,7 +86,7 @@ class Structural1D(object):
             P[0, :len(path[0])] += path[0]
             P[1, :len(path[1])] += path[1]
             curve = SplineCurve(N, P)
-            self._path = curve
+            self.__curve = curve
         else:
             raise TypeError("Not expected received argument")
         self._ts = [0, 1]
@@ -100,44 +100,63 @@ class Structural1D(object):
             raise ValueError("t in path must be in [0, 1]")
         if t not in self._ts:
             self.addt(t)
-        result = self._path(t)
+        result = self.__curve(t)
         if result.ndim == 2:
             result = result.reshape(3)
         return result
 
-    @property
-    def ts(self) -> np.ndarray:
-        return np.array(self._ts)
+    def defo(self, t: float) -> np.ndarray:
+        try:
+            t = float(t)
+        except Exception as e:
+            raise TypeError(f"The parameter t must be a float. Could not convert {type(t)}")
+        if t < 0 or t > 1:
+            raise ValueError("t in path must be in [0, 1]")
+        result = self._defo(t)
+        if result.ndim == 2:
+            result = result.reshape(3)
+        return result
 
     def addt(self, t: float):
+        # self.__curve.knotinsert(t)
         self._ts.append(t)
         self._ts.sort()
 
     @property
-    def material(self) -> Material:
-        return self._material
-
-    @material.setter
-    def material(self, value:Material):
-        self._material = value
-
+    def dofs(self) -> int:
+        return self.__dofs
+    
     @property
-    def section(self) -> Section:
-        return self._section
+    def ts(self) -> np.ndarray:
+        return np.array(self._ts)
 
     @property
     def points(self) -> np.ndarray:
         return np.array([self.path(ti) for ti in self._ts])
 
+    @property
+    def material(self) -> Material:
+        return self._material
+
+    @property
+    def section(self) -> Section:
+        return self._section
+
     @section.setter
-    def section(self, value : Section):
+    def section(self, value: Section):
         self._section = value
 
     @material.setter
-    def material(self, value:Material):
+    def material(self, value: Material):
         self._material = value
 
     def stiffness_matrix(self) -> np.ndarray:
         return self.global_stiffness_matrix()
 
-    
+    def set_result(self, U: np.ndarray):
+        if not isinstance(U, np.ndarray):
+            raise TypeError("U must be a numpy array")
+        if U.shape != (len(self.ts), self.dofs):
+            raise ValueError(f"U shape must be ({len(self.ts)}, {self.dofs})")
+        
+        self._defo = SplineCurve()
