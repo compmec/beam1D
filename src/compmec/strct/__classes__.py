@@ -6,67 +6,135 @@ class Material(object):
         super().__init__(self)
 
 class Section(object):
-    def __init__(self):
-        self._A = np.zeros(3, dtype="float64")
-        self._I = np.zeros(3, dtype="float64")
+    def __init__(self, nu: float):
+        self.nu = nu
+        self.__A = None
+        self.__I = None
+
+    def init_zeros_A(self):
+        self.__A = np.zeros(3, dtype="float64")
+
+    def init_zeros_I(self):
+        self.__I = np.zeros(3, dtype="float64")
+
+    @property
+    def nu(self):
+        return self.__nu
 
     @property
     def Ax(self) -> float:
-        return self._A[0]
+        if self.__A is None:
+            self.compute_areas()
+        return self.__A[0]
 
     @property
     def Ay(self) -> float:
-        return self._A[1]
+        if self.__A is None:
+            self.compute_areas()
+        return self.__A[1]
 
     @property
     def Az(self) -> float:
-        return self._A[2]
+        if self.__A is None:
+            self.compute_areas()
+        return self.__A[2]
 
     @property
     def A(self) -> np.ndarray:
-        return self._A
-    
+        if self.__A is None:
+            self.compute_areas()
+        return self.__A
     
     @property
     def Ix(self) -> float:
-        return self._I[0]
+        if self.__I is None:
+            self.compute_inertias()
+        return self.__I[0]
 
     @property
     def Iy(self) -> float:
-        return self._I[1]
+        if self.__I is None:
+            self.compute_inertias()
+        return self.__I[1]
 
     @property
     def Iz(self) -> float:
-        return self._I[2]
+        if self.__I is None:
+            self.compute_inertias()
+        return self.__I[2]
 
     @property
     def I(self) -> np.ndarray:
-        return self._I
+        if self.__I is None:
+            self.compute_inertias()
+        return self.__I
 
+    @nu.setter
+    def nu(self, value: float):
+        value = float(value)
+        if value < 0:
+            raise ValueError(f"The poisson value cannot be less than 0: nu={value}")
+        if value > 0.5:
+            raise ValueError(f"The poisson value cannot be greater than 0.5: nu={value}")
+        self.__nu = value
 
     @Ax.setter
-    def Ax(self, value:float):
-        self._A[0] = value
+    def Ax(self, value: float):
+        value = float(value)
+        if value <= 0:
+            raise ValueError(f"Cannot set a area as zero or negative: {value}")
+        if self.__A is None:
+            self.init_zeros_A()
+        self.__A[0] = value
 
     @Ay.setter
-    def Ay(self, value:float):
-        self._A[1] = value
+    def Ay(self, value: float):
+        if value <= 0:
+            raise ValueError(f"Cannot set a area as zero or negative: {value}")
+        if self.__A is None:
+            self.init_zeros_A()
+        self.__A[1] = value
 
     @Az.setter
-    def Az(self, value:float):
-        self._A[2] = value
+    def Az(self, value: float):
+        if value <= 0:
+            raise ValueError(f"Cannot set a area as zero or negative: {value}")
+        if self.__A is None:
+            self.init_zeros_A()
+        self.__A[2] = value
 
     @Ix.setter
-    def Ix(self, value:float):
-        self._I[0] = value
+    def Ix(self, value: float):
+        if value <= 0:
+            raise ValueError(f"Cannot set a inertia as zero or negative: {value}")
+        if self.__I is None:
+            self.init_zeros_I()
+        self.__I[0] = value
 
     @Iy.setter
-    def Iy(self, value:float):
-        self._I[1] = value
+    def Iy(self, value: float):
+        if value <= 0:
+            raise ValueError(f"Cannot set a inertia as zero or negative: {value}")
+        if self.__I is None:
+            self.init_zeros_I()
+        self.__I[1] = value
 
     @Iz.setter
-    def Iz(self, value:float):
-        self._I[2] = value
+    def Iz(self, value: float):
+        if value <= 0:
+            raise ValueError(f"Cannot set a inertia as zero or negative: {value}")
+        if self.__I is None:
+            self.init_zeros_I()
+        self.__I[2] = value
+
+    def shear_coefficient(self):
+        raise NotImplementedError("This function must be overwritten")
+
+    def compute_areas(self):
+        raise NotImplementedError("This function must be overwritten")
+
+    def compute_inertias(self):
+        raise NotImplementedError("This function must be overwritten")
 
     def triangular_mesh(self, elementsize:float):
         raise NotImplementedError("This function must be redefined by child class")
@@ -160,4 +228,3 @@ class Structural1D(object):
         if U.shape != (len(self.ts), self.dofs):
             raise ValueError(f"U shape must be ({len(self.ts)}, {self.dofs})")
         
-        self._defo = SplineCurve()
