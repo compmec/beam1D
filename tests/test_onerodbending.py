@@ -581,5 +581,25 @@ def test_bendingXYZtoXYZ():
 def test_end():
     pass
 
+def main():
+    test_begin()
+    test_bendingXtoY()
+    test_bendingXtoZ()
+    test_bendingYtoX()
+    test_bendingYtoZ()
+    test_bendingZtoX()
+    test_bendingZtoY()
+    test_bendingXtoYZ()
+    test_bendingYtoXZ()
+    test_bendingZtoXY()
+    test_bendingXYtoXY()
+    test_bendingXZtoXZ()
+    test_bendingYZtoYZ()
+    test_bendingXYtoXYZ()
+    test_bendingXZtoXYZ()
+    test_bendingYZtoXYZ()
+    test_bendingXYZtoXYZ()
+    test_end()
+
 if __name__ == "__main__":
-    pytest.main()
+    main()

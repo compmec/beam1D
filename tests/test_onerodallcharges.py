@@ -41,7 +41,7 @@ def compute_U_analitic(stiffvals, force, vectors):
 
 @pytest.mark.order(3)
 @pytest.mark.dependency(
-	depends=["tests/test_onerodbending.py::test_end",
+    depends=["tests/test_onerodbending.py::test_end",
              "tests/test_onerodtraction.py::test_end",
              "tests/test_onerodtorsion.py::test_end"],
     scope='session'
@@ -98,5 +98,11 @@ def test_all():
 def test_end():
     pass
 
+
+def main():
+    test_begin()
+    test_all()
+    test_end()
+
 if __name__ == "__main__":
-    pytest.main()
+    main()

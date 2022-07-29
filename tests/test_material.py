@@ -53,7 +53,7 @@ def test_main():
 			assert (mat.Lame2 - G) < 1e-6
 
 @pytest.mark.order(1)
-@pytest.mark.dependency(depends=["test_main"])
+@pytest.mark.dependency(depends=["test_begin", "test_main"])
 def test_end():
 	pass
 

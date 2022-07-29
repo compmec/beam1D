@@ -8,7 +8,7 @@ from usefulfunc import *
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(
-	depends=["tests/test_material.py::test_end",
+    depends=["tests/test_material.py::test_end",
              "tests/test_structural1D.py::test_end"],
     scope='session')
 def test_begin():
@@ -285,5 +285,16 @@ def test_tractionR():
 def test_end():
     pass
 
+def main():
+    test_begin()
+    test_tractionX()
+    test_tractionY()
+    test_tractionZ()
+    test_tractionXY()
+    test_tractionYZ()
+    test_tractionXZ()
+    test_tractionR()
+    test_end()
+
 if __name__ == "__main__":
-    pytest.main()
+    main()
