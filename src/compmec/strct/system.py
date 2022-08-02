@@ -428,6 +428,20 @@ class StaticSystem():
         U = self.__mount_U(dofs)
         U, F = solve(K, F, U)
         self._solution = U
+        self.apply_on_elements()
+
+    def apply_on_elements(self):
+        for element in self._structure.elements:
+            npts = len(element.ts)
+            points = element.points
+            indexs = np.zeros(npts, dtype="int32")
+            for i, p in enumerate(points):
+                indexs[i] = self._geometry.find_point(p)
+            Uelem = np.zeros((npts, 6))
+            for i, j in enumerate(indexs):
+                Uelem[i, :] = self._solution[j, :]
+            element.set_result(Uelem)
+
 
     
     

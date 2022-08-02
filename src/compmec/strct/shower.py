@@ -6,6 +6,7 @@ from compmec.strct.system import StaticSystem
 from typing import List, Tuple, Iterable, Optional
 from compmec.strct.__classes__ import Structural1D
 from compmec.nurbs import SplineCurve
+from compmec.strct.strainstress import EulerBernoulliPos 
 
 class AxonometricProjector(object):
 
@@ -126,9 +127,7 @@ class ShowerStaticSystem(Shower):
         npts = 65
         tplot = np.linspace(0, 1, npts)
         for element in self.__system._structure.elements:
-            curve3D = self.getonesplinecurve(element, deformed)
-            all3Dpoints = curve3D(tplot)
-            print("curve = ", type(curve3D))
+            all3Dpoints = element.evaluate(tplot, deformed)
             all2Dpoints = np.zeros((npts, 2))
             for j, point3D in enumerate(all3Dpoints):
                 all2Dpoints[j] = projector(point3D)

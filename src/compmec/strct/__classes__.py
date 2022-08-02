@@ -1,5 +1,10 @@
 import numpy as np
-from geomdl import BSpline
+from typing import Iterable, List, Tuple, Optional
+from compmec.nurbs import SplineBaseFunction, SplineCurve 
+import copy
+from compmec.strct.strainstress import EulerBernoulliPos
+from compmec.nurbs.degreeoperations import degree_elevation_basefunction, degree_elevation_controlpoints
+from compmec.nurbs.knotoperations import insert_knot_basefunction, insert_knot_controlpoints
 
 class Material(object):
     def __init__(self):
@@ -147,20 +152,30 @@ class Section(object):
 
 class Structural1D(object):
     def __init__(self, path):
+        self._dofs = None
         if isinstance(path, (tuple, list)):
-            P = [[0, 0, 0],
-                 [0, 0, 0]]
+
+            P = []
             for i, p in enumerate(path):
-                for j, v in enumerate(p):
-                    P[i][j] = v
-            curve = BSpline.Curve()
-            curve.degree = 1
-            curve.ctrlpts = P
-            curve.knotvector = [0, 0, 1, 1]
-            self.__curve = curve
+                P.append([])
+                for v in p:
+                    P[i].append(v)
+                for j in range(len(P[i]), 3):
+                    P[i].append(0)
+            degree = 1
+            npts = len(P)
+            U = [0]*degree + list(np.linspace(0, 1, npts-degree+1))+ [1]*degree
+            N = SplineBaseFunction(U)  # p = 1
+            P = degree_elevation_controlpoints(N, P)
+            N = degree_elevation_basefunction(N)  # p = 2
+            P = degree_elevation_controlpoints(N, P)
+            N = degree_elevation_basefunction(N)  # p = 3
+            curve = SplineCurve(N, P)
+            self.__originalcurve = curve
+            self.__deformedcurve = None
         else:
             raise TypeError("Not expected received argument")
-        self._ts = [0, 1]
+        self.__ts = [0, 1]
 
     def path(self, t: float) -> np.ndarray:
         try:
@@ -169,55 +184,63 @@ class Structural1D(object):
             raise TypeError(f"The parameter t must be a float. Could not convert {type(t)}")
         if t < 0 or t > 1:
             raise ValueError("t in path must be in [0, 1]")
-        if t not in self._ts:
+        if t not in self.__ts:
             self.addt(t)
-        result = self.__curve.evaluate_single(t)
+        result = self.__originalcurve(t)
         return tuple(result)
 
-    def defo(self, t: float) -> np.ndarray:
-        try:
-            t = float(t)
-        except Exception as e:
-            raise TypeError(f"The parameter t must be a float. Could not convert {type(t)}")
-        if t < 0 or t > 1:
-            raise ValueError("t in path must be in [0, 1]")
-        result = self._defo(t)
-        if result.ndim == 2:
-            result = result.reshape(3)
-        return result
+    def normal(self, t:float ) -> np.ndarray:
+        t = float(t)
+        dpathdt = self.__originalcurve.derivate()
+        return dpathdt(t)
+
+    def evaluate(self, ts: Iterable[float], deformed: Optional[bool] = False) -> List[Tuple[float]]:
+        results = []
+        for t in ts:
+            if deformed:
+                result = tuple(self.__deformedcurve(float(t)))
+            else:
+                result = tuple(self.__originalcurve(float(t)))
+            results.append(result)
+        return results
 
     def addt(self, t: float):
-        # self.__curve.knotinsert(t)
-        self._ts.append(t)
-        self._ts.sort()
+        F = self.__originalcurve.F
+        P = self.__originalcurve.P
+        for i in range(3):  # We will add 3 knots at curve
+            P = insert_knot_controlpoints(F, P, t)
+            F = insert_knot_basefunction(F, t)
+        self.__originalcurve = self.__originalcurve.__class__(F, P)
+        self.__ts.append(t)
+        self.__ts.sort()
 
     @property
     def dofs(self) -> int:
-        return self.__dofs
+        return self._dofs
     
     @property
     def ts(self) -> np.ndarray:
-        return np.array(self._ts)
+        return np.array(self.__ts)
 
     @property
     def points(self) -> np.ndarray:
-        return np.array([self.path(ti) for ti in self._ts])
+        return np.array([self.path(ti) for ti in self.__ts])
 
     @property
     def material(self) -> Material:
-        return self._material
+        return self.__material
 
     @property
     def section(self) -> Section:
-        return self._section
+        return self.__section
 
     @section.setter
     def section(self, value: Section):
-        self._section = value
+        self.__section = value
 
     @material.setter
     def material(self, value: Material):
-        self._material = value
+        self.__material = value
 
     def stiffness_matrix(self) -> np.ndarray:
         return self.global_stiffness_matrix()
@@ -228,3 +251,6 @@ class Structural1D(object):
         if U.shape != (len(self.ts), self.dofs):
             raise ValueError(f"U shape must be ({len(self.ts)}, {self.dofs})")
         
+        displacement = EulerBernoulliPos.displacement(self, U)
+        self.__deformedcurve = displacement
+        self.__deformedcurve.P += self.__originalcurve.P  # Sum control points

@@ -31,17 +31,18 @@ def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
 
 class Truss(Structural1D):
     def __init__(self, path):
+        self._dofs = 3
         super().__init__(path)
-
-
+        
 class Cable(Structural1D):
     def __init__(self, path):
         super().__init__(path)
 
 class Beam(Structural1D):
     def __init__(self, path):
-        super().__init__(path)   
-
+        super().__init__(path)
+        self._dofs = 6
+        
     def local_stiffness_matrix_Kx(self, L: float) -> np.ndarray:
         raise NotImplementedError("This function must be overwritten by the child")
 
