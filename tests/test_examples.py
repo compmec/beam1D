@@ -9,7 +9,8 @@ from matplotlib import pyplot as plt
 
 @pytest.mark.order(10)
 @pytest.mark.dependency(
-	depends=["tests/test_onerodallcharges.py::test_end"],
+	depends=["tests/test_onerodallcharges.py::test_end",
+             "tests/test_bendingretangular.py::test_end"],
     scope='session'
 )
 def test_begin():
@@ -36,9 +37,15 @@ def test_example1():
     Ugood[1, 0] = 4*10*1000/(210e+3 * np.pi*8**2 )
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
+
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example1"])
 def test_example2():
     A = (0, 0)
     B = (1000, 0)
@@ -58,9 +65,15 @@ def test_example2():
     Ugood[1, 5] = -32*10*(1000**2)/(np.pi* 210e+3 * 8**4)
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
+
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example2"])
 def test_example3():
     A = (0, 0)
     B = (1000, 0)
@@ -83,9 +96,15 @@ def test_example3():
     Ugood[2, 1] = Ugood[1, 1] + 400 * Ugood[1, 5]
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
+
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example3"])
 def test_example4():
     A = (0, 0)
     B = (1000, 0)
@@ -113,9 +132,15 @@ def test_example4():
     Ugood[3, 5] = -6.42e+6/EI
     np.testing.assert_almost_equal(Usolu, Ugood)
 
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
+
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example4"])
 def test_example5():
     q0 = -0.1
     L = 1000
@@ -140,7 +165,7 @@ def test_example5():
 
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example5"])
 def test_example6():
     A = (0, 0)
     B = (1000, 0)
@@ -155,9 +180,15 @@ def test_example6():
     system.add_dist_load(beamAB, (0.3, 0.7), {"Fy": (-10, -10)})
     system.run()
 
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
+
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example6"])
 def test_example7():
     A = (0, 0)
     B = (1000, 0)
@@ -172,9 +203,15 @@ def test_example7():
     system.add_dist_load(beamAB, (0, 1), {"Fy": (-10, 0)})
     system.run()
 
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
+
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example7"])
 def test_example8():
     A = (0, 0)
     B = (1000, 0)
@@ -189,9 +226,15 @@ def test_example8():
     system.add_dist_load(beamAB, (0, 0.3, 0.7, 1), {"Fy": (0, -10, -10, 0)})
     system.run()
 
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
+
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example8"])
 def test_example9():
     A = (0, 0)
     B = (1000, 0)
@@ -214,15 +257,19 @@ def test_example9():
     system.add_BC(A, {"ux": 0,
                       "uy": 0})
     system.add_BC(B, {"uy": 0})
-    system.add_load(C, {"Fx": 15,
-                        "Fy": -10})
+    system.add_load(C, {"Fx": 1500000,
+                        "Fy": 1000000})
     system.run()
-    # shower = ShowerStaticSystem(system)
-    # shower.plot2D("xy", deformed=True)
+    
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    axes = plt.gca()
+    shower.plot2D("xy", deformed=False, axes=axes)
+    shower.plot2D("xy", deformed=True, axes=axes)
 
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_example9"])
 def test_example10():
     A = (300, 0)
     B = (0, 500)
@@ -249,13 +296,25 @@ def test_example10():
     system.run()
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_begin", "test_example10"])
 def test_end():
 	pass
 
+def main():
+    test_begin()
+    test_example1()
+    test_example2()
+    test_example3()
+    test_example4()
+    test_example5()
+    test_example6()
+    test_example7()
+    test_example8()
+    test_example9()
+    test_example10()
+    test_end()
+    plt.show()
+
 if __name__ == "__main__":
-    # test_example9()
-    pytest.main()
-    # plt.show()
+    main()
         

@@ -50,7 +50,7 @@ def test_begin():
     pass
 
 @pytest.mark.order(3)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(4)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_all():
     ntests = 100
