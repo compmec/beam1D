@@ -1,7 +1,14 @@
-import numpy as np
 from compmec.strct.material import Isotropic
 import pytest
 
+@pytest.mark.order(1)
+@pytest.mark.dependency()
+def test_begin():
+	pass
+
+@pytest.mark.order(1)
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_main():
 	
 	Es = [100, 200, 3, 45, 900, 20, 66]
@@ -45,7 +52,10 @@ def test_main():
 			assert (mat.Lame1 - L) < 1e-6
 			assert (mat.Lame2 - G) < 1e-6
 
-
+@pytest.mark.order(1)
+@pytest.mark.dependency(depends=["test_begin", "test_main"])
+def test_end():
+	pass
 
 if __name__ == "__main__":
 	pytest.main()

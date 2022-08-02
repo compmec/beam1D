@@ -6,10 +6,15 @@ from compmec.strct.solver import solve
 from usefulfunc import *
 import pytest
 
-@pytest.mark.dependency()
+@pytest.mark.order(4)
+@pytest.mark.dependency(
+	depends=["tests/test_onerodallcharges.py::test_end"],
+    scope='session'
+)
 def test_begin():
-    pass
+	pass
 
+@pytest.mark.order(4)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_bendingX():
@@ -56,6 +61,7 @@ def test_bendingX():
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
+@pytest.mark.order(4)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_bendingY():
@@ -101,6 +107,8 @@ def test_bendingY():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
+
+@pytest.mark.order(4)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingY", "test_bendingY"])
 def test_bendingXY():
@@ -151,6 +159,11 @@ def test_bendingXY():
         Fgood[1, :3] += Pw * w + Pv * v
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
+@pytest.mark.order(4)
+@pytest.mark.dependency(depends=["test_begin", "test_bendingXY"])
+def test_end():
+    pass
 
 if __name__ == "__main__":
     pytest.main()

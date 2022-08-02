@@ -16,7 +16,7 @@ def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
     r = dp/L
     v = (0, 0, 1)
     cosangle = np.inner(r, v)
-    if cosangle > 0.99:  # 0.99 is the cos of 8 degrees
+    if np.abs(cosangle) > 0.99:  # 0.99 is the cos of 8 degrees
         v = (0, 1, 0)
         cosangle = np.inner(r, v)
     v -= cosangle * r
@@ -31,17 +31,18 @@ def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
 
 class Truss(Structural1D):
     def __init__(self, path):
+        self._dofs = 3
         super().__init__(path)
-
-
+        
 class Cable(Structural1D):
     def __init__(self, path):
         super().__init__(path)
 
 class Beam(Structural1D):
     def __init__(self, path):
-        super().__init__(path)   
-
+        super().__init__(path)
+        self._dofs = 6
+        
     def local_stiffness_matrix_Kx(self, L: float) -> np.ndarray:
         raise NotImplementedError("This function must be overwritten by the child")
 
@@ -61,7 +62,7 @@ class Beam(Structural1D):
         That means, our matrix is in fact [4, 3, 4, 3]
         Or also  [2, 6, 2, 6]
         """
-        L = np.linalg.norm(p1-p0)
+        L = np.linalg.norm(np.array(p1)-np.array(p0))
         Kx = self.local_stiffness_matrix_Kx(L)
         Kt = self.local_stiffness_matrix_Kt(L)
         Ky = self.local_stiffness_matrix_Ky(L)
@@ -100,6 +101,8 @@ class Beam(Structural1D):
             Kgloone = self.global_stiffness_matrix(p0, p1)
             Kglobal[i:i+2, :, i:i+2, :] += Kgloone
         return Kglobal
+
+    
 
 
 class EulerBernoulli(Beam):
