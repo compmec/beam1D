@@ -1,12 +1,9 @@
-from matplotlib import tri
-from matplotlib import pyplot as plt
 from compmec.strct.section import Circle, HollowCircle, ThinCircle
 import numpy as np
 from compmec.strct.system import StaticSystem
 from typing import List, Tuple, Iterable, Optional
 from compmec.strct.__classes__ import Structural1D
-from compmec.nurbs import SplineCurve
-from compmec.strct.strainstress import EulerBernoulliPos 
+import matplotlib as mpl
 
 class AxonometricProjector(object):
 
@@ -116,34 +113,84 @@ class ShowerStaticSystem(Shower):
         if not deformed:
             return element.path
         raise NotImplementedError("Deformed: Should be implemented")
+    
+    def getAll2DPoints(self, tplot: Iterable[float], deformed: Optional[bool], projector: Projector):
+        all2Dpoints = []
+        npts = len(tplot)
+        for element in self.__system._structure.elements:
+            element3Dpoints = element.evaluate(tplot, deformed)
+            element2Dpoints = np.zeros((npts, 2))
+            for j, point3D in enumerate(element3Dpoints):
+                element2Dpoints[j] = projector(point3D)
+            all2Dpoints.append(element2Dpoints)
+        return all2Dpoints
+    
+    def plot2D_notfield(self, tplot: Iterable[float], projector: Projector, deformed: bool, axes):
+        all2Dpoints = self.getAll2DPoints(tplot, deformed, projector)
+        for element2Dpoints in all2Dpoints:
+            axes.plot(element2Dpoints[:, 0], element2Dpoints[:, 1], color="k", label="original")
             
+    def plot2D_withfield(self, tplot: Iterable[float], projector, deformed: bool, fieldname: str, axes):
+        fig = mpl.pyplot.gcf()
+        all2Dpoints = self.getAll2DPoints(tplot, deformed, projector)
+        allfieldvalues = []
+        tmed = (tplot[1:]+tplot[:-1])/2
+        minfield = 1e+9
+        maxfield = -1e+9
+        for element in self.__system._structure.elements:
+            fieldcurve = element.field(fieldname)
+            fieldvalues = fieldcurve(tmed).reshape(-1)
+            if np.min(fieldvalues) < minfield:
+                minfield = np.min(fieldvalues)
+            if np.max(fieldvalues) > maxfield:
+                maxfield = np.max(fieldvalues)
+            allfieldvalues.append(fieldvalues)
+        if minfield >= 0:
+            minfield = 0
+            cmap = mpl.pyplot.get_cmap("viridis")  # viridis, plasma, jet
+        else:
+            cmap = mpl.pyplot.get_cmap("coolwarm")  # bwr, coolwarm
+            maxfield = max(abs(minfield), maxfield)
+            minfield = -maxfield
+        if minfield == maxfield:
+            if minfield == 0:
+                maxfield = 1
+            else:
+                maxfield = abs(maxfield)
+                minfield = -maxfield
+        norm = mpl.colors.Normalize(vmin=minfield, vmax=maxfield)
+        for points2D, fieldvalues in zip(all2Dpoints, allfieldvalues):
+            colors_ts = (fieldvalues-minfield)/(maxfield-minfield)  # Normalize
+            for i, c in enumerate(colors_ts):
+                axes.plot(points2D[i:i+2, 0], points2D[i:i+2, 1], color=cmap(c), linewidth=3)
+        fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axes, orientation='vertical', label=fieldname)
 
     def plot2D(self, projector: str = "xy", fieldname: Optional[str] = None, deformed: Optional[bool]=False, axes=None):
         if axes is None:
-            axes = plt.gca()
-        if fieldname is not None:
-            cmap = plt.get_cmap("bwr")
+            axes = mpl.pyplot.gca()
         projector = Projector(projector)
         npts = 65
         tplot = np.linspace(0, 1, npts)
-        for element in self.__system._structure.elements:
-            all3Dpoints = element.evaluate(tplot, deformed)
-            all2Dpoints = np.zeros((npts, 2))
-            for j, point3D in enumerate(all3Dpoints):
-                all2Dpoints[j] = projector(point3D)
-            axes.plot(all2Dpoints[:, 0], all2Dpoints[:, 1], color="k", label="original")
+        if fieldname is None:
+            self.plot2D_notfield(tplot, projector, deformed, axes)
+        else:
+            self.plot2D_withfield(tplot, projector, deformed, fieldname, axes)
+            
+        
+
+    
+                
 
     def plot3D(self, fieldname: Optional[str] = None, deformed: Optional[bool]=False, axes=None):
         if axes is None:
-            plt.figure()
-            axes = plt.gca()
+            mpl.pyplot.figure()
+            axes = mpl.pyplot.gca()
         npts = 65
         tplot = np.linspace(0, 1, npts)
         if fieldname is not None:
-            cmap = plt.get_cmap("bwr")
+            cmap = mpl.pyplot.get_cmap("bwr")
         for element in self.__system._structure.elements:
             curve3D = self.getonesplinecurve(element, deformed)
-            print("curve = ", type(curve3D))
             points3D = curve3D(tplot)
             if fieldname is None:
                 axes.plot(points3D[:, 0], points3D[:, 1], points3D[:, 2], color="k")
@@ -161,13 +208,13 @@ def plot_mesh(mesh):
             continue
         connections = cell.data
     
-    plt.figure()
+    mpl.pyplot.figure()
     for connection in connections:
         ps = [points[c] for c in connection]
         ps.append(ps[0])
         x = [pi[0] for pi in ps]
         y = [pi[1] for pi in ps]
-        plt.plot(x, y, color="k")
+        mpl.pyplot.plot(x, y, color="k")
 
 def function(p):
     x, y, z = p
@@ -190,8 +237,8 @@ def show_section(function, mesh, axes=None):
     x = points[:, 0]
     y = points[:, 1]
     v = [function(p) for p in points]
-    triangulation = tri.Triangulation(x, y, connections)
-    plt.tricontourf(triangulation, v)
+    triangulation = mpl.tri.Triangulation(x, y, connections)
+    mpl.pyplot.tricontourf(triangulation, v)
 
     
 
@@ -203,7 +250,7 @@ def main():
     mesh = circle.mesh()
     show_section(function, mesh)
 
-    plt.show()
+    mpl.pyplot.show()
 
 
 if __name__ == "__main__":

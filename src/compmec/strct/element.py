@@ -5,6 +5,7 @@ Each point has 6 unknowns:
 """
 import numpy as np
 from compmec.strct.__classes__ import Structural1D
+from compmec.strct.strainstress import EulerBernoulliPos
 
 def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
     np0 = np.zeros(3)
@@ -139,7 +140,10 @@ class EulerBernoulli(Beam):
                        [-6*L, 2*L**2,  6*L, 4*L**2]]) 
         return (E*Iy/L**3) * Kz 
 
-    
+    def field(self, fieldname: str):
+        if not isinstance(fieldname, str):
+            raise TypeError("The fieldname must be a string like 'L2norm(u)'")
+        return EulerBernoulliPos.field(fieldname, self, self._result)
 
 
 class Timoshenko(Beam):

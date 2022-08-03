@@ -1,13 +1,40 @@
 import numpy as np
 from compmec.nurbs import SplineBaseFunction, SplineCurve
 from compmec.nurbs.knotoperations import insert_knot_basefunction, insert_knot_controlpoints
-# from compmec.strct.element import EulerBernoulli
+from compmec.strct.__classes__ import Structural1D
 
 class EulerBernoulliPos(object):
 
+    __INSTANCE = None
 
+    def __init__(self):
+        EulerBernoulliPos.__INSTANCE = self
+        self.__NAME2FUNCTIONS = {"L2norm(u)": self.L2norm_displacement,
+                                 "u": self.displacement,
+                                 "ux": self.displacement_x,
+                                 "uy": self.displacement_y,
+                                 "uz": self.displacement_z}
+    
     @staticmethod
-    def displacement(element, result: np.ndarray) -> SplineCurve:
+    def getInstance():
+        if EulerBernoulliPos.__INSTANCE is None:
+            EulerBernoulliPos()
+        return EulerBernoulliPos.__INSTANCE
+        
+    @staticmethod
+    def field(fieldname: str, element: Structural1D, result: np.ndarray) -> SplineCurve:
+        if not isinstance(element, Structural1D):
+            raise TypeError(f"The given element must be a Structural1D instance. Received {type(element)}")
+        instance = EulerBernoulliPos.getInstance()
+        if fieldname not in instance.__NAME2FUNCTIONS.keys():
+            raise ValueError(f"Received argument is not valid. They are {list(instance.__NAME2FUNCTIONS.keys())}")
+        function = instance.__NAME2FUNCTIONS[fieldname]
+        curve = function(element, result)
+        return curve
+
+    
+
+    def displacement(self, element, result: np.ndarray) -> SplineCurve:
         # if not isinstance(element, EulerBernoulli):
         #     raise TypeError("Element must be a EulerBernoulli instance")
         result = np.array(result)
@@ -46,6 +73,40 @@ class EulerBernoulliPos(object):
         curve = SplineCurve(N, Ctrlpts)
         return curve
 
+    def L2norm_displacement(self, element, result: np.ndarray) -> SplineCurve:
+        disp = self.displacement(element, result)
+        knots = []
+        for i, ui in enumerate(disp.U):
+            if ui not in knots:
+                knots.append(ui)
+        usample = []
+        for i in range(len(knots)-1):
+            usample += list(np.linspace(knots[i], knots[i+1], disp.F.p+2, endpoint=False))
+        usample.append(knots[-1])
+        B = np.zeros(len(usample))
+        L = np.zeros((disp.npts, len(usample)))
+        for i, ui in enumerate(usample):
+            L[:, i] = disp.F[:](ui)
+            B[i] = np.sqrt(np.sum(disp(ui)**2))
+        newControlPoints = np.linalg.solve(L @ L.T, L @ B)
+        newControlPoints = newControlPoints.reshape((len(newControlPoints), 1))
+        return disp.__class__(disp.F, newControlPoints)
 
-            
-            
+    def displacement_x(self, element, result: np.ndarray) -> SplineCurve:
+        displace = self.displacement(element, result)
+        P = np.zeros((displace.P.shape[0], 1))
+        P[:, 0] = displace.P[:, 0]
+        return displace.__class__(displace.F, P)
+
+    def displacement_y(self, element, result: np.ndarray) -> SplineCurve:
+        displace = self.displacement(element, result)
+        P = np.zeros((displace.P.shape[0], 1))
+        P[:, 0] = displace.P[:, 1]
+        return displace.__class__(displace.F, P)
+
+    def displacement_z(self, element, result: np.ndarray) -> SplineCurve:
+        displace = self.displacement(element, result)
+        P = np.zeros((displace.P.shape[0], 1))
+        P[:, 0] = displace.P[:, 2]
+        return displace.__class__(displace.F, P)
+        

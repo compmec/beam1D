@@ -1,8 +1,6 @@
 import numpy as np
 from typing import Iterable, List, Tuple, Optional
 from compmec.nurbs import SplineBaseFunction, SplineCurve 
-import copy
-from compmec.strct.strainstress import EulerBernoulliPos
 from compmec.nurbs.degreeoperations import degree_elevation_basefunction, degree_elevation_controlpoints
 from compmec.nurbs.knotoperations import insert_knot_basefunction, insert_knot_controlpoints
 
@@ -198,6 +196,10 @@ class Structural1D(object):
         results = []
         for t in ts:
             if deformed:
+                if self.__deformedcurve is None:
+                    displacement = self.field("u")
+                    self.__deformedcurve = displacement
+                    self.__deformedcurve.P += self.__originalcurve.P  # Sum control points
                 result = tuple(self.__deformedcurve(float(t)))
             else:
                 result = tuple(self.__originalcurve(float(t)))
@@ -250,7 +252,7 @@ class Structural1D(object):
             raise TypeError("U must be a numpy array")
         if U.shape != (len(self.ts), self.dofs):
             raise ValueError(f"U shape must be ({len(self.ts)}, {self.dofs})")
-        
-        displacement = EulerBernoulliPos.displacement(self, U)
-        self.__deformedcurve = displacement
-        self.__deformedcurve.P += self.__originalcurve.P  # Sum control points
+        self._result = np.copy(U)
+
+    def field(self, fieldname: str):
+        raise NotImplementedError("This function must be overwritten")
