@@ -233,7 +233,7 @@ def test_example8():
     shower.plot2D("xy", deformed=True, axes=axes)
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(6)
 @pytest.mark.dependency(depends=["test_example8"])
 def test_example9():
     A = (0, 0)
@@ -258,17 +258,19 @@ def test_example9():
                       "uy": 0})
     system.add_BC(B, {"uy": 0})
     system.add_load(C, {"Fx": 1500000,
-                        "Fy": 1000000})
+                        "Fy": -1000000})
     system.run()
     
     shower = ShowerStaticSystem(system)
-    plt.figure()
-    axes = plt.gca()
-    shower.plot2D("xy", deformed=False, axes=axes)
-    shower.plot2D("xy", deformed=True, axes=axes)
+    fig, axes = plt.subplots(1, 4)
+    shower.plot2D("xy", fieldname="ux", deformed=False, axes=axes[0])
+    shower.plot2D("xy", fieldname="uy", deformed=False, axes=axes[1])
+    shower.plot2D("xy", fieldname="uz", deformed=False, axes=axes[2])
+    shower.plot2D("xy", fieldname="L2norm(u)", deformed=False, axes=axes[3])
+    
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(6)
 @pytest.mark.dependency(depends=["test_example9"])
 def test_example10():
     A = (300, 0)
@@ -302,16 +304,16 @@ def test_end():
 
 def main():
     test_begin()
-    test_example1()
-    test_example2()
-    test_example3()
-    test_example4()
-    test_example5()
-    test_example6()
-    test_example7()
-    test_example8()
+    # test_example1()
+    # test_example2()
+    # test_example3()
+    # test_example4()
+    # test_example5()
+    # test_example6()
+    # test_example7()
+    # test_example8()
     test_example9()
-    test_example10()
+    # test_example10()
     test_end()
     plt.show()
 

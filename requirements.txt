@@ -2,3 +2,4 @@ tox==3.24.4
 numpy==1.21.2
 meshio==5.3.4
 pygmsh==7.1.17
+matplotlib==3.5.2
