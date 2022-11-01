@@ -16,7 +16,7 @@ def test_begin():
 	pass
 
 @pytest.mark.order(9)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(3)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_rodtraction():
     L = 1000
@@ -27,28 +27,58 @@ def test_rodtraction():
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=d/2, nu=0.3)
     beamAB.material = Isotropic(E=E, nu=0.3)
-    for t in np.linspace(0, 1, 65):
+    for t in np.linspace(0, 1, 17):
         beamAB.path(t)
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux":0,
-                    "uy":0,
-                    "tz":0})
+                      "uy":0,
+                      "tz":0})
     system.add_load(B, {"Fx": F0})
     system.run()
 
-    t = np.linspace(0, 1, 129)
+    npts = 129
+    t = np.linspace(0, 1, npts)
     A = np.pi * (d/2)**2
-    uxexact = F0*L*t/(E * A)
-    uxfield = beamAB.field("ux")(t).reshape(-1)
-    uyfield = beamAB.field("uy")(t).reshape(-1)
-    uzfield = beamAB.field("uz")(t).reshape(-1)
-    np.testing.assert_almost_equal(uxfield, uxexact)
-    np.testing.assert_almost_equal(uyfield, np.zeros(uyfield.shape))
-    np.testing.assert_almost_equal(uzfield, np.zeros(uzfield.shape))
+    uexact = np.zeros((npts, 3))
+    uexact[:, 0] = F0*L*t/(E * A)
+    ufield = beamAB.field("u")
+    uguess = ufield(t)
+    np.testing.assert_almost_equal(uguess, uexact)
 
 @pytest.mark.order(9)
-@pytest.mark.dependency(depends=["test_begin", "test_rodtraction"])
+@pytest.mark.timeout(3)
+@pytest.mark.dependency(depends=["test_begin"])
+def test_cantileverbeam():
+    L = 1000
+    A = (0, 0)
+    B = (L, 0)
+    F0 = 10
+    E, d = 210e+3, 8
+    beamAB = EulerBernoulli([A, B])
+    beamAB.section = Circle(R=d/2, nu=0.3)
+    beamAB.material = Isotropic(E=E, nu=0.3)
+    for t in np.linspace(0, 1, 17):
+        beamAB.path(t)
+    system = StaticSystem()
+    system.add_element(beamAB)
+    system.add_BC(A, {"ux":0,
+                      "uy":0,
+                      "tz":0})
+    system.add_load(B, {"Fy": F0})
+    system.run()
+
+    npts = 129
+    t = np.linspace(0, 1, npts)
+    I = np.pi * d**4 / 64
+    uexact = np.zeros((npts, 3))
+    uexact[:, 1] = F0*L**3*t**2*(3-t)/(6*E*I)
+    ufield = beamAB.field("u")
+    np.testing.assert_almost_equal(ufield(t), uexact)
+
+
+@pytest.mark.order(9)
+@pytest.mark.dependency(depends=["test_begin", "test_rodtraction", "test_cantileverbeam"])
 def test_end():
 	pass
 
