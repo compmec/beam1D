@@ -7,7 +7,7 @@ import numpy as np
 from scipy import sparse
 from typing import Union, Tuple, List, Iterable, Callable
 import compmec.nurbs as nurbs
-from compmec.strct.__classes__ import Structural1DInterface
+from compmec.strct.__classes__ import Point, Structural1DInterface
 from compmec.nurbs.degreeoperations import degree_elevation_basefunction, degree_elevation_controlpoints
 from compmec.nurbs.knotoperations import insert_knot_basefunction, insert_knot_controlpoints
 
@@ -42,6 +42,8 @@ def init_linear_spline(P: np.ndarray):
     npts, dim = P.shape
     if dim != 3:
         raise ValueError("The points must have 3 floats")
+    for i in P.shape[0]:
+        Point(P[i])  # To create a point if it doesn't exist
     U = [0] * degree + list(np.linspace(0, 1, npts-degree+1)) + [1] * degree
     N = nurbs.SplineBaseFunction(U)
     return nurbs.SplineCurve(N, P)
@@ -84,6 +86,7 @@ class Structural1D(Structural1DInterface):
         self.valid_t(t)
         if t in self.__ts:
             return
+        Point(self.path(t))  # To create the point with the ID
         F = self.path.F
         P = self.path.P
         P = nurbs.knotoperations.insert_knot_controlpoints(F, P, t)

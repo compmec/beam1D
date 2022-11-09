@@ -5,10 +5,11 @@ import abc
 
 class Point(object):
     __instances = []
+    __points = []
 
     @staticmethod
     def validation_point(value: Tuple[float]):
-        value = np.ndarray(value, dtype="float64")
+        value = np.array(value, dtype="float64")
         if value.ndim != 1:
             raise ValueError("A point must be a 1D-array")
         if len(value) != 3:
@@ -16,7 +17,7 @@ class Point(object):
 
     def __new__(cls, value: Tuple[float]):
         if len(Point.__instances) == 0:
-            return self.new(value)
+            return Point.new(value)
         id = Point.get_id(value)
         if id is None:
             return Point.new(value)
@@ -24,9 +25,9 @@ class Point(object):
 
     @staticmethod
     def new(value: Tuple[float]):
-        self = object.__new__(cls)
+        self = object.__new__(Point)
         Point.__instances.append(self)
-        return self    
+        return self
 
     @staticmethod
     def get_id(value: Tuple[float], distmax: float = 1e-9) -> int:
@@ -36,7 +37,7 @@ class Point(object):
         if len(Point.__instances) == 0:
             return None
         value = np.array(value)
-        distances = np.array([np.linalg.norm(point-value) for point in Point.__instances])
+        distances = np.array([np.sum((point.p-value)**2) for point in Point.__instances])
         mask = (distances < distmax)
         if not np.any(mask):
             return None
@@ -45,7 +46,7 @@ class Point(object):
     def __init__(self, value: Tuple[float]):
         self.__p = np.array(value, dtype="float64")
         self.__r = np.zeros(3, dtype="float64")
-        self.__id = len(Point.__instances)
+        self.__id = len(Point.__instances)-1
 
     @property
     def id(self):
@@ -65,7 +66,7 @@ class Point(object):
     def __repr__(self):
         return str(self)
 
-    def __tuple__(self):
+    def __iter__(self):
         return tuple(self.p)
 
     def __list__(self):
