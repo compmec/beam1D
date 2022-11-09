@@ -262,7 +262,11 @@ class Structural1DInterface(abc.ABC):
     @property
     def field(self) -> Callable[[str], nurbs.SplineCurve]:
         """Returns function which receives an string and returns an nurbs.SplineCurve"""
-        return self.__field
+        try:
+            return self.__field
+        except AttributeError as e:
+            raise ValueError("You must run the simulation before calling 'field'")
+
 
     @path.setter
     def path(self, value: nurbs.SplineCurve):
@@ -306,10 +310,19 @@ class BeamInterface(Structural1DInterface):
 
 class ComputeFieldInterface(abc.ABC):
     
+    
     @abc.abstractmethod
     def __init__(self, element: Structural1DInterface, result: np.ndarray):
         raise NotImplementedError
+    
+    @abc.abstractmethod
+    def __call__(self, fieldname: str) -> nurbs.SplineCurve:
+        raise NotImplementedError
 
+    @abc.abstractmethod
+    def field(self, fieldname: str) -> nurbs.SplineCurve:
+        raise NotImplementedError
+    
     @property
     def element(self) -> Structural1DInterface:
         return self.__element
@@ -335,11 +348,6 @@ class ComputeFieldInterface(abc.ABC):
         if value.shape[1] != 6:
             raise ValueError(f"The number of results in must be {6}, received {value.shape[1]}")
         self.__result = value
-    
-    @abc.abstractmethod
-    def field(self, fieldname: str):
-        """Compute the requested field"""
-        raise NotImplementedError
 
     @abc.abstractmethod
     def position(self):
@@ -387,11 +395,11 @@ class ComputeFieldBeamInterface(ComputeFieldInterface):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def internalmoment(self) -> nurbs.SplineCurve:
-        """Computes the internal moment of the beam"""
+    def internalmomentum(self) -> nurbs.SplineCurve:
+        """Computes the internal momentum of the beam"""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def externalmoment(self) -> nurbs.SplineCurve:
-        """Computes the external moment applied on the beam"""
+    def externalmomentum(self) -> nurbs.SplineCurve:
+        """Computes the external momentum applied on the beam"""
         raise NotImplementedError

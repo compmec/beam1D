@@ -85,8 +85,8 @@ def test_cantileverbeam():
     FEexact[-1, 1] = F0
     MEexact[0, 2] = -F0*L
     ufield = beamAB.field("u")
-    Ffield = beamAB.field("F")
-    Mfield = beamAB.field("M")
+    Ffield = beamAB.field("FI")
+    Mfield = beamAB.field("MI")
     FEfield = beamAB.field("FE")
     MEfield = beamAB.field("ME")
 

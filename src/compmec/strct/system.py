@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Iterable, Type, Union, Tuple
-from compmec.strct.__classes__ import Structural1DInterface
+from compmec.strct.__classes__ import Structural1DInterface, ComputeFieldBeamInterface
+from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.solver import solve
 
 
@@ -440,7 +441,8 @@ class StaticSystem():
             Uelem = np.zeros((npts, 6))
             for i, j in enumerate(indexs):
                 Uelem[i, :] = self._solution[j, :]
-            element.result = Uelem
+            field = ComputeFieldBeam(element, Uelem)
+            element.field = field
 
 
     

@@ -20,8 +20,8 @@ def test_begin():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example1():
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -42,8 +42,8 @@ def test_example1():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_example1"])
 def test_example2():
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -65,8 +65,8 @@ def test_example2():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_example2"])
 def test_example3():
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -84,6 +84,10 @@ def test_example3():
     Ugood[1, 5] = -32*10*(600**2)/(np.pi* 210e+3 * 8**4)
     Ugood[2, 5] = Ugood[1, 5]
     Ugood[2, 1] = Ugood[1, 1] + 400 * Ugood[1, 5]
+    print("Usolu = ")
+    print(Usolu)
+    print("Ugood = ")
+    print(Ugood)
     np.testing.assert_almost_equal(Usolu, Ugood)
 
 
@@ -91,8 +95,8 @@ def test_example3():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_example3"])
 def test_example4():
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -125,8 +129,8 @@ def test_example5():
     q0 = -0.1
     L = 1000
     EI = 210e+3 * np.pi * (8**4)/64
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -147,8 +151,8 @@ def test_example5():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_example5"])
 def test_example6():
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -165,8 +169,8 @@ def test_example6():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_example6"])
 def test_example7():
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -183,8 +187,8 @@ def test_example7():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_example7"])
 def test_example8():
-    A = (0, 0)
-    B = (1000, 0)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
@@ -200,9 +204,9 @@ def test_example8():
 @pytest.mark.timeout(6)
 @pytest.mark.dependency(depends=["test_example8"])
 def test_example9():
-    A = (0, 0)
-    B = (1000, 0)
-    C = (500, 500)
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
+    C = (500, 500, 0)
     beamAB = EulerBernoulli([A, B])
     beamAC = EulerBernoulli([A, C])
     beamBC = EulerBernoulli([B, C])
@@ -232,7 +236,7 @@ def test_example9():
 def test_example10():
     A = (300, 0)
     B = (0, 500)
-    C = (300, 500)
+    C = (300, 500, 0)
     beamAC = EulerBernoulli([A, C])
     beamBC = EulerBernoulli([B, C])
     circle = Circle(R=8/2, nu=0.3)
@@ -261,16 +265,16 @@ def test_end():
 
 def main():
     test_begin()
-    # test_example1()
-    # test_example2()
-    # test_example3()
-    # test_example4()
-    # test_example5()
-    # test_example6()
-    # test_example7()
-    # test_example8()
+    test_example1()
+    test_example2()
+    test_example3()
+    test_example4()
+    test_example5()
+    test_example6()
+    test_example7()
+    test_example8()
     test_example9()
-    # test_example10()
+    test_example10()
     test_end()
     plt.show()
 
