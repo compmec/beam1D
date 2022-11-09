@@ -5,8 +5,12 @@ Each point has 6 unknowns:
 """
 import numpy as np
 from scipy import sparse
-from compmec.strct.__classes__ import Structural1D
-from compmec.strct.fields import ComputeFieldBeam
+from typing import Union, Tuple, List, Iterable, Callable
+import compmec.nurbs as nurbs
+from compmec.strct.__classes__ import Structural1DInterface
+from compmec.nurbs.degreeoperations import degree_elevation_basefunction, degree_elevation_controlpoints
+from compmec.nurbs.knotoperations import insert_knot_basefunction, insert_knot_controlpoints
+
 
 def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
     np0 = np.zeros(3)
@@ -30,6 +34,74 @@ def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
     R[:, 2] = v
     return R.T
 
+def init_linear_spline(P: np.ndarray):
+    P = np.array(P, dtype="float64")
+    degree = 1
+    if P.ndim != 2:
+        raise ValueError("P must be a 2D array")
+    npts, dim = P.shape
+    if dim != 3:
+        raise ValueError("The points must have 3 floats")
+    U = [0] * degree + list(np.linspace(0, 1, npts-degree+1)) + [1] * degree
+    N = nurbs.SplineBaseFunction(U)
+    return nurbs.SplineCurve(N, P)
+    
+
+class Structural1D(Structural1DInterface):
+
+    def __init__(self, path: nurbs.SplineCurve):
+        self.path = path
+        self.__field = None
+
+    def valid_path(self, value):
+        pass
+
+    def valid_material(self, value):
+        pass
+    
+    def valid_section(self, value):
+        pass
+
+    def valid_field(self, value):
+        pass
+
+    def valid_t(self, value):
+        if not 0 <= value <= 1:
+            raise ValueError("The value of t must be in [0, 1]. Received %.3f"%value)
+
+    def __init__(self, path: Union[nurbs.SplineCurve, np.ndarray]):
+        self.__dofs = None
+        if isinstance(path, nurbs.SplineCurve):
+            self.path = path
+        else:
+            self.path = init_linear_spline(path)
+        self.__ts = []
+        for t in self.path.U:
+            if t not in self.__ts:
+                self.__ts.append(t)        
+
+    def addt(self, t: float):
+        self.valid_t(t)
+        if t in self.__ts:
+            return
+        F = self.path.F
+        P = self.path.P
+        P = nurbs.knotoperations.insert_knot_controlpoints(F, P, t)
+        F = nurbs.knotoperations.insert_knot_basefunction(F, t)
+        self.path = self.path.__class__(F, P)
+        self.__ts.append(t)
+        self.__ts.sort()
+
+    @property
+    def dofs(self) -> int:
+        return self.__dofs
+    
+    @property
+    def ts(self) -> np.ndarray:
+        return np.array(self.__ts)
+
+
+
 
 class Truss(Structural1D):
     def __init__(self, path):
@@ -44,7 +116,6 @@ class Cable(Structural1D):
 class Beam(Structural1D):
     def __init__(self, path):
         self._dofs = 6
-        self.__result = None
         super().__init__(path)
 
     def local_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
@@ -71,31 +142,6 @@ class Beam(Structural1D):
             Kgloone = self.global_stiffness_matrix(p0, p1)
             Kglobal[i:i+2, :, i:i+2, :] += Kgloone
         return Kglobal
-
-    @property
-    def result(self):
-        if self.__result is None:
-            raise ValueError("You must run the simulation to get the results")
-        return self.__result
-
-    @result.setter
-    def result(self, value: np.ndarray):
-        n = self.path.P.shape[0]  # Number of points in the beam
-        value = np.array(value)
-        if value.ndim != 2:
-            raise ValueError("The received result must be 2D matrix")
-        npts, dim = value.shape
-        if dim != 6:
-            raise ValueError(f"The received dimension of result must be {6}, not {dim}")
-        if npts != n:
-            raise ValueError(f"The number of points is {n}, not {npts}")
-        self.__result = value
-
-    def field(self, fieldname: str):
-        if not isinstance(fieldname, str):
-            raise TypeError("The fieldname must be a string like 'L2norm(u)'")
-        return ComputeFieldBeam.field(fieldname, self, self.result)
-
 
 class EulerBernoulli(Beam):
     def __init__(self, path):

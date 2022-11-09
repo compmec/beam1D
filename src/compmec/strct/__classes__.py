@@ -1,8 +1,6 @@
 import numpy as np
-from typing import Iterable, List, Tuple, Optional, Union
-from compmec.nurbs import SplineBaseFunction, SplineCurve 
-from compmec.nurbs.degreeoperations import degree_elevation_basefunction, degree_elevation_controlpoints
-from compmec.nurbs.knotoperations import insert_knot_basefunction, insert_knot_controlpoints
+from typing import Iterable, List, Tuple, Optional, Union, Callable
+import compmec.nurbs as nurbs 
 import abc
 
 class Point(object):
@@ -21,7 +19,7 @@ class Point(object):
             return self.new(value)
         id = Point.get_id(value)
         if id is None:
-            return self.new(value)
+            return Point.new(value)
         return Point.__instances[id]
 
     @staticmethod
@@ -220,78 +218,38 @@ class Section(object):
         return self.triangular_mesh(elementsize)
 
 
-class Structural1D(object):
-    def __init__(self, path: Union[SplineCurve, np.ndarray]):
-        self._dofs = None
-        self.__init_path(path)
+class Structural1DInterface(abc.ABC):
+    @abc.abstractmethod
+    def __init__(self, path: Union[nurbs.SplineCurve, np.ndarray]):
+        raise NotImplementedError
 
-    def __init_path(self, path: Union[SplineCurve, np.ndarray]):
-        if isinstance(path, SplineCurve):
-            self.__curve = path
-        else:
-            P = np.array(path)
-            if P.ndim != 2:
-                raise ValueError(f"The received points must be an 2D array. Received {P.ndim}")
-            npts, dim = P.shape
-            if dim != 3:
-                raise ValueError(f"The dimension of points must be 3. Received {dim}")
-            degree = 1  # Degree of polynomial
-            U = [0]*degree + list(np.linspace(0, 1, npts-degree+1))+ [1]*degree
-            N = SplineBaseFunction(U)
-            C = SplineCurve(N, P)
-            self.__curve = C
-        self.__ts = []
-        for t in self.__curve.U:
-            if t not in self.__ts:
-                self.__ts.append(t)
-        
+    @abc.abstractmethod
+    def valid_path(self, value):
+        raise NotImplementedError
 
-    @property
-    def path(self) -> SplineCurve:
-        return self.__curve
+    @abc.abstractmethod
+    def valid_material(self, value):
+        raise NotImplementedError
 
-    def normal(self, t:float ) -> np.ndarray:
-        t = float(t)
-        dpathdt = self.__curve.derivate()
-        value = dpathdt(t)
-        return value/np.linalg.norm(value)
+    @abc.abstractmethod
+    def valid_section(self, value):
+        raise NotImplementedError
 
-    def evaluate(self, ts: Iterable[float], deformed: Optional[bool] = False) -> List[Tuple[float]]:
-        results = []
-        for t in ts:
-            if deformed:
-                if self.__deformedcurve is None:
-                    displacement = self.field("u")
-                    self.__deformedcurve = displacement
-                    self.__deformedcurve.P += self.__curve.P  # Sum control points
-                result = tuple(self.__deformedcurve(float(t)))
-            else:
-                result = tuple(self.__curve(float(t)))
-            results.append(result)
-        return results
+    @abc.abstractmethod
+    def valid_field(self, value):
+        raise NotImplementedError
 
-    def addt(self, t: float):
-        if t in self.__ts:
-            return
-        F = self.__curve.F
-        P = self.__curve.P
-        P = insert_knot_controlpoints(F, P, t)
-        F = insert_knot_basefunction(F, t)
-        self.__curve = self.__curve.__class__(F, P)
-        self.__ts.append(t)
-        self.__ts.sort()
+    @abc.abstractmethod
+    def valid_t(self, value):
+        raise NotImplementedError
 
     @property
-    def dofs(self) -> int:
-        return self._dofs
-    
-    @property
-    def ts(self) -> np.ndarray:
-        return np.array(self.__ts)
+    def path(self) -> nurbs.SplineCurve:
+        return self.__path
 
     @property
-    def points(self) -> np.ndarray:
-        return np.array([self.path(ti) for ti in self.__ts])
+    def ts(self) -> Tuple[float]:
+        return tuple(self.__ts)
 
     @property
     def material(self) -> Material:
@@ -301,24 +259,139 @@ class Structural1D(object):
     def section(self) -> Section:
         return self.__section
 
-    @section.setter
-    def section(self, value: Section):
-        self.__section = value
+    @property
+    def field(self) -> Callable[[str], nurbs.SplineCurve]:
+        """Returns function which receives an string and returns an nurbs.SplineCurve"""
+        return self.__field
+
+    @path.setter
+    def path(self, value: nurbs.SplineCurve):
+        self.valid_path(value)
+        self.__path = value
 
     @material.setter
     def material(self, value: Material):
+        self.valid_material(value)
         self.__material = value
+    
+    @section.setter
+    def section(self, value: Section):
+        self.valid_section(value)
+        self.__section = value
+        
+    @field.setter
+    def field(self, value):
+        """After the simulation we use it to make an reference to the field computer"""
+        self.valid_field(value)
+        self.__field = value
 
+    @abc.abstractmethod
+    def addt(self, t: float):
+        raise NotImplementedError
+
+class TrussInterface(Structural1DInterface):
+    @abc.abstractmethod
     def stiffness_matrix(self) -> np.ndarray:
-        return self.global_stiffness_matrix()
+        raise NotImplementedError
 
+class BeamInterface(Structural1DInterface):
+    @abc.abstractmethod
+    def stiffness_matrix(self) -> np.ndarray:
+        raise NotImplementedError
+    
+
+
+
+    
+
+class ComputeFieldInterface(abc.ABC):
+    
+    @abc.abstractmethod
+    def __init__(self, element: Structural1DInterface, result: np.ndarray):
+        raise NotImplementedError
+
+    @property
+    def element(self) -> Structural1DInterface:
+        return self.__element
+
+    @property
+    def result(self) -> np.ndarray:
+        return np.copy(self.__result)
+
+    @element.setter
+    def element(self, value: Structural1DInterface):
+        if not isinstance(value, Structural1DInterface):
+            raise TypeError("The element must be a Structural1D instance")
+        self.__element = value
+    
+    @result.setter
+    def result(self, value: np.ndarray):
+        if self.element is None:
+            raise ValueError("To set result, you must set element first")
+        ctrlpts = self.element.path.P
+        npts, dim = ctrlpts.shape
+        if value.shape[0] != npts:
+            raise ValueError(f"To set results: result.shape[0] = {value.shape[0]} != {npts} = npts")
+        if value.shape[1] != 6:
+            raise ValueError(f"The number of results in must be {6}, received {value.shape[1]}")
+        self.__result = value
+    
+    @abc.abstractmethod
     def field(self, fieldname: str):
-        raise NotImplementedError("This function must be overwritten")
+        """Compute the requested field"""
+        raise NotImplementedError
 
+    @abc.abstractmethod
+    def position(self):
+        """Compute the position of neutral line"""
+        raise NotImplementedError
 
+    @abc.abstractmethod
+    def deformed(self):
+        """Compute the deformed position of neutral line"""
+        raise NotImplementedError
 
-class ComputeField(object):
+    @abc.abstractmethod
+    def displacement(self) -> nurbs.SplineCurve:
+        """Compute the displacement of each point"""
+        raise NotImplementedError
 
-    def __validation_Structural1D(element: Structural1D):
-        if not isinstance(element, Structural1D):
-            raise TypeError(f"The given element must be a Structural1D instance. Received {type(element)}")
+    @abc.abstractmethod
+    def externalforce(self) -> nurbs.SplineCurve:
+        """Compute the external force applied on the element"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def internalforce(self) -> nurbs.SplineCurve:
+        """Compute the internal force inside the element"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def vonmisesstress(self) -> nurbs.SplineCurve:
+        """Compute the Von Mises Stress of the element"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def trescastress(self) -> nurbs.SplineCurve:
+        """Compute the Tresca Stress of the element"""
+        raise NotImplementedError
+
+class ComputeFieldTrussInterface(ComputeFieldInterface):
+    pass
+
+class ComputeFieldBeamInterface(ComputeFieldInterface):
+    
+    @abc.abstractmethod
+    def rotations(self) -> nurbs.SplineCurve:
+        """Computes the rotation of each point """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def internalmoment(self) -> nurbs.SplineCurve:
+        """Computes the internal moment of the beam"""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def externalmoment(self) -> nurbs.SplineCurve:
+        """Computes the external moment applied on the beam"""
+        raise NotImplementedError

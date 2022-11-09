@@ -2,7 +2,7 @@ from compmec.strct.section import Circle, HollowCircle, ThinCircle
 import numpy as np
 from compmec.strct.system import StaticSystem
 from typing import List, Tuple, Iterable, Optional
-from compmec.strct.__classes__ import Structural1D
+from compmec.strct.__classes__ import Structural1DInterface
 import matplotlib as mpl
 
 class AxonometricProjector(object):
@@ -109,7 +109,7 @@ class ShowerStaticSystem(Shower):
         super().__init__()
         self.__system = system
     
-    def getonesplinecurve(self, element: Structural1D, deformed: bool=False):
+    def getonesplinecurve(self, element: Structural1DInterface, deformed: bool=False):
         if not deformed:
             return element.path
         raise NotImplementedError("Deformed: Should be implemented")
