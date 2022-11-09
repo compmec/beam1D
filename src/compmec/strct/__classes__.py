@@ -1,8 +1,80 @@
 import numpy as np
-from typing import Iterable, List, Tuple, Optional
+from typing import Iterable, List, Tuple, Optional, Union
 from compmec.nurbs import SplineBaseFunction, SplineCurve 
 from compmec.nurbs.degreeoperations import degree_elevation_basefunction, degree_elevation_controlpoints
 from compmec.nurbs.knotoperations import insert_knot_basefunction, insert_knot_controlpoints
+import abc
+
+class Point(object):
+    __instances = []
+
+    @staticmethod
+    def validation_point(value: Tuple[float]):
+        value = np.ndarray(value, dtype="float64")
+        if value.ndim != 1:
+            raise ValueError("A point must be a 1D-array")
+        if len(value) != 3:
+            raise ValueError("The point must be a 3D-point, with three values")
+
+    def __new__(cls, value: Tuple[float]):
+        if len(Point.__instances) == 0:
+            return self.new(value)
+        id = Point.get_id(value)
+        if id is None:
+            return self.new(value)
+        return Point.__instances[id]
+
+    @staticmethod
+    def new(value: Tuple[float]):
+        self = object.__new__(cls)
+        Point.__instances.append(self)
+        return self    
+
+    @staticmethod
+    def get_id(value: Tuple[float], distmax: float = 1e-9) -> int:
+        """
+        Precisa testar
+        """
+        if len(Point.__instances) == 0:
+            return None
+        value = np.array(value)
+        distances = np.array([np.linalg.norm(point-value) for point in Point.__instances])
+        mask = (distances < distmax)
+        if not np.any(mask):
+            return None
+        return np.where(mask)[0][0]
+
+    def __init__(self, value: Tuple[float]):
+        self.__p = np.array(value, dtype="float64")
+        self.__r = np.zeros(3, dtype="float64")
+        self.__id = len(Point.__instances)
+
+    @property
+    def id(self):
+        return self.__id
+
+    @property
+    def p(self):
+        return self.__p
+
+    @property
+    def r(self):
+        return self.__r
+    
+    def __str__(self):
+        return str(self.p)
+    
+    def __repr__(self):
+        return str(self)
+
+    def __tuple__(self):
+        return tuple(self.p)
+
+    def __list__(self):
+        return list(self.p)
+    
+
+
 
 class Material(object):
     def __init__(self):
