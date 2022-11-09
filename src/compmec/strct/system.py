@@ -440,7 +440,7 @@ class StaticSystem():
             Uelem = np.zeros((npts, 6))
             for i, j in enumerate(indexs):
                 Uelem[i, :] = self._solution[j, :]
-            element.set_result(Uelem)
+            element.result = Uelem
 
 
     

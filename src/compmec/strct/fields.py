@@ -1,42 +1,26 @@
 import numpy as np
 from compmec.nurbs import SplineBaseFunction, SplineCurve
-from compmec.strct.__classes__ import Structural1D
+from compmec.strct.__classes__ import Structural1D, ComputeField
+        
 
-
-class ComputeField(object):
-
-    __INSTANCE = None
-
-    def __init__(self):
-        ComputeField.__INSTANCE = self
-        self.__NAME2FUNCTIONS = {"u": self.displacement,
-                                 "M": self.momentum,
-                                 "F": self.force,
-                                 "FE": self.externalforce,
-                                 "ME": self.externalmomentum}
+class ComputeFieldBeam(ComputeField):
     
     @staticmethod
-    def getInstance():
-        if ComputeField.__INSTANCE is None:
-            ComputeField()
-        return ComputeField.__INSTANCE
-        
-    @staticmethod
     def field(fieldname: str, element: Structural1D, result: np.ndarray) -> SplineCurve:
-        if not isinstance(element, Structural1D):
-            raise TypeError(f"The given element must be a Structural1D instance. Received {type(element)}")
-        instance = ComputeField.getInstance()
-        if fieldname not in instance.__NAME2FUNCTIONS.keys():
-            raise ValueError(f"Received argument is not valid. They are {list(instance.__NAME2FUNCTIONS.keys())}")
-        function = instance.__NAME2FUNCTIONS[fieldname]
+        NAME2FUNCTIONS = {"u": ComputeFieldBeam.displacement,
+                          "M": ComputeFieldBeam.momentum,
+                          "F": ComputeFieldBeam.force,
+                          "FE": ComputeFieldBeam.externalforce,
+                          "ME": ComputeFieldBeam.externalmomentum}
+        if fieldname not in NAME2FUNCTIONS.keys():
+            raise ValueError(f"Received fieldname '{fieldname}' is not valid. They are {list(ComputeFieldBeam.__NAME2FUNCTIONS.keys())}")
+        function = NAME2FUNCTIONS[fieldname]
         curve = function(element, result)
         return curve
 
     
-
-    def displacement(self, element, result: np.ndarray) -> SplineCurve:
-        # if not isinstance(element, EulerBernoulli):
-        #     raise TypeError("Element must be a EulerBernoulli instance")
+    @staticmethod
+    def displacement(element: Structural1D, result: np.ndarray) -> SplineCurve:
         result = np.array(result)
         if result.ndim != 2:
             raise ValueError("result must be a 2D array")
@@ -53,7 +37,8 @@ class ComputeField(object):
         curve = SplineCurve(N, Ctrlpts)
         return curve
 
-    def externalforce(self, element, result: np.ndarray) -> SplineCurve:
+    @staticmethod
+    def externalforce(element: Structural1D, result: np.ndarray) -> SplineCurve:
         result = np.array(result)
         if result.ndim != 2:
             raise ValueError("result must be a 2D array")
@@ -71,7 +56,8 @@ class ComputeField(object):
         curve = SplineCurve(N, Ctrlpts)
         return curve
 
-    def externalmomentum(self, element, result: np.ndarray) -> SplineCurve:
+    @staticmethod
+    def externalmomentum(element, result: np.ndarray) -> SplineCurve:
         result = np.array(result)
         if result.ndim != 2:
             raise ValueError("result must be a 2D array")
@@ -89,7 +75,8 @@ class ComputeField(object):
         curve = SplineCurve(N, Ctrlpts)
         return curve
 
-    def momentum(self, element, result: np.ndarray) -> SplineCurve:
+    @staticmethod
+    def momentum(element: Structural1D, result: np.ndarray) -> SplineCurve:
         result = np.array(result)
         if result.ndim != 2:
             raise ValueError("result must be a 2D array")
@@ -113,7 +100,8 @@ class ComputeField(object):
         curve = SplineCurve(N, Ctrlpts)
         return curve
 
-    def force(self, element, result: np.ndarray) -> SplineCurve:
+    @staticmethod
+    def force(element: Structural1D, result: np.ndarray) -> SplineCurve:
         result = np.array(result)
         if result.ndim != 2:
             raise ValueError("result must be a 2D array")
