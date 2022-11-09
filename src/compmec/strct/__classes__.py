@@ -221,48 +221,40 @@ class Section(object):
 
 
 class Structural1D(object):
-    def __init__(self, path):
+    def __init__(self, path: Union[SplineCurve, np.ndarray]):
         self._dofs = None
-        if isinstance(path, (tuple, list)):
+        self.__init_path(path)
 
-            P = []
-            for i, p in enumerate(path):
-                P.append([])
-                for v in p:
-                    P[i].append(v)
-                for j in range(len(P[i]), 3):
-                    P[i].append(0)
-            degree = 1
-            npts = len(P)
-            U = [0]*degree + list(np.linspace(0, 1, npts-degree+1))+ [1]*degree
-            N = SplineBaseFunction(U)  # p = 1
-            P = degree_elevation_controlpoints(N, P)
-            N = degree_elevation_basefunction(N)  # p = 2
-            P = degree_elevation_controlpoints(N, P)
-            N = degree_elevation_basefunction(N)  # p = 3
-            curve = SplineCurve(N, P)
-            self.__originalcurve = curve
-            self.__deformedcurve = None
+    def __init_path(self, path: Union[SplineCurve, np.ndarray]):
+        if isinstance(path, SplineCurve):
+            self.__curve = path
         else:
-            raise TypeError("Not expected received argument")
-        self.__ts = [0, 1]
+            P = np.array(path)
+            if P.ndim != 2:
+                raise ValueError(f"The received points must be an 2D array. Received {P.ndim}")
+            npts, dim = P.shape
+            if dim != 3:
+                raise ValueError(f"The dimension of points must be 3. Received {dim}")
+            degree = 1  # Degree of polynomial
+            U = [0]*degree + list(np.linspace(0, 1, npts-degree+1))+ [1]*degree
+            N = SplineBaseFunction(U)
+            C = SplineCurve(N, P)
+            self.__curve = C
+        self.__ts = []
+        for t in self.__curve.U:
+            if t not in self.__ts:
+                self.__ts.append(t)
+        
 
-    def path(self, t: float) -> np.ndarray:
-        try:
-            t = float(t)
-        except Exception as e:
-            raise TypeError(f"The parameter t must be a float. Could not convert {type(t)}")
-        if t < 0 or t > 1:
-            raise ValueError("t in path must be in [0, 1]")
-        if t not in self.__ts:
-            self.addt(t)
-        result = self.__originalcurve(t)
-        return tuple(result)
+    @property
+    def path(self) -> SplineCurve:
+        return self.__curve
 
     def normal(self, t:float ) -> np.ndarray:
         t = float(t)
-        dpathdt = self.__originalcurve.derivate()
-        return dpathdt(t)
+        dpathdt = self.__curve.derivate()
+        value = dpathdt(t)
+        return value/np.linalg.norm(value)
 
     def evaluate(self, ts: Iterable[float], deformed: Optional[bool] = False) -> List[Tuple[float]]:
         results = []
@@ -271,20 +263,21 @@ class Structural1D(object):
                 if self.__deformedcurve is None:
                     displacement = self.field("u")
                     self.__deformedcurve = displacement
-                    self.__deformedcurve.P += self.__originalcurve.P  # Sum control points
+                    self.__deformedcurve.P += self.__curve.P  # Sum control points
                 result = tuple(self.__deformedcurve(float(t)))
             else:
-                result = tuple(self.__originalcurve(float(t)))
+                result = tuple(self.__curve(float(t)))
             results.append(result)
         return results
 
     def addt(self, t: float):
-        F = self.__originalcurve.F
-        P = self.__originalcurve.P
-        for i in range(3):  # We will add 3 knots at curve
-            P = insert_knot_controlpoints(F, P, t)
-            F = insert_knot_basefunction(F, t)
-        self.__originalcurve = self.__originalcurve.__class__(F, P)
+        if t in self.__ts:
+            return
+        F = self.__curve.F
+        P = self.__curve.P
+        P = insert_knot_controlpoints(F, P, t)
+        F = insert_knot_basefunction(F, t)
+        self.__curve = self.__curve.__class__(F, P)
         self.__ts.append(t)
         self.__ts.sort()
 
@@ -319,12 +312,13 @@ class Structural1D(object):
     def stiffness_matrix(self) -> np.ndarray:
         return self.global_stiffness_matrix()
 
-    def set_result(self, U: np.ndarray):
-        if not isinstance(U, np.ndarray):
-            raise TypeError("U must be a numpy array")
-        if U.shape != (len(self.ts), self.dofs):
-            raise ValueError(f"U shape must be ({len(self.ts)}, {self.dofs})")
-        self._result = np.copy(U)
-
     def field(self, fieldname: str):
         raise NotImplementedError("This function must be overwritten")
+
+
+
+class ComputeField(object):
+
+    def __validation_Structural1D(element: Structural1D):
+        if not isinstance(element, Structural1D):
+            raise TypeError(f"The given element must be a Structural1D instance. Received {type(element)}")
