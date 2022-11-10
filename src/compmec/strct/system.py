@@ -399,7 +399,7 @@ class StaticSystem():
             F[index, position] += loads
         return F
 
-    def __mount_K(self, dofs: dict) -> np.ndarray:
+    def __mount_K(self) -> np.ndarray:
         npts = self._geometry.npts
         K = np.zeros((npts, 6, npts, 6))
         for element in self._structure.elements:

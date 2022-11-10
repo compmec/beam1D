@@ -21,10 +21,11 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> Tuple[np.ndarray, np.
          []]
     """
     npts = F.shape[0]
+    ndofs = F.shape[1]
     known = []
     unknown = []
     for i in range(npts):
-        for j in range(6):
+        for j in range(ndofs):
             if U[i, j] is None:
                 unknown.append((i,j))
             else:
