@@ -42,7 +42,7 @@ def init_linear_spline(P: np.ndarray):
     npts, dim = P.shape
     if dim != 3:
         raise ValueError("The points must have 3 floats")
-    for i in P.shape[0]:
+    for i in range(P.shape[0]):
         Point(P[i])  # To create a point if it doesn't exist
     U = [0] * degree + list(np.linspace(0, 1, npts-degree+1)) + [1] * degree
     N = nurbs.SplineBaseFunction(U)

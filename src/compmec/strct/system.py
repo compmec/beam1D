@@ -380,34 +380,28 @@ class StaticSystem():
             raise ValueError("You must run the simulation before getting the solution values")
         return self._solution
 
-    def __dofs(self):
-        dofs = {}
-        for i in range(6):
-            dofs[i] = i
-        return dofs
-
     def __getpointsfrom(self, element: Structural1DInterface):
         for t in element.ts:
             p = element.path(t)
             self._geometry.index_point_at(p)
 
-    def __mount_U(self, dofs: dict) -> np.ndarray:
+    def __mount_U(self) -> np.ndarray:
         npts = self._geometry.npts
-        U = np.empty((npts, len(dofs)), dtype="object")
+        U = np.empty((npts, 6), dtype="object")
         for index, position, displacement in self._boundarycondition.bcvals:
-            U[index, dofs[position]] = displacement
+            U[index, position] = displacement
         return U
 
-    def __mount_F(self, dofs: dict) -> np.ndarray:
+    def __mount_F(self) -> np.ndarray:
         npts = self._geometry.npts
-        F = np.zeros((npts, len(dofs)))
+        F = np.zeros((npts, 6))
         for index, position, loads in self._loads.loads:
             F[index, position] += loads
         return F
 
     def __mount_K(self, dofs: dict) -> np.ndarray:
         npts = self._geometry.npts
-        K = np.zeros((npts, len(dofs), npts, len(dofs)))
+        K = np.zeros((npts, 6, npts, 6))
         for element in self._structure.elements:
             Kloc = element.stiffness_matrix()
             inds = []
@@ -423,10 +417,9 @@ class StaticSystem():
     def run(self):
         for element in self._structure.elements:
             self.__getpointsfrom(element)
-        dofs = self.__dofs()
-        K = self.__mount_K(dofs)
-        F = self.__mount_F(dofs)
-        U = self.__mount_U(dofs)
+        K = self.__mount_K()
+        F = self.__mount_F()
+        U = self.__mount_U()
         U, F = solve(K, F, U)
         self._solution = U
         self.apply_on_elements()
