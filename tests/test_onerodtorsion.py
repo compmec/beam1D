@@ -8,7 +8,8 @@ from usefulfunc import *
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(
-	depends=["tests/test_material.py::test_end",
+	depends=["tests/test_solver.py::test_end",
+             "tests/test_material.py::test_end",
              "tests/test_structural1D.py::test_end",
              "tests/test_section.py::test_circle"],
     scope='session')

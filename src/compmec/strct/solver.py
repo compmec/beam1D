@@ -9,7 +9,7 @@ In the end we have a linear system which is given by
 
 """
 
-def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray, TOLERANCE=1e-9) -> Tuple[np.ndarray, np.ndarray]:
     """
     K is a big matrix of shape (npts, 6, npts, 6)
     F is a matrix of shape (npts, 6)
@@ -54,7 +54,7 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> Tuple[np.ndarray, np.
     try:
         Uu = la.solve(Kuu, B)
     except np.linalg.LinAlgError as e:
-        Uu = la.lstsq(Kuu, B, rcond=1e-10)[0]
+        Uu = la.lstsq(Kuu, B, rcond=TOLERANCE)[0]
         
     Fu = Kkk @ Uk + Kku @ Uu
 
@@ -64,7 +64,7 @@ def solve(K : np.ndarray, F : np.ndarray, U:np.ndarray) -> Tuple[np.ndarray, np.
     for i, (a, b) in enumerate(unknown):
         U[a, b] = Uu[i]
     U = np.array(U, dtype="float64")
-    U[np.abs(U) < 1e-10] = 0
+    U[np.abs(U) < TOLERANCE] = 0
     
     return U, F
 

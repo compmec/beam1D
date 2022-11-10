@@ -13,6 +13,7 @@ def test_begin():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_cantilever2pts():
+    TOLERANCE = 1e-6
     Korig = [[[[ 10555.7513,  0,  0,  0, 0,  0],
                [-10555.7513,  0,  0,  0, 0,  0]],
               [[ 0,  0.506676063,  0,  0, 0,  253.338032],
@@ -49,8 +50,8 @@ def test_cantilever2pts():
     Fgood = [[0, 10, 0, 0, 0, 10000],
              [0, -10, 0, 0, 0, 0]]
     Utest, Ftest = solve(Korig, Forig, Uorig)
-    np.testing.assert_almost_equal(Utest, Ugood, decimal=6)
-    np.testing.assert_almost_equal(Ftest, Fgood, decimal=6)
+    np.testing.assert_almost_equal(Utest, Ugood, decimal=int(-np.log10(TOLERANCE)))
+    np.testing.assert_almost_equal(Ftest, Fgood, decimal=int(-np.log10(TOLERANCE)))
 
 
 @pytest.mark.order(1)

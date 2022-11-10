@@ -385,21 +385,21 @@ class StaticSystem():
             p = element.path(t)
             self._geometry.index_point_at(p)
 
-    def __mount_U(self) -> np.ndarray:
+    def mount_U(self) -> np.ndarray:
         npts = self._geometry.npts
         U = np.empty((npts, 6), dtype="object")
         for index, position, displacement in self._boundarycondition.bcvals:
             U[index, position] = displacement
         return U
 
-    def __mount_F(self) -> np.ndarray:
+    def mount_F(self) -> np.ndarray:
         npts = self._geometry.npts
         F = np.zeros((npts, 6))
         for index, position, loads in self._loads.loads:
             F[index, position] += loads
         return F
 
-    def __mount_K(self) -> np.ndarray:
+    def mount_K(self) -> np.ndarray:
         npts = self._geometry.npts
         K = np.zeros((npts, 6, npts, 6))
         for element in self._structure.elements:
@@ -417,9 +417,9 @@ class StaticSystem():
     def run(self):
         for element in self._structure.elements:
             self.__getpointsfrom(element)
-        K = self.__mount_K()
-        F = self.__mount_F()
-        U = self.__mount_U()
+        K = self.mount_K()
+        F = self.mount_F()
+        U = self.mount_U()
         U, F = solve(K, F, U)
         self._solution = U
         self.apply_on_elements()

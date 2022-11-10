@@ -7,7 +7,7 @@ from compmec.strct.system import StaticSystem
 from matplotlib import pyplot as plt
 
 @pytest.mark.order(10)
-@pytest.mark.skip(reason="Must implement the functions to get displacements, momentums and etc from the beam")
+# @pytest.mark.skip(reason="Must implement the functions to get displacements, momentums and etc from the beam")
 @pytest.mark.dependency(
 	depends=["tests/test_onerodallcharges.py::test_end",
              "tests/test_bendingretangular.py::test_end"],
@@ -70,6 +70,7 @@ def test_example3():
     beamAB = EulerBernoulli([A, B])
     beamAB.section = Circle(R=8/2, nu=0.3)
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
+    beamAB.addt(0.6)
     C = beamAB.path(0.6)
     system = StaticSystem()
     system.add_element(beamAB)
@@ -84,10 +85,6 @@ def test_example3():
     Ugood[1, 5] = -32*10*(600**2)/(np.pi* 210e+3 * 8**4)
     Ugood[2, 5] = Ugood[1, 5]
     Ugood[2, 1] = Ugood[1, 1] + 400 * Ugood[1, 5]
-    print("Usolu = ")
-    print(Usolu)
-    print("Ugood = ")
-    print(Ugood)
     np.testing.assert_almost_equal(Usolu, Ugood)
 
 
@@ -102,6 +99,8 @@ def test_example4():
     beamAB.material = Isotropic(E=210e+3, nu=0.3)
     C = beamAB.path(0.3)
     D = beamAB.path(0.7)
+    beamAB.addt(0.3)
+    beamAB.addt(0.7)
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0,
@@ -234,8 +233,8 @@ def test_example9():
 @pytest.mark.timeout(6)
 @pytest.mark.dependency(depends=["test_example9"])
 def test_example10():
-    A = (300, 0)
-    B = (0, 500)
+    A = (300, 0, 0)
+    B = (0, 500, 0)
     C = (300, 500, 0)
     beamAC = EulerBernoulli([A, C])
     beamBC = EulerBernoulli([B, C])
