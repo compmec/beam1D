@@ -36,7 +36,7 @@ class Point(object):
         """
         if len(Point.__instances) == 0:
             return None
-        value = np.array(value)
+        value = np.array(value, dtype="float64")
         distances = np.array([np.sum((point.p-value)**2) for point in Point.__instances])
         mask = (distances < distmax)
         if not np.any(mask):

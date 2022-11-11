@@ -36,7 +36,7 @@ class Geometry1D(object):
     def points(self, value: np.ndarray):
         if self._points is not None:
             raise ValueError("There are points. Cannot subcribe. Use add_point(point) instead")
-        value = np.array(value)
+        value = np.array(value, dtype="float64")
         if value.ndim != 2:
             raise ValueError("Set points must have shape (npts, dim)")
         self._points = value
@@ -84,7 +84,7 @@ class Geometry1D(object):
         Internal unprotected function. See docs of the original function
         """
         n = len(point)
-        distsquare = np.array([sum((pi[:n] - point)**2) for pi in self.points])
+        distsquare = np.array([sum((pi[:n] - point)**2) for pi in self.points], dtype="float64")
         mindistsquare = np.min(distsquare)
         if np.all(mindistsquare > tolerance):
             return None
@@ -326,7 +326,7 @@ class StaticSystem():
             raise TypeError("Interval must be a tuple of floats")
         
         interval, values = self.__compute_dist_points(element.ts, interval, values)
-        points3D = np.array([element.path(t) for t in interval])
+        points3D = np.array([element.path(t) for t in interval], dtype="float64")
         npts, dim = points3D.shape
         indexs = [self._geometry.index_point_at(point) for point in points3D]
         Ls = [np.linalg.norm(points3D[i+1]-points3D[i]) for i in range(npts-1)]

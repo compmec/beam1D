@@ -20,11 +20,11 @@ class AxonometricProjector(object):
         elif name == "yz" or name == "parallel yz":
             self.horizontal = (0, 1, 0)
             self.vertical = (0, 0, 1)
-        self.horizontal = np.array(self.horizontal)
-        self.vertical = np.array(self.vertical)
+        self.horizontal = np.array(self.horizontal, dtype="float64")
+        self.vertical = np.array(self.vertical, dtype="float64")
 
     def __call__(self, point3D: Tuple[float, float, float]) -> Tuple[float, float, float]:
-        point3D = np.array(point3D)
+        point3D = np.array(point3D, dtype="float64")
         if point3D.ndim != 1:
             raise ValueError("Point3D must be a 1D-array")
         if len(point3D) != 3:

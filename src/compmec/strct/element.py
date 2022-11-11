@@ -101,7 +101,7 @@ class Structural1D(Structural1DInterface):
     
     @property
     def ts(self) -> np.ndarray:
-        return np.array(self.__ts)
+        return np.array(self.__ts, dtype="float64")
 
 
 
@@ -153,13 +153,13 @@ class EulerBernoulli(Beam):
     def local_stiffness_matrix_Kx(self, L: float) -> np.ndarray:
         E = self.material.E
         A = self.section.Ax 
-        Kx = (E*A/L) * (2*np.eye(2)-1) 
+        Kx = (E*A/L) * (2*np.eye(2, dtype="float64")-1) 
         return Kx 
  
     def local_stiffness_matrix_Kt(self, L: float) -> np.ndarray: 
         G = self.material.G
         Ix = self.section.Ix
-        Kt = (G*Ix/L) * (2*np.eye(2)-1) 
+        Kt = (G*Ix/L) * (2*np.eye(2, dtype="float64")-1) 
         return Kt 
          
     def local_stiffness_matrix_Ky(self, L: float) -> np.ndarray: 
@@ -168,7 +168,7 @@ class EulerBernoulli(Beam):
         Ky = np.array([[ 12,    6*L,  -12,    6*L], 
                        [6*L, 4*L**2, -6*L, 2*L**2], 
                        [-12,   -6*L,   12,   -6*L], 
-                       [6*L, 2*L**2, -6*L, 4*L**2]]) 
+                       [6*L, 2*L**2, -6*L, 4*L**2]], dtype="float64") 
         return (E*Iz/L**3) * Ky 
  
     def local_stiffness_matrix_Kz(self, L: float) -> np.ndarray: 
@@ -177,7 +177,7 @@ class EulerBernoulli(Beam):
         Kz = np.array([[  12,   -6*L,  -12,   -6*L], 
                        [-6*L, 4*L**2,  6*L, 2*L**2], 
                        [ -12,    6*L,   12,    6*L], 
-                       [-6*L, 2*L**2,  6*L, 4*L**2]]) 
+                       [-6*L, 2*L**2,  6*L, 4*L**2]], dtype="float64") 
         return (E*Iy/L**3) * Kz 
 
     def local_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
@@ -187,12 +187,14 @@ class EulerBernoulli(Beam):
         That means, our matrix is in fact [4, 3, 4, 3]
         Or also  [2, 6, 2, 6]
         """
-        L = np.linalg.norm(np.array(p1)-np.array(p0))
+        p0 = np.array(p0, dtype="float64")
+        p1 = np.array(p1, dtype="float64")
+        L = np.linalg.norm(p1-p0)
         Kx = self.local_stiffness_matrix_Kx(L)
         Kt = self.local_stiffness_matrix_Kt(L)
         Ky = self.local_stiffness_matrix_Ky(L)
         Kz = self.local_stiffness_matrix_Kz(L)
-        K = np.zeros((2, 6, 2, 6))
+        K = np.zeros((2, 6, 2, 6), dtype="float64")
         K[:, 0, :, 0] = Kx
         K[:, 3, :, 3] = Kt
         for i in range(2):

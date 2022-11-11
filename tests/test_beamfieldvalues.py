@@ -90,12 +90,14 @@ def test_cantileverbeam():
     FEfield = beamAB.field("FE")
     MEfield = beamAB.field("ME")
 
+    DECIMALFORCE = 4
+    DECIMALMOMENTUM = 2
     np.testing.assert_almost_equal(ufield(ts), uexact)
-    # np.testing.assert_almost_equal(Ffield(ts), Fexact)
-    # np.testing.assert_almost_equal(Mfield(ts), Mexact)
-    # np.testing.assert_almost_equal(MEfield(ts), MEexact)
-    # np.testing.assert_almost_equal(FEfield(ts), FEexact)
-
+    np.testing.assert_almost_equal(Ffield(ts), Fexact, decimal=DECIMALFORCE)
+    np.testing.assert_almost_equal(Mfield(ts), Mexact, decimal=DECIMALMOMENTUM)
+    np.testing.assert_almost_equal(FEfield(ts), FEexact, decimal=DECIMALFORCE)
+    np.testing.assert_almost_equal(MEfield(ts), MEexact, decimal=DECIMALMOMENTUM)
+    
 
 @pytest.mark.order(9)
 @pytest.mark.dependency(depends=["test_begin", "test_rodtraction", "test_cantileverbeam"])

@@ -45,7 +45,7 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
 
     def internalforce(self) -> nurbs.SplineCurve:
         Ctrlpts = np.zeros((self.N.n, 3))
-        pairs = np.array([self.element.ts[:-1], self.element.ts[1:]]).T
+        pairs = np.array([self.element.ts[:-1], self.element.ts[1:]], dtype="float64").T
         for i, (t0, t1) in enumerate(pairs):
             p0, p1 = self.element.path(t0), self.element.path(t1)
             KG = self.element.global_stiffness_matrix(p0, p1)
@@ -68,7 +68,7 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
 
     def internalmomentum(self) -> nurbs.SplineCurve:
         Ctrlpts = np.zeros((self.N.n, 3))
-        pairs = np.array([self.element.ts[:-1], self.element.ts[1:]]).T
+        pairs = np.array([self.element.ts[:-1], self.element.ts[1:]], dtype="float64").T
         for i, (t0, t1) in enumerate(pairs):
             p0, p1 = self.element.path(t0), self.element.path(t1)
             KG = self.element.global_stiffness_matrix(p0, p1)
