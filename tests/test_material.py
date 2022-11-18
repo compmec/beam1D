@@ -54,6 +54,29 @@ def test_main():
 
 @pytest.mark.order(1)
 @pytest.mark.dependency(depends=["test_begin", "test_main"])
+def test_fails():
+	"""It fails when we don't give enough information"""
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3)
+	with pytest.raises(ValueError):
+		Isotropic(G=70e+3)
+	with pytest.raises(ValueError):
+		Isotropic(nu=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(Lame1=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(Lame2=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(K=100e+3)
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, nu=0.495)  # Incompressible
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, nu=-0.2)
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, nu=0.7)
+
+@pytest.mark.order(1)
+@pytest.mark.dependency(depends=["test_begin", "test_main", "test_fails"])
 def test_end():
 	pass
 

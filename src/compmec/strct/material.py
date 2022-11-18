@@ -10,9 +10,31 @@ class Isotropic(Material):
 		"""
 		pass
 
-	def __init__(self, *args, **kwargs):
-		self.init_variables()
+	@staticmethod
+	def isFloat(value: float):
+		try:
+			float(value)
+		except Exception as e:
+			raise TypeError(f"The received value has type {type(value)}, must be float")
 
+	@staticmethod
+	def isPositive(value: float):
+		if value <= 0:
+			raise ValueError(f"The value must be positive! Received {value}")
+
+	def __init__(self, *args, **kwargs):
+		self.__init_variables()
+		self.__fill_variables(**kwargs)
+		self.__compute_all()
+
+	def __init_variables(self):
+		self.__E = None
+		self.__G = None
+		self.__K = None
+		self.__nu = None
+		self.__lambda = None
+
+	def __fill_variables(self, **kwargs):
 		if "E" in kwargs:
 			self.E = kwargs["E"]
 		if "G" in kwargs:
@@ -21,22 +43,10 @@ class Isotropic(Material):
 			self.K = kwargs["K"]
 		if "nu" in kwargs: 
 			self.nu = kwargs["nu"]
-		# if "lambda" in kwargs:
-		# 	self.Lame1 = kwargs["lambda"]
-		# if "mu" in kwargs:
-		# 	self.G = kwargs["mu"]
 		if "Lame1" in kwargs:
-			self.Lame1 = kwargs["Lame1"]
+			self.Lame1 = kwargs["Lame1"]  # lambda
 		if "Lame2" in kwargs:
-			self.G = kwargs["Lame2"]
-		self.__compute_all()
-
-	def init_variables(self):
-		self._E = None
-		self._G = None
-		self._K = None
-		self._nu = None
-		self._lambda = None
+			self.Lame2 = kwargs["Lame2"]  # mu
 
 	def __cannot_compute(self, var):
 		msg = "Cannot compute '%s'. Current variables = \n" % var
@@ -46,8 +56,8 @@ class Isotropic(Material):
 		msg += "      nu = %s\n" % self.nu
 		msg += "   Lame1 = %s\n" % self.Lame1
 		msg += "   Lame2 = %s\n" % self.Lame2 
-
-		raise Exception(msg)
+		raise ValueError(msg)
+		
 	def __compute_E(self):
 		if self.E is not None:
 			return
@@ -144,55 +154,63 @@ class Isotropic(Material):
 
 	@property
 	def E(self) -> float:
-		return self._E
+		return self.__E
 
 	@property
 	def G(self) -> float:
-		return self._G
+		return self.__G
 
 	@property
 	def K(self) -> float:
-		return self._K
+		return self.__K
 
 	@property
 	def nu(self) -> float:
-		return self._nu
+		return self.__nu
 
 	@property
 	def Lame1(self) -> float:
-		return self._lambda
+		return self.__lambda
 
 	@property
 	def Lame2(self) -> float:
-		return self._G
+		return self.__G
 
 	@E.setter
 	def E(self, value : float):
-		self._E = value
+		Isotropic.isFloat(value)
+		Isotropic.isPositive(value)
+		self.__E = float(value)
 
 	@G.setter
 	def G(self, value : float):
-		self._G = value
+		Isotropic.isFloat(value)
+		Isotropic.isPositive(value)
+		self.__G = float(value)
 	
 	@K.setter
 	def K(self, value : float):
-		self._K = value
+		Isotropic.isFloat(value)
+		Isotropic.isPositive(value)
+		self.__K = float(value)
 
 	@nu.setter
 	def nu(self, value : float):
+		Isotropic.isFloat(value)
+		Isotropic.isPositive(value)
 		if 0.49 < value and value < 0.5:
-			raise Exception("Poisson is near 0.5. We cannot treat non-compressible materials")
+			raise ValueError("Poisson is near 0.5. We cannot treat non-compressible materials")
 		if value < 0 or 0.49 < value:
-			raise Exception("Poisson modulus must be between [0, 0.49]")
+			raise ValueError("Poisson modulus must be between [0, 0.49]")
 		
-		self._nu = value
+		self.__nu = value
 
 	@Lame1.setter
 	def Lame1(self, value : float):
-		self._lambda = value
+		Isotropic.isFloat(value)
+		Isotropic.isPositive(value)
+		self.__lambda = value
 
 	@Lame2.setter
 	def Lame2(self, value : float):
 		self.G = value
-
-	
