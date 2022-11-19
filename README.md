@@ -1,8 +1,9 @@
-# Structures
+[![PyPI Version][pypi-image]][pypi-url]
+[![Build Status][build-image]][build-url]
+[![Code Coverage][coverage-image]][coverage-url]
+[![][versions-image]][versions-url]
 
-[![PyPi Version](https://img.shields.io/pypi/v/compmec-strct.svg?style=flat-square)](https://pypi.org/project/compmec-strct/)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/compmec-strct.svg?style=flat-square)](https://pypi.org/project/compmec-strct/)
-![Tests](https://github.com/compmec/strct/actions/workflows/tests.yml/badge.svg)
+# Structures
 
 Solves struture problems using FEM. 
 
@@ -60,5 +61,13 @@ In progress
 Please use the [Issues][issueslink] or refer to the email ```compmecgit@gmail.com```
 
 
+[pypi-image]: https://img.shields.io/pypi/v/compmec-strct
+[pypi-url]: https://pypi.org/project/compmec-strct/
+[build-image]: https://github.com/compmec/strct/actions/workflows/build.yaml/badge.svg
+[build-url]: https://github.com/compmec/strct/actions/workflows/build.yaml
+[coverage-image]: https://codecov.io/gh/compmec/strct/branch/main/graph/badge.svg
+[coverage-url]: https://codecov.io/gh/compmec/strct/
+[versions-image]: https://img.shields.io/pypi/pyversions/compmec-strct.svg?style=flat-square
+[versions-url]: https://pypi.org/project/compmec-strct/
 [pypilink]: https://pypi.org/project/compmec-strct/
 [issueslink]: https://github.com/compmec/strct/issues
