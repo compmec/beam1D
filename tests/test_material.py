@@ -1,7 +1,14 @@
-import numpy as np
 from compmec.strct.material import Isotropic
 import pytest
 
+@pytest.mark.order(1)
+@pytest.mark.dependency()
+def test_begin():
+	pass
+
+@pytest.mark.order(1)
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(depends=["test_begin"])
 def test_main():
 	
 	Es = [100, 200, 3, 45, 900, 20, 66]
@@ -45,7 +52,43 @@ def test_main():
 			assert (mat.Lame1 - L) < 1e-6
 			assert (mat.Lame2 - G) < 1e-6
 
+@pytest.mark.order(1)
+@pytest.mark.dependency(depends=["test_begin", "test_main"])
+def test_fails():
+	"""It fails when we don't give enough information"""
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3)
+	with pytest.raises(ValueError):
+		Isotropic(G=70e+3)
+	with pytest.raises(ValueError):
+		Isotropic(nu=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(Lame1=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(Lame2=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(K=100e+3)
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, nu=0.495)  # Incompressible
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, nu=-0.2)
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, nu=0.7)
+	with pytest.raises(ValueError):
+		Isotropic(Ef=210e+3, nu=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(mu=70e+3, nu=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, G=60e+3, nu=0.4)
+	with pytest.raises(ValueError):
+		Isotropic(E=-210e+3, G=60e+3)
+	with pytest.raises(TypeError):
+		Isotropic(E="210", G=60e+3)
 
+@pytest.mark.order(1)
+@pytest.mark.dependency(depends=["test_begin", "test_main", "test_fails"])
+def test_end():
+	pass
 
 if __name__ == "__main__":
 	pytest.main()

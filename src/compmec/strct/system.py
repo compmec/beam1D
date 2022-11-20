@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Iterable, Type, Union, Tuple
-from compmec.strct.__classes__ import Structural1D
+from compmec.strct.__classes__ import Structural1DInterface, ComputeFieldBeamInterface
+from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.solver import solve
 
 
@@ -35,7 +36,7 @@ class Geometry1D(object):
     def points(self, value: np.ndarray):
         if self._points is not None:
             raise ValueError("There are points. Cannot subcribe. Use add_point(point) instead")
-        value = np.array(value)
+        value = np.array(value, dtype="float64")
         if value.ndim != 2:
             raise ValueError("Set points must have shape (npts, dim)")
         self._points = value
@@ -83,7 +84,7 @@ class Geometry1D(object):
         Internal unprotected function. See docs of the original function
         """
         n = len(point)
-        distsquare = np.array([sum((pi[:n] - point)**2) for pi in self.points])
+        distsquare = np.array([sum((pi[:n] - point)**2) for pi in self.points], dtype="float64")
         mindistsquare = np.min(distsquare)
         if np.all(mindistsquare > tolerance):
             return None
@@ -258,12 +259,12 @@ class StaticStructure(object):
     def elements(self):
         return self._elements
 
-    def add_element(self, value: Structural1D) -> None:
-        if not isinstance(value, Structural1D):
+    def add_element(self, value: Structural1DInterface) -> None:
+        if not isinstance(value, Structural1DInterface):
             raise TypeError("To add an element, it must be a Structural 1D instance")
         return self._add_element(value)
 
-    def _add_element(self, value: Structural1D) -> None:
+    def _add_element(self, value: Structural1DInterface) -> None:
         self._elements.append(value)
 
 class StaticSystem():
@@ -279,7 +280,7 @@ class StaticSystem():
         self._boundarycondition = StaticBoundaryCondition()
         self._solution = None
     
-    def add_element(self, element: Structural1D):
+    def add_element(self, element: Structural1DInterface):
         self._structure.add_element(element)
         self.__getpointsfrom(element)
 
@@ -298,7 +299,7 @@ class StaticSystem():
         index = self._geometry.index_point_at(point)
         self._loads.add_load(index, loads)
 
-    def add_dist_load(self, element: Structural1D, interval: Iterable[float], values: dict):
+    def add_dist_load(self, element: Structural1DInterface, interval: Iterable[float], values: dict):
         """
         Add a distribueted load in a interval.
         Example:
@@ -316,8 +317,8 @@ class StaticSystem():
             At (0.6) the value of "Fy" is 0
             At (0.7) the value of "Fy" is 30
         """
-        if not isinstance(element, Structural1D):
-            raise TypeError("Element must be Structural1D")
+        if not isinstance(element, Structural1DInterface):
+            raise TypeError("Element must be Structural1DInterface")
         try:
             for t in interval:
                 float(t)
@@ -325,10 +326,10 @@ class StaticSystem():
             raise TypeError("Interval must be a tuple of floats")
         
         interval, values = self.__compute_dist_points(element.ts, interval, values)
-        points = [element.path(t) for t in interval]
-        indexs = [self._geometry.index_point_at(point) for point in points]
-        npts = len(points)
-        Ls = [np.linalg.norm(points[i+1]-points[i]) for i in range(npts-1)]
+        points3D = np.array([element.path(t) for t in interval], dtype="float64")
+        npts, dim = points3D.shape
+        indexs = [self._geometry.index_point_at(point) for point in points3D]
+        Ls = [np.linalg.norm(points3D[i+1]-points3D[i]) for i in range(npts-1)]
         self._loads.add_dist_load(indexs, values, Ls)
 
     def __compute_dist_points(self, ts: Iterable[float], interval: Iterable[float], values: dict):
@@ -379,34 +380,28 @@ class StaticSystem():
             raise ValueError("You must run the simulation before getting the solution values")
         return self._solution
 
-    def __dofs(self):
-        dofs = {}
-        for i in range(6):
-            dofs[i] = i
-        return dofs
-
-    def __getpointsfrom(self, element: Structural1D):
+    def __getpointsfrom(self, element: Structural1DInterface):
         for t in element.ts:
             p = element.path(t)
             self._geometry.index_point_at(p)
 
-    def __mount_U(self, dofs: dict) -> np.ndarray:
+    def mount_U(self) -> np.ndarray:
         npts = self._geometry.npts
-        U = np.empty((npts, len(dofs)), dtype="object")
+        U = np.empty((npts, 6), dtype="object")
         for index, position, displacement in self._boundarycondition.bcvals:
-            U[index, dofs[position]] = displacement
+            U[index, position] = displacement
         return U
 
-    def __mount_F(self, dofs: dict) -> np.ndarray:
+    def mount_F(self) -> np.ndarray:
         npts = self._geometry.npts
-        F = np.zeros((npts, len(dofs)))
+        F = np.zeros((npts, 6))
         for index, position, loads in self._loads.loads:
             F[index, position] += loads
         return F
 
-    def __mount_K(self, dofs: dict) -> np.ndarray:
+    def mount_K(self) -> np.ndarray:
         npts = self._geometry.npts
-        K = np.zeros((npts, len(dofs), npts, len(dofs)))
+        K = np.zeros((npts, 6, npts, 6))
         for element in self._structure.elements:
             Kloc = element.stiffness_matrix()
             inds = []
@@ -422,12 +417,26 @@ class StaticSystem():
     def run(self):
         for element in self._structure.elements:
             self.__getpointsfrom(element)
-        dofs = self.__dofs()
-        K = self.__mount_K(dofs)
-        F = self.__mount_F(dofs)
-        U = self.__mount_U(dofs)
+        K = self.mount_K()
+        F = self.mount_F()
+        U = self.mount_U()
         U, F = solve(K, F, U)
         self._solution = U
+        self.apply_on_elements()
+
+    def apply_on_elements(self):
+        for element in self._structure.elements:
+            npts = len(element.ts)
+            points = element.path(element.ts)
+            indexs = np.zeros(npts, dtype="int32")
+            for i, p in enumerate(points):
+                indexs[i] = self._geometry.find_point(p)
+            Uelem = np.zeros((npts, 6))
+            for i, j in enumerate(indexs):
+                Uelem[i, :] = self._solution[j, :]
+            field = ComputeFieldBeam(element, Uelem)
+            element.field = field
+
 
     
     
