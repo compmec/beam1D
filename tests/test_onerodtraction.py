@@ -1,20 +1,25 @@
 import numpy as np
+import pytest
+
+from compmec.strct.element import EulerBernoulli
 from compmec.strct.material import Isotropic
 from compmec.strct.section import Circle
-from compmec.strct.element import EulerBernoulli
 from compmec.strct.solver import solve
-import pytest
-from usefulfunc import *
+
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(
-	depends=["tests/test_solver.py::test_end",
-             "tests/test_material.py::test_end",
-             "tests/test_structural1D.py::test_end",
-             "tests/test_section.py::test_circle"],
-    scope='session')
+    depends=[
+        "tests/test_solver.py::test_end",
+        "tests/test_material.py::test_end",
+        "tests/test_structural1D.py::test_end",
+        "tests/test_section.py::test_circle",
+    ],
+    scope="session",
+)
 def test_begin():
     pass
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -22,14 +27,14 @@ def test_begin():
 def test_tractionX():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (L, 0, 0)
         bar = EulerBernoulli([A, B])
@@ -44,14 +49,13 @@ def test_tractionX():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ux = (4*P*L)/(np.pi*d**2*E)
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [ux, 0, 0, 0, 0, 0]])
-        Fgood = np.array([[-P, 0, 0, 0, 0, 0],
-                          [P, 0, 0, 0, 0, 0]])
+        ux = (4 * P * L) / (np.pi * d**2 * E)
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [ux, 0, 0, 0, 0, 0]])
+        Fgood = np.array([[-P, 0, 0, 0, 0, 0], [P, 0, 0, 0, 0, 0]])
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -59,14 +63,14 @@ def test_tractionX():
 def test_tractionY():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, L, 0)
         bar = EulerBernoulli([A, B])
@@ -81,14 +85,13 @@ def test_tractionY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uy = (4*P*L)/(np.pi*d**2*E)
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, uy, 0, 0, 0, 0]])
-        Fgood = np.array([[0, -P, 0, 0, 0, 0],
-                          [0, P, 0, 0, 0, 0]])
+        uy = (4 * P * L) / (np.pi * d**2 * E)
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, uy, 0, 0, 0, 0]])
+        Fgood = np.array([[0, -P, 0, 0, 0, 0], [0, P, 0, 0, 0, 0]])
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -96,14 +99,14 @@ def test_tractionY():
 def test_tractionZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, 0, L)
         bar = EulerBernoulli([A, B])
@@ -118,13 +121,12 @@ def test_tractionZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uz = (4*P*L)/(np.pi*d**2*E)
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, 0, uz, 0, 0, 0]])
-        Fgood = np.array([[0, 0, -P, 0, 0, 0],
-                          [0, 0, P, 0, 0, 0]])
+        uz = (4 * P * L) / (np.pi * d**2 * E)
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, 0, uz, 0, 0, 0]])
+        Fgood = np.array([[0, 0, -P, 0, 0, 0], [0, 0, P, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -132,15 +134,16 @@ def test_tractionZ():
 def test_tractionXY():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([True, True, False])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, True, False]
+        r /= np.linalg.norm(r)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = L * r
         bar = EulerBernoulli([A, B])
@@ -155,7 +158,7 @@ def test_tractionXY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ur = (4*P*L)/(np.pi*d**2*E)
+        ur = (4 * P * L) / (np.pi * d**2 * E)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
@@ -164,6 +167,7 @@ def test_tractionXY():
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -171,15 +175,16 @@ def test_tractionXY():
 def test_tractionYZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([False, True, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [False, True, True]
+        r /= np.linalg.norm(r)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = L * r
         bar = EulerBernoulli([A, B])
@@ -194,7 +199,7 @@ def test_tractionYZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ur = (4*P*L)/(np.pi*d**2*E)
+        ur = (4 * P * L) / (np.pi * d**2 * E)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
@@ -203,6 +208,7 @@ def test_tractionYZ():
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -210,15 +216,16 @@ def test_tractionYZ():
 def test_tractionXZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([True, False, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, False, True]
+        r /= np.linalg.norm(r)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = L * r
         bar = EulerBernoulli([A, B])
@@ -233,7 +240,7 @@ def test_tractionXZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ur = (4*P*L)/(np.pi*d**2*E)
+        ur = (4 * P * L) / (np.pi * d**2 * E)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
@@ -243,23 +250,27 @@ def test_tractionXZ():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
-@pytest.mark.order(2)    
+
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_tractionXY", "test_tractionYZ", "test_tractionXZ"])
+@pytest.mark.dependency(
+    depends=["test_tractionXY", "test_tractionYZ", "test_tractionXZ"]
+)
 def test_tractionR():
     ntests = 10
     for i in range(ntests):
-        r = random_unit_vector()
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        r = np.random.uniform(-1, 1, 3)
+        r /= np.linalg.norm(r)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
-        B = L*r
+        B = L * r
         bar = EulerBernoulli([A, B])
         bar.material = steel
         bar.section = circle
@@ -272,7 +283,7 @@ def test_tractionR():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ur = (4*P*L)/(np.pi*d**2*E)
+        ur = (4 * P * L) / (np.pi * d**2 * E)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
@@ -282,10 +293,12 @@ def test_tractionR():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
+
 @pytest.mark.order(2)
 @pytest.mark.dependency(depends=["test_begin", "test_tractionR"])
 def test_end():
     pass
+
 
 def main():
     test_begin()
@@ -297,6 +310,7 @@ def main():
     test_tractionXZ()
     test_tractionR()
     test_end()
+
 
 if __name__ == "__main__":
     main()

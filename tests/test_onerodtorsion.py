@@ -1,20 +1,25 @@
 import numpy as np
+import pytest
+
+from compmec.strct.element import EulerBernoulli
 from compmec.strct.material import Isotropic
 from compmec.strct.section import Circle
-from compmec.strct.element import EulerBernoulli
 from compmec.strct.solver import solve
-import pytest
-from usefulfunc import *
+
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(
-	depends=["tests/test_solver.py::test_end",
-             "tests/test_material.py::test_end",
-             "tests/test_structural1D.py::test_end",
-             "tests/test_section.py::test_circle"],
-    scope='session')
+    depends=[
+        "tests/test_solver.py::test_end",
+        "tests/test_material.py::test_end",
+        "tests/test_structural1D.py::test_end",
+        "tests/test_section.py::test_circle",
+    ],
+    scope="session",
+)
 def test_begin():
     pass
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -22,14 +27,14 @@ def test_begin():
 def test_torsionXcircle():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        T = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        T = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (L, 0, 0)
         bar = EulerBernoulli([A, B])
@@ -44,14 +49,13 @@ def test_torsionXcircle():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        tx = 64*T*L*(1+nu)/(np.pi*E*d**4)
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, tx, 0, 0]])
-        Fgood = np.array([[0, 0, 0, -T, 0, 0],
-                          [0, 0, 0, T, 0, 0]])
+        tx = 64 * T * L * (1 + nu) / (np.pi * E * d**4)
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, tx, 0, 0]])
+        Fgood = np.array([[0, 0, 0, -T, 0, 0], [0, 0, 0, T, 0, 0]])
 
         np.testing.assert_almost_equal(Utest, Ugood)
-        np.testing.assert_almost_equal(Ftest, Fgood)	
+        np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -59,14 +63,14 @@ def test_torsionXcircle():
 def test_torsionYcircle():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        T = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        T = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, L, 0)
         bar = EulerBernoulli([A, B])
@@ -81,14 +85,13 @@ def test_torsionYcircle():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ty = 64*T*L*(1+nu)/(np.pi*E*d**4)
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, ty, 0]])
-        Fgood = np.array([[0, 0, 0, 0, -T, 0],
-                          [0, 0, 0, 0, T, 0]])
+        ty = 64 * T * L * (1 + nu) / (np.pi * E * d**4)
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, ty, 0]])
+        Fgood = np.array([[0, 0, 0, 0, -T, 0], [0, 0, 0, 0, T, 0]])
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -96,14 +99,14 @@ def test_torsionYcircle():
 def test_torsionZcircle():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        T = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        T = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, 0, L)
         bar = EulerBernoulli([A, B])
@@ -118,14 +121,13 @@ def test_torsionZcircle():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        tz = 64*T*L*(1+nu)/(np.pi*E*d**4)
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, tz]])
-        Fgood = np.array([[0, 0, 0, 0, 0, -T],
-                          [0, 0, 0, 0, 0, T]])
+        tz = 64 * T * L * (1 + nu) / (np.pi * E * d**4)
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, tz]])
+        Fgood = np.array([[0, 0, 0, 0, 0, -T], [0, 0, 0, 0, 0, T]])
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -133,17 +135,18 @@ def test_torsionZcircle():
 def test_torsionXYcircle():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        T = random_between(-1, 1)
-        r = random_unit_vector([True, True, False])
-        
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        T = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, True, False]
+        r /= np.linalg.norm(r)
+
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
-        B = L*r
+        B = L * r
         bar = EulerBernoulli([A, B])
         bar.material = steel
         bar.section = circle
@@ -156,7 +159,7 @@ def test_torsionXYcircle():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        tr = 64*T*L*(1+nu)/(np.pi*E*d**4)
+        tr = 64 * T * L * (1 + nu) / (np.pi * E * d**4)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, 3:] = tr * r
@@ -165,6 +168,7 @@ def test_torsionXYcircle():
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -172,17 +176,18 @@ def test_torsionXYcircle():
 def test_torsionYZcircle():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        T = random_between(-1, 1)
-        r = random_unit_vector([False, True, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        T = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [False, True, True]
+        r /= np.linalg.norm(r)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
-        B = L*r
+        B = L * r
         bar = EulerBernoulli([A, B])
         bar.material = steel
         bar.section = circle
@@ -195,7 +200,7 @@ def test_torsionYZcircle():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        tr = 64*T*L*(1+nu)/(np.pi*E*d**4)
+        tr = 64 * T * L * (1 + nu) / (np.pi * E * d**4)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, 3:] = tr * r
@@ -204,6 +209,7 @@ def test_torsionYZcircle():
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -211,17 +217,18 @@ def test_torsionYZcircle():
 def test_torsionXZcircle():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        T = random_between(-1, 1)
-        r = random_unit_vector([True, False, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        T = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, False, True]
+        r /= np.linalg.norm(r)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
-        B = L*r
+        B = L * r
         bar = EulerBernoulli([A, B])
         bar.material = steel
         bar.section = circle
@@ -234,7 +241,7 @@ def test_torsionXZcircle():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        tr = 64*T*L*(1+nu)/(np.pi*E*d**4)
+        tr = 64 * T * L * (1 + nu) / (np.pi * E * d**4)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, 3:] = tr * r
@@ -243,24 +250,28 @@ def test_torsionXZcircle():
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_torsionXYcircle", "test_torsionYZcircle", "test_torsionXZcircle"])
+@pytest.mark.dependency(
+    depends=["test_torsionXYcircle", "test_torsionYZcircle", "test_torsionXZcircle"]
+)
 def test_torsionRcircle():
     ntests = 10
     for i in range(ntests):
-        r = random_unit_vector()
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        T = random_between(-1, 1)
+        r = np.random.uniform(-1, 1, 3)
+        r /= np.linalg.norm(r)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        T = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
-        B = L*r
+        B = L * r
         bar = EulerBernoulli([A, B])
         bar.material = steel
         bar.section = circle
@@ -273,7 +284,7 @@ def test_torsionRcircle():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        tr = 64*T*L*(1+nu)/(np.pi*E*d**4)
+        tr = 64 * T * L * (1 + nu) / (np.pi * E * d**4)
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, 3:] = tr * r
@@ -282,11 +293,13 @@ def test_torsionRcircle():
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(depends=["test_begin", "test_torsionRcircle"])
 def test_end():
     pass
+
 
 def main():
     test_begin()
@@ -298,6 +311,7 @@ def main():
     test_torsionXZcircle()
     test_torsionRcircle()
     test_end()
+
 
 if __name__ == "__main__":
     main()

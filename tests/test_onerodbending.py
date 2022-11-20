@@ -1,21 +1,25 @@
 import numpy as np
+import pytest
+
+from compmec.strct.element import EulerBernoulli
 from compmec.strct.material import Isotropic
 from compmec.strct.section import Circle
-from compmec.strct.element import EulerBernoulli
 from compmec.strct.solver import solve
-import pytest
-from usefulfunc import *
 
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(
-	depends=["tests/test_solver.py::test_end",
-             "tests/test_material.py::test_end",
-             "tests/test_structural1D.py::test_end",
-             "tests/test_section.py::test_circle"],
-    scope='session')
+    depends=[
+        "tests/test_solver.py::test_end",
+        "tests/test_material.py::test_end",
+        "tests/test_structural1D.py::test_end",
+        "tests/test_section.py::test_circle",
+    ],
+    scope="session",
+)
 def test_begin():
     pass
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -23,14 +27,14 @@ def test_begin():
 def test_bendingXtoY():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (L, 0, 0)
         bar = EulerBernoulli([A, B])
@@ -45,32 +49,29 @@ def test_bendingXtoY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-
-        uy = (64*P*L**3)/(3*np.pi*E*d**4)
-        tz = 32*P*L**2/(np.pi*E*d**4)
-        Mz = P*L
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, uy, 0, 0, 0, tz]])
-        Fgood = np.array([[0, -P, 0, 0, 0, -Mz],
-                          [0, P, 0, 0, 0, 0]])
+        uy = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tz = 32 * P * L**2 / (np.pi * E * d**4)
+        Mz = P * L
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, uy, 0, 0, 0, tz]])
+        Fgood = np.array([[0, -P, 0, 0, 0, -Mz], [0, P, 0, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
-@pytest.mark.order(2)   
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingXtoZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (L, 0, 0)
         bar = EulerBernoulli([A, B])
@@ -85,13 +86,11 @@ def test_bendingXtoZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uz = (64*P*L**3)/(3*np.pi*E*d**4)
-        ty = 32*P*L**2/(np.pi*E*d**4)
-        My = P*L
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, 0, uz, 0, -ty, 0]])
-        Fgood = np.array([[0, 0, -P, 0, My, 0],
-                          [0, 0, P, 0, 0, 0]])
+        uz = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        ty = 32 * P * L**2 / (np.pi * E * d**4)
+        My = P * L
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, 0, uz, 0, -ty, 0]])
+        Fgood = np.array([[0, 0, -P, 0, My, 0], [0, 0, P, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
@@ -102,16 +101,17 @@ def test_bendingXtoZ():
 def test_bendingXtoYZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([False, True, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [False, True, True]
+        r /= np.linalg.norm(r)
         rx = np.cross(r, (1, 0, 0))
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (L, 0, 0)
         bar = EulerBernoulli([A, B])
@@ -126,9 +126,9 @@ def test_bendingXtoYZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ur = (64*P*L**3)/(3*np.pi*E*d**4)
-        tr = 32*P*L**2/(np.pi*E*d**4)
-        Mr = P*L
+        ur = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tr = 32 * P * L**2 / (np.pi * E * d**4)
+        Mr = P * L
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
@@ -136,7 +136,7 @@ def test_bendingXtoYZ():
         Fgood[0, :3] = -P * r
         Fgood[0, 3:] = Mr * rx
         Fgood[1, :3] = P * r
-        
+
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
@@ -147,14 +147,14 @@ def test_bendingXtoYZ():
 def test_bendingYtoX():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, L, 0)
         bar = EulerBernoulli([A, B])
@@ -169,15 +169,14 @@ def test_bendingYtoX():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ux = (64*P*L**3)/(3*np.pi*E*d**4)
-        tz = 32*P*L**2/(np.pi*E*d**4)
-        Mz = P*L
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [ux, 0, 0, 0, 0, -tz]])
-        Fgood = np.array([[-P, 0, 0, 0, 0, Mz],
-                          [P, 0, 0, 0, 0, 0]])
+        ux = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tz = 32 * P * L**2 / (np.pi * E * d**4)
+        Mz = P * L
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [ux, 0, 0, 0, 0, -tz]])
+        Fgood = np.array([[-P, 0, 0, 0, 0, Mz], [P, 0, 0, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
+
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
@@ -185,14 +184,14 @@ def test_bendingYtoX():
 def test_bendingYtoZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, L, 0)
         bar = EulerBernoulli([A, B])
@@ -207,13 +206,11 @@ def test_bendingYtoZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uz = (64*P*L**3)/(3*np.pi*E*d**4)
-        tx = 32*P*L**2/(np.pi*E*d**4)
-        Mx = P*L
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, 0, uz, tx, 0, 0]])
-        Fgood = np.array([[0, 0, -P, -Mx, 0, 0],
-                          [0, 0, P, 0, 0, 0]])
+        uz = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tx = 32 * P * L**2 / (np.pi * E * d**4)
+        Mx = P * L
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, 0, uz, tx, 0, 0]])
+        Fgood = np.array([[0, 0, -P, -Mx, 0, 0], [0, 0, P, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
@@ -224,16 +221,17 @@ def test_bendingYtoZ():
 def test_bendingYtoXZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([True, False, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, False, True]
+        r /= np.linalg.norm(r)
         rx = np.cross(r, (0, 1, 0))
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, L, 0)
         bar = EulerBernoulli([A, B])
@@ -248,9 +246,9 @@ def test_bendingYtoXZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ur = (64*P*L**3)/(3*np.pi*E*d**4)
-        tr = 32*P*L**2/(np.pi*E*d**4)
-        Mr = P*L
+        ur = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tr = 32 * P * L**2 / (np.pi * E * d**4)
+        Mr = P * L
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
@@ -258,25 +256,25 @@ def test_bendingYtoXZ():
         Fgood[0, :3] = -P * r
         Fgood[0, 3:] = Mr * rx
         Fgood[1, :3] = P * r
-        
+
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
-@pytest.mark.order(2)      
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingZtoX():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, 0, L)
         bar = EulerBernoulli([A, B])
@@ -291,31 +289,29 @@ def test_bendingZtoX():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ux = (64*P*L**3)/(3*np.pi*E*d**4)
-        ty = 32*P*L**2/(np.pi*E*d**4)
-        My = P*L
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [ux, 0, 0, 0, ty, 0]])
-        Fgood = np.array([[-P, 0, 0, 0, -My, 0],
-                          [P, 0, 0, 0, 0, 0]])
+        ux = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        ty = 32 * P * L**2 / (np.pi * E * d**4)
+        My = P * L
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [ux, 0, 0, 0, ty, 0]])
+        Fgood = np.array([[-P, 0, 0, 0, -My, 0], [P, 0, 0, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
 
-@pytest.mark.order(2)  
+@pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXtoY"])
 def test_bendingZtoY():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, 0, L)
         bar = EulerBernoulli([A, B])
@@ -330,13 +326,11 @@ def test_bendingZtoY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uy = (64*P*L**3)/(3*np.pi*E*d**4)
-        tx = 32*P*L**2/(np.pi*E*d**4)
-        Mx = P*L
-        Ugood = np.array([[0, 0, 0, 0, 0, 0],
-                          [0, uy, 0, -tx, 0, 0]])
-        Fgood = np.array([[0, -P, 0, Mx, 0, 0],
-                          [0, P, 0, 0, 0, 0]])
+        uy = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tx = 32 * P * L**2 / (np.pi * E * d**4)
+        Mx = P * L
+        Ugood = np.array([[0, 0, 0, 0, 0, 0], [0, uy, 0, -tx, 0, 0]])
+        Fgood = np.array([[0, -P, 0, Mx, 0, 0], [0, P, 0, 0, 0, 0]])
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
@@ -347,16 +341,17 @@ def test_bendingZtoY():
 def test_bendingZtoXY():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([True, True, False])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, True, False]
+        r /= np.linalg.norm(r)
         rx = np.cross(r, (0, 0, 1))
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = (0, 0, L)
         bar = EulerBernoulli([A, B])
@@ -371,9 +366,9 @@ def test_bendingZtoXY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        ur = (64*P*L**3)/(3*np.pi*E*d**4)
-        tr = 32*P*L**2/(np.pi*E*d**4)
-        Mr = P*L
+        ur = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tr = 32 * P * L**2 / (np.pi * E * d**4)
+        Mr = P * L
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = ur * r
@@ -381,7 +376,7 @@ def test_bendingZtoXY():
         Fgood[0, :3] = -P * r
         Fgood[0, 3:] = Mr * rx
         Fgood[1, :3] = P * r
-        
+
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
@@ -392,16 +387,17 @@ def test_bendingZtoXY():
 def test_bendingXYtoXY():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([True, True, False])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, True, False]
+        r /= np.linalg.norm(r)
         v = np.cross(r, (0, 0, 1))
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = L * r
         bar = EulerBernoulli([A, B])
@@ -416,9 +412,9 @@ def test_bendingXYtoXY():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uv = (64*P*L**3)/(3*np.pi*E*d**4)
-        tz = 32*P*L**2/(np.pi*E*d**4)
-        Mz = P*L
+        uv = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tz = 32 * P * L**2 / (np.pi * E * d**4)
+        Mz = P * L
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = uv * v
@@ -429,22 +425,24 @@ def test_bendingXYtoXY():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
+
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_bendingXtoZ", "test_bendingZtoX"])
 def test_bendingXZtoXZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([True, False, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [True, False, True]
+        r /= np.linalg.norm(r)
         v = np.cross(r, (0, 1, 0))
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = L * r
         bar = EulerBernoulli([A, B])
@@ -459,9 +457,9 @@ def test_bendingXZtoXZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uv = (64*P*L**3)/(3*np.pi*E*d**4)
-        ty = 32*P*L**2/(np.pi*E*d**4)
-        My = P*L
+        uv = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        ty = 32 * P * L**2 / (np.pi * E * d**4)
+        My = P * L
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = uv * v
@@ -479,16 +477,17 @@ def test_bendingXZtoXZ():
 def test_bendingYZtoYZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector([False, True, True])
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3) * [False, True, True]
+        r /= np.linalg.norm(r)
         v = np.cross(r, (1, 0, 0))
 
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = L * r
         bar = EulerBernoulli([A, B])
@@ -503,9 +502,9 @@ def test_bendingYZtoYZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uv = (64*P*L**3)/(3*np.pi*E*d**4)
-        tx = 32*P*L**2/(np.pi*E*d**4)
-        Mx = P*L
+        uv = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tx = 32 * P * L**2 / (np.pi * E * d**4)
+        Mx = P * L
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = uv * v
@@ -516,42 +515,56 @@ def test_bendingYZtoYZ():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
+
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_bendingXYtoXY", "test_bendingXtoYZ", "test_bendingYtoXZ"])
+@pytest.mark.dependency(
+    depends=["test_bendingXYtoXY", "test_bendingXtoYZ", "test_bendingYtoXZ"]
+)
 def test_bendingXYtoXYZ():
     pass
 
+
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_bendingXZtoXZ", "test_bendingXtoYZ", "test_bendingZtoXY"])
+@pytest.mark.dependency(
+    depends=["test_bendingXZtoXZ", "test_bendingXtoYZ", "test_bendingZtoXY"]
+)
 def test_bendingXZtoXYZ():
     pass
 
-@pytest.mark.order(2)
-@pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_bendingYZtoYZ", "test_bendingZtoXY", "test_bendingYtoXZ"])
-def test_bendingYZtoXYZ():
-    pass
 
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_bendingXYtoXYZ", "test_bendingXZtoXYZ", "test_bendingYZtoXYZ"])
+@pytest.mark.dependency(
+    depends=["test_bendingYZtoYZ", "test_bendingZtoXY", "test_bendingYtoXZ"]
+)
+def test_bendingYZtoXYZ():
+    pass
+
+
+@pytest.mark.order(2)
+@pytest.mark.timeout(2)
+@pytest.mark.dependency(
+    depends=["test_bendingXYtoXYZ", "test_bendingXZtoXYZ", "test_bendingYZtoXYZ"]
+)
 def test_bendingXYZtoXYZ():
     ntests = 10
     for i in range(ntests):
-        E = random_between(1, 2)
-        nu = random_between(0, 0.49)
-        d = random_between(1, 2)
-        L = random_between(1, 2)
-        P = random_between(-1, 1)
-        r = random_unit_vector()
-        v = random_vector()
-        v = normalize(v-projection(v, r))
+        E = np.random.uniform(1, 2)
+        nu = np.random.uniform(0, 0.49)
+        d = np.random.uniform(1, 2)
+        L = np.random.uniform(1, 2)
+        P = np.random.uniform(-1, 1)
+        r = np.random.uniform(-1, 1, 3)
+        r /= np.linalg.norm(r)
+        v = np.random.uniform(-1, 1, 3)
+        v -= np.inner(v, r) * r / np.sum(r**2)
+        v /= np.linalg.norm(v)
         w = np.cross(r, v)
-        
+
         steel = Isotropic(E=E, nu=nu)
-        circle = Circle(R=d/2, nu=nu)
+        circle = Circle(R=d / 2, nu=nu)
         A = (0, 0, 0)
         B = L * r
         bar = EulerBernoulli([A, B])
@@ -566,9 +579,9 @@ def test_bendingXYZtoXYZ():
         K = bar.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
 
-        uv = (64*P*L**3)/(3*np.pi*E*d**4)
-        tw = 32*P*L**2/(np.pi*E*d**4)
-        Mw = P*L
+        uv = (64 * P * L**3) / (3 * np.pi * E * d**4)
+        tw = 32 * P * L**2 / (np.pi * E * d**4)
+        Mw = P * L
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
         Ugood[1, :3] = uv * v
@@ -579,10 +592,12 @@ def test_bendingXYZtoXYZ():
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
 
+
 @pytest.mark.order(2)
 @pytest.mark.dependency(depends=["test_begin", "test_bendingXYZtoXYZ"])
 def test_end():
     pass
+
 
 def main():
     test_begin()
@@ -603,6 +618,7 @@ def main():
     test_bendingYZtoXYZ()
     test_bendingXYZtoXYZ()
     test_end()
+
 
 if __name__ == "__main__":
     main()
