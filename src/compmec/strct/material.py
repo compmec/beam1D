@@ -24,6 +24,7 @@ class Isotropic(Material):
 
     def __init__(self, **kwargs):
         self.__init_variables()
+        self.__valid_kwargs(kwargs)
         self.__fill_variables(**kwargs)
 
     def __init_variables(self):
@@ -32,6 +33,15 @@ class Isotropic(Material):
         self.__K = None
         self.__nu = None
         self.__lambda = None
+
+    def __valid_kwargs(**kwargs):
+        for key, item in kwargs.items():
+            try:
+                float(item)
+            except Exception as e:
+                raise TypeError(f"All the elements in the vector must be floats: kwargs[{key}] = {type(item)}")
+            if float(item) < 0:
+                raise ValueError("All the elements must be positive!")
 
     def __fill_variables(self, **kwargs):
         if len(kwargs) != 2:
@@ -47,7 +57,7 @@ class Isotropic(Material):
         elif "L" in kwargs and "G" in kwargs:
             self.__compute_from_LG(kwargs["L"], kwargs["G"])
         elif "L" in kwargs and "E" in kwargs:
-            raise ValueError("Lame1 and E options are not avalable")
+            self.__compute_from_LE(kwargs["L"], kwargs["E"])
         elif "K" in kwargs and "L" in kwargs:
             self.__compute_from_KL(kwargs["K"], kwargs["L"])
         elif "K" in kwargs and "G" in kwargs:
@@ -61,7 +71,7 @@ class Isotropic(Material):
         elif "K" in kwargs and "E" in kwargs:
             self.__compute_from_KE(kwargs["K"], kwargs["E"])
         else:
-            raise ValueError("Cannot ")
+            raise ValueError(f"Cannot compute with the arguments {kwargs.keys()}")
         
 
     def __compute_from_EG(self, E: float, G: float):
@@ -70,6 +80,18 @@ class Isotropic(Material):
         self.nu = E/(2*G) - 1
         self.K = E*G/(3*(3*G-E))
         self.Lame1 = G*(E-2*G)/(3*G-E)
+
+    def __compute_from_LE(self, L: float, E: float):
+        """
+        Wikipedia website don't give a direct relation.
+        We use that E/L = (1+nu)*(1-2*nu)/nu
+        """
+        self.Lame1 = L
+        self.E = E
+        r = E/L
+        self.nu = (np.sqrt(9+2*r+r**2)-(1+r))/4
+        self.G = E/(2*(1+self.nu))
+        self.K = L + 2*self.G/3
 
     def __compute_from_LG(self, L: float, G: float):
         self.Lame1 = L

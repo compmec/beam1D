@@ -74,6 +74,16 @@ def test_fails():
 		Isotropic(E=210e+3, nu=-0.2)
 	with pytest.raises(ValueError):
 		Isotropic(E=210e+3, nu=0.7)
+	with pytest.raises(ValueError):
+		Isotropic(Ef=210e+3, nu=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(mu=70e+3, nu=0.3)
+	with pytest.raises(ValueError):
+		Isotropic(E=210e+3, G=60e+3, nu=0.4)
+	with pytest.raises(ValueError):
+		Isotropic(E=-210e+3, G=60e+3)
+	with pytest.raises(TypeError):
+		Isotropic(E="210", G=60e+3)
 
 @pytest.mark.order(1)
 @pytest.mark.dependency(depends=["test_begin", "test_main", "test_fails"])
