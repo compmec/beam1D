@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 
 from compmec.strct.__classes__ import ProfileInterface
-from compmec.strct.verifytype import PositiveFloat, type_check
+from compmec.strct.verifytype import PositiveFloat
 
 
 class ThinProfile(abc.ABC):

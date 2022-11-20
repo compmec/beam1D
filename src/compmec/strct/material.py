@@ -1,32 +1,15 @@
 import numpy as np
 
 from compmec.strct.__classes__ import Material
+from compmec.strct.verifytype import PositiveFloat
 
 
 class Isotropic(Material):
-    def __doc__(self):
-        """
-        Receives the configuration material.
-        It's isotropic
-        """
-        pass
-
-    @staticmethod
-    def isFloat(value: float):
-        try:
-            float(value)
-        except Exception as e:
-            raise TypeError(f"The received value has type {type(value)}, must be float")
-
-    @staticmethod
-    def isPositive(value: float):
-        if value <= 0:
-            raise ValueError(f"The value must be positive! Received {value}")
-
     def __init__(self, **kwargs):
         self.__init_variables()
         self.__valid_kwargs(kwargs)
         self.__fill_variables(**kwargs)
+        self.__verify_all_final()
 
     def __init_variables(self):
         self.__E = None
@@ -37,14 +20,7 @@ class Isotropic(Material):
 
     def __valid_kwargs(self, kwargs):
         for key, item in kwargs.items():
-            try:
-                float(item)
-            except Exception as e:
-                raise TypeError(
-                    f"All the elements in the vector must be floats: kwargs[{key}] = {type(item)}"
-                )
-            if float(item) < 0:
-                raise ValueError("All the elements must be positive!")
+            PositiveFloat.verify(item, key)
 
     def __fill_variables(self, **kwargs):
         if len(kwargs) != 2:
@@ -78,80 +54,91 @@ class Isotropic(Material):
         else:
             raise ValueError(f"Cannot compute with the arguments {kwargs.keys()}")
 
-    def __compute_from_EG(self, E: float, G: float):
-        self.E = E
-        self.G = G
-        self.nu = E / (2 * G) - 1
-        self.K = E * G / (3 * (3 * G - E))
-        self.Lame1 = G * (E - 2 * G) / (3 * G - E)
+    def __verify_all_final(self):
+        PositiveFloat.verify(self.E, "E")
+        PositiveFloat.verify(self.G, "G")
+        PositiveFloat.verify(self.K, "K")
+        PositiveFloat.verify(self.nu, "nu")
+        PositiveFloat.verify(self.Lame1, "Lame1")
+        if 0.49 < self.nu and self.nu < 0.5:
+            raise ValueError(
+                "Poisson is near 0.5. We cannot treat non-compressible materials"
+            )
 
-    def __compute_from_LE(self, L: float, E: float):
+    def __compute_from_EG(self, E: float, G: float):
+        self.__E = E
+        self.__G = G
+        self.__nu = E / (2 * G) - 1
+        self.__K = E * G / (3 * (3 * G - E))
+        self.__L = G * (E - 2 * G) / (3 * G - E)
+
+    def __compute_from_LE(self, L: PositiveFloat, E: PositiveFloat):
         """
         Wikipedia website don't give a direct relation.
         We use that E/L = (1+nu)*(1-2*nu)/nu
         """
-        self.Lame1 = L
-        self.E = E
+        self.__L = L
+        self.__E = E
         r = E / L
-        self.nu = (np.sqrt(9 + 2 * r + r**2) - (1 + r)) / 4
-        self.G = E / (2 * (1 + self.nu))
-        self.K = L + 2 * self.G / 3
+        self.__nu = (np.sqrt(9 + 2 * r + r**2) - (1 + r)) / 4
+        self.__G = E / (2 * (1 + self.nu))
+        self.__K = L + 2 * self.G / 3
 
-    def __compute_from_LG(self, L: float, G: float):
-        self.Lame1 = L
-        self.G = G
-        self.E = G * (3 * L + 2 * G) / (L + G)
-        self.K = L + 2 * G / 3
-        self.nu = L / (2 * (L + G))
+    def __compute_from_LG(self, L: PositiveFloat, G: PositiveFloat):
+        self.__L = L
+        self.__G = G
+        self.__E = G * (3 * L + 2 * G) / (L + G)
+        self.__K = L + 2 * G / 3
+        self.__nu = L / (2 * (L + G))
 
-    def __compute_from_KL(self, K: float, L: float):
-        self.K = K
-        self.Lame1 = L
-        self.E = 9 * K * (K - L) / (3 * K - L)
-        self.G = 3 * (K - L) / 2
-        self.nu = L / (3 * K - L)
+    def __compute_from_KL(self, K: PositiveFloat, L: PositiveFloat):
+        self.__K = K
+        self.__L = L
+        self.__E = 9 * K * (K - L) / (3 * K - L)
+        self.__G = 3 * (K - L) / 2
+        self.__nu = L / (3 * K - L)
 
-    def __compute_from_KG(self, K: float, G: float):
-        self.K = K
-        self.G = G
-        self.Lame1 = K - 2 * G / 3
-        self.E = 9 * K * G / (3 * K + G)
-        self.nu = (3 * K - 2 * G) / (2 * (3 * K + G))
+    def __compute_from_KG(self, K: PositiveFloat, G: PositiveFloat):
+        self.__K = K
+        self.__G = G
+        self.__L = K - 2 * G / 3
+        self.__E = 9 * K * G / (3 * K + G)
+        self.__nu = (3 * K - 2 * G) / (2 * (3 * K + G))
 
-    def __compute_from_Lnu(self, L: float, nu: float):
-        self.Lame1 = L
-        self.nu = nu
-        self.K = L * (1 + nu) / (3 * nu)
-        self.E = L * (1 + nu) * (1 - 2 * nu) / nu
-        self.G = L * (1 - 2 * nu) / (2 * nu)
+    def __compute_from_Lnu(self, L: PositiveFloat, nu: PositiveFloat):
+        self.__L = L
+        self.__nu = nu
+        self.__K = L * (1 + nu) / (3 * nu)
+        self.__E = L * (1 + nu) * (1 - 2 * nu) / nu
+        self.__G = L * (1 - 2 * nu) / (2 * nu)
 
-    def __compute_from_Gnu(self, G: float, nu: float):
-        self.nu = nu
-        self.G = G
-        self.Lame1 = 2 * G * nu / (1 - 2 * nu)
-        self.E = 2 * G * (1 + nu)
-        self.K = 2 * G * (1 + nu) / (3 * (1 - 2 * nu))
+    def __compute_from_Gnu(self, G: PositiveFloat, nu: PositiveFloat):
+        self.__nu = nu
+        self.__G = G
+        self.__L = 2 * G * nu / (1 - 2 * nu)
+        self.__E = 2 * G * (1 + nu)
+        self.__K = 2 * G * (1 + nu) / (3 * (1 - 2 * nu))
 
-    def __compute_from_Enu(self, E: float, nu: float):
-        self.E = E
-        self.nu = nu
-        self.K = E / (3 * (1 - 2 * nu))
-        self.G = E / (2 * (1 + nu))
-        self.Lame1 = 2 * self.G * nu / (1 - 2 * nu)
+    def __compute_from_Enu(self, E: PositiveFloat, nu: PositiveFloat):
+        self.__E = E
+        self.__nu = nu
+        self.__K = E / (3 * (1 - 2 * nu))
+        self.__G = E / (2 * (1 + nu))
+        self.__L = 2 * self.G * nu / (1 - 2 * nu)
 
-    def __compute_from_Knu(self, K: float, nu: float):
-        self.K = K
-        self.nu = nu
-        self.E = 3 * K * (1 - 2 * nu)
-        self.G = 3 * K * (1 - 2 * nu) / (2 * (1 + nu))
-        self.Lame1 = 3 * K * nu / (1 + nu)
+    def __compute_from_Knu(self, K: PositiveFloat, nu: PositiveFloat):
+        self.__K = K
+        self.__nu = nu
+        self.__E = 3 * K * (1 - 2 * nu)
+        self.__G = 3 * K * (1 - 2 * nu) / (2 * (1 + nu))
+        self.__L = 3 * K * nu / (1 + nu)
 
-    def __compute_from_KE(self, K: float, E: float):
-        self.K = K
-        self.E = E
-        self.Lame1 = 3 * K * (3 * K - E) / (9 * K - E)
-        self.G = 3 * K * E / (9 * K - E)
-        self.nu = (3 * K - E) / (6 * K)
+    def __compute_from_KE(self, K: PositiveFloat, E: PositiveFloat):
+        self.__K = K
+        self.__E = E
+        self.__L = 3 * K * (3 * K - E) / (9 * K - E)
+        self.__G = 3 * K * E / (9 * K - E)
+        self.__nu = (3 * K - E) / (6 * K)
 
     @property
     def E(self) -> float:
@@ -171,48 +158,8 @@ class Isotropic(Material):
 
     @property
     def Lame1(self) -> float:
-        return self.__lambda
+        return self.__L
 
     @property
     def Lame2(self) -> float:
         return self.__G
-
-    @E.setter
-    def E(self, value: float):
-        Isotropic.isFloat(value)
-        Isotropic.isPositive(value)
-        self.__E = float(value)
-
-    @G.setter
-    def G(self, value: float):
-        Isotropic.isFloat(value)
-        Isotropic.isPositive(value)
-        self.__G = float(value)
-
-    @K.setter
-    def K(self, value: float):
-        Isotropic.isFloat(value)
-        Isotropic.isPositive(value)
-        self.__K = float(value)
-
-    @nu.setter
-    def nu(self, value: float):
-        Isotropic.isFloat(value)
-        Isotropic.isPositive(value)
-        if 0.49 < value and value < 0.5:
-            raise ValueError(
-                "Poisson is near 0.5. We cannot treat non-compressible materials"
-            )
-        if value < 0 or 0.49 < value:
-            raise ValueError("Poisson modulus must be between [0, 0.49]")
-        self.__nu = value
-
-    @Lame1.setter
-    def Lame1(self, value: float):
-        Isotropic.isFloat(value)
-        Isotropic.isPositive(value)
-        self.__lambda = value
-
-    @Lame2.setter
-    def Lame2(self, value: float):
-        self.G = value
