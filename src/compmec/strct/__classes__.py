@@ -1,7 +1,9 @@
-import numpy as np
-from typing import Iterable, List, Tuple, Optional, Union, Callable
-import compmec.nurbs as nurbs 
 import abc
+from typing import Callable, Iterable, List, Optional, Tuple, Union
+
+import compmec.nurbs as nurbs
+import numpy as np
+
 
 class Point(object):
     __instances = []
@@ -37,8 +39,10 @@ class Point(object):
         if len(Point.__instances) == 0:
             return None
         value = np.array(value, dtype="float64")
-        distances = np.array([np.sum((point.p-value)**2) for point in Point.__instances])
-        mask = (distances < distmax)
+        distances = np.array(
+            [np.sum((point.p - value) ** 2) for point in Point.__instances]
+        )
+        mask = distances < distmax
         if not np.any(mask):
             return None
         return np.where(mask)[0][0]
@@ -46,7 +50,7 @@ class Point(object):
     def __init__(self, value: Tuple[float]):
         self.__p = np.array(value, dtype="float64")
         self.__r = np.zeros(3, dtype="float64")
-        self.__id = len(Point.__instances)-1
+        self.__id = len(Point.__instances) - 1
 
     @property
     def id(self):
@@ -59,10 +63,10 @@ class Point(object):
     @property
     def r(self):
         return self.__r
-    
+
     def __str__(self):
         return str(self.p)
-    
+
     def __repr__(self):
         return str(self)
 
@@ -71,13 +75,16 @@ class Point(object):
 
     def __list__(self):
         return list(self.p)
-    
 
+
+class ProfileInterface(abc.ABC):
+    pass
 
 
 class Material(object):
     def __init__(self):
         super().__init__(self)
+
 
 class Section(object):
     def __init__(self, nu: float):
@@ -118,7 +125,7 @@ class Section(object):
         if self.__A is None:
             self.compute_areas()
         return self.__A
-    
+
     @property
     def Ix(self) -> float:
         if self.__I is None:
@@ -149,7 +156,9 @@ class Section(object):
         if value < 0:
             raise ValueError(f"The poisson value cannot be less than 0: nu={value}")
         if value > 0.5:
-            raise ValueError(f"The poisson value cannot be greater than 0.5: nu={value}")
+            raise ValueError(
+                f"The poisson value cannot be greater than 0.5: nu={value}"
+            )
         self.__nu = value
 
     @Ax.setter
@@ -210,12 +219,12 @@ class Section(object):
     def compute_inertias(self):
         raise NotImplementedError("This function must be overwritten")
 
-    def triangular_mesh(self, elementsize:float):
+    def triangular_mesh(self, elementsize: float):
         raise NotImplementedError("This function must be redefined by child class")
 
-    def mesh(self, elementsize:float = None):
+    def mesh(self, elementsize: float = None):
         if elementsize is None:
-            elementsize = 0.1*np.sqrt(self.Ax)
+            elementsize = 0.1 * np.sqrt(self.Ax)
         return self.triangular_mesh(elementsize)
 
 
@@ -268,7 +277,6 @@ class Structural1DInterface(abc.ABC):
         except AttributeError as e:
             raise ValueError("You must run the simulation before calling 'field'")
 
-
     @path.setter
     def path(self, value: nurbs.SplineCurve):
         self.valid_path(value)
@@ -278,12 +286,12 @@ class Structural1DInterface(abc.ABC):
     def material(self, value: Material):
         self.valid_material(value)
         self.__material = value
-    
+
     @section.setter
     def section(self, value: Section):
         self.valid_section(value)
         self.__section = value
-        
+
     @field.setter
     def field(self, value):
         """After the simulation we use it to make an reference to the field computer"""
@@ -294,28 +302,24 @@ class Structural1DInterface(abc.ABC):
     def addt(self, t: float):
         raise NotImplementedError
 
+
 class TrussInterface(Structural1DInterface):
     @abc.abstractmethod
     def stiffness_matrix(self) -> np.ndarray:
         raise NotImplementedError
 
+
 class BeamInterface(Structural1DInterface):
     @abc.abstractmethod
     def stiffness_matrix(self) -> np.ndarray:
         raise NotImplementedError
-    
 
-
-
-    
 
 class ComputeFieldInterface(abc.ABC):
-    
-    
     @abc.abstractmethod
     def __init__(self, element: Structural1DInterface, result: np.ndarray):
         raise NotImplementedError
-    
+
     @abc.abstractmethod
     def __call__(self, fieldname: str) -> nurbs.SplineCurve:
         raise NotImplementedError
@@ -323,7 +327,7 @@ class ComputeFieldInterface(abc.ABC):
     @abc.abstractmethod
     def field(self, fieldname: str) -> nurbs.SplineCurve:
         raise NotImplementedError
-    
+
     @property
     def element(self) -> Structural1DInterface:
         return self.__element
@@ -337,7 +341,7 @@ class ComputeFieldInterface(abc.ABC):
         if not isinstance(value, Structural1DInterface):
             raise TypeError("The element must be a Structural1D instance")
         self.__element = value
-    
+
     @result.setter
     def result(self, value: np.ndarray):
         if self.element is None:
@@ -345,9 +349,13 @@ class ComputeFieldInterface(abc.ABC):
         ctrlpts = self.element.path.P
         npts, dim = ctrlpts.shape
         if value.shape[0] != npts:
-            raise ValueError(f"To set results: result.shape[0] = {value.shape[0]} != {npts} = npts")
+            raise ValueError(
+                f"To set results: result.shape[0] = {value.shape[0]} != {npts} = npts"
+            )
         if value.shape[1] != 6:
-            raise ValueError(f"The number of results in must be {6}, received {value.shape[1]}")
+            raise ValueError(
+                f"The number of results in must be {6}, received {value.shape[1]}"
+            )
         self.__result = value
 
     @abc.abstractmethod
@@ -385,14 +393,15 @@ class ComputeFieldInterface(abc.ABC):
         """Compute the Tresca Stress of the element"""
         raise NotImplementedError
 
+
 class ComputeFieldTrussInterface(ComputeFieldInterface):
     pass
 
+
 class ComputeFieldBeamInterface(ComputeFieldInterface):
-    
     @abc.abstractmethod
     def rotations(self) -> nurbs.SplineCurve:
-        """Computes the rotation of each point """
+        """Computes the rotation of each point"""
         raise NotImplementedError
 
     @abc.abstractmethod
