@@ -1,5 +1,4 @@
 import numpy as np
-import pygmsh
 from typing import Optional
 from compmec.strct.__classes__ import Section
 
@@ -58,10 +57,6 @@ class ThinRetangular(Section):
         self.h = h
 
 class Square(Section):
-    def __doc__(self):
-        """
-        Docs
-        """
     def __init__(self, b:float, nu:float):
         super().__init__(nu)
         self.b = b
@@ -85,10 +80,6 @@ class Square(Section):
         # raise NotImplementedError("Inertias for a square are not defined")
 
 class HollowSquare(Section):
-    def __doc__(self):
-        """
-        Docs
-        """
     def __init__(self, be:float, bi:float, nu:float):
         super().__init__(nu)
         self.be = be
@@ -96,10 +87,6 @@ class HollowSquare(Section):
 
 
 class ThinSquare(Section):
-    def __doc__(self):
-        """
-        Docs
-        """
     def __init__(self, b:float, nu:float):
         super().__init__(nu)
         self.b = b
@@ -134,12 +121,6 @@ class Circle(Section):
         self.Ix = np.pi * R4 / 2
         self.Iy = np.pi * R4 / 4
         self.Iz = np.pi * R4 / 4
-    
-    def triangular_mesh(self, meshsize:float):
-        with pygmsh.geo.Geometry() as geom:
-            geom.add_circle((0, 0), self.R, mesh_size=meshsize)
-            mesh = geom.generate_mesh()
-        return mesh
 
 
 class HollowCircle(Circle):
@@ -203,14 +184,6 @@ class HollowCircle(Circle):
         self.Iy = np.pi * (Re4 - Ri4) / 4
         self.Iz = np.pi * (Re4 - Ri4) / 4
 
-    def triangular_mesh(self, meshsize: float):
-        with pygmsh.occ.Geometry() as geom:
-            geom.characteristic_length_max = meshsize
-            externalcircle = geom.add_disk((0, 0), self.Re)
-            internalcircle = geom.add_disk((0, 0), self.Ri) 
-            geom.boolean_difference(externalcircle, internalcircle)
-            mesh = geom.generate_mesh()
-        return mesh
 
 class ThinCircle(HollowCircle):
     __ratiomax = 0.2
@@ -249,18 +222,6 @@ class ThinCircle(HollowCircle):
         self.Ix = 2 * np.pi * eR3
         self.Iy = np.pi * eR3
         self.Iz = np.pi * eR3
-        
-    def triangular_mesh(self):
-        with pygmsh.occ.Geometry() as geom:
-            geom.characteristic_length_max = self.e
-            externalcircle = geom.add_disk((0, 0), self.R + 0.5*self.e)
-            internalcircle = geom.add_disk((0, 0), self.R - 0.5*self.e) 
-            geom.boolean_difference(externalcircle, internalcircle)
-            mesh = geom.generate_mesh()
-        return mesh
-
-    def mesh(self):
-        return self.triangular_mesh()
 
 class PerfilI(Section):
     def __init__(self, b: float, h: float, t1: float, t2: float, nu: float):
@@ -290,11 +251,3 @@ class General(Section):
         """
         super().__init__(nu)
         raise Exception("Not implemented")
-    
-
-
-def main():
-    pass
-
-if __name__ == "__main__":
-    main()

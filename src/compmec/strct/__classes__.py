@@ -219,14 +219,6 @@ class Section(object):
     def compute_inertias(self):
         raise NotImplementedError("This function must be overwritten")
 
-    def triangular_mesh(self, elementsize: float):
-        raise NotImplementedError("This function must be redefined by child class")
-
-    def mesh(self, elementsize: float = None):
-        if elementsize is None:
-            elementsize = 0.1 * np.sqrt(self.Ax)
-        return self.triangular_mesh(elementsize)
-
 
 class Structural1DInterface(abc.ABC):
     @abc.abstractmethod
