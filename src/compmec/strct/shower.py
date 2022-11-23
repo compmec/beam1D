@@ -1,4 +1,4 @@
-from compmec.strct.section import Circle, HollowCircle, ThinCircle
+from compmec.strct.profile import Circle, HollowCircle, ThinCircle
 import numpy as np
 from compmec.strct.system import StaticSystem
 from typing import List, Tuple, Iterable, Optional

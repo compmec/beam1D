@@ -1,5 +1,5 @@
 from compmec.strct.element import EulerBernoulli
-from compmec.strct.section import Circle, Square
+from compmec.strct.profile import Circle, Square
 from compmec.strct.material import Isotropic
 from compmec.strct.system import StaticSystem
 from compmec.strct.shower import ShowerStaticSystem

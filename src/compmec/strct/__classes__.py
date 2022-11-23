@@ -86,11 +86,13 @@ class Material(object):
         super().__init__(self)
 
 
-class Section(object):
-    def __init__(self, nu: float):
-        self.nu = nu
-        self.__A = None
-        self.__I = None
+class Section(abc.ABC):
+    pass
+
+class HomogeneousSection(Section):
+    def __init__(self, material: Material, profile: ProfileInterface):
+        self.material = material
+        self.profile = profile
 
     def init_zeros_A(self):
         self.__A = np.zeros(3, dtype="float64")
@@ -99,125 +101,42 @@ class Section(object):
         self.__I = np.zeros(3, dtype="float64")
 
     @property
-    def nu(self):
-        return self.__nu
+    def material(self) -> Material:
+        return self.__material
 
     @property
-    def Ax(self) -> float:
+    def profile(self) -> ProfileInterface:
+        return self.__profile
+    
+    @property
+    def A(self) -> Tuple[float, float, float]:
         if self.__A is None:
             self.compute_areas()
-        return self.__A[0]
+        return tuple(self.__A)
 
     @property
-    def Ay(self) -> float:
-        if self.__A is None:
-            self.compute_areas()
-        return self.__A[1]
-
-    @property
-    def Az(self) -> float:
-        if self.__A is None:
-            self.compute_areas()
-        return self.__A[2]
-
-    @property
-    def A(self) -> np.ndarray:
-        if self.__A is None:
-            self.compute_areas()
-        return self.__A
-
-    @property
-    def Ix(self) -> float:
+    def I(self) -> Tuple[float, float, float]:
         if self.__I is None:
             self.compute_inertias()
-        return self.__I[0]
+        return tuple(self.__I)
 
-    @property
-    def Iy(self) -> float:
+    @material.setter
+    def material(self, value: Material):
+        self.__material = value
+
+    @profile.setter
+    def profile(self, value: ProfileInterface):
         if self.__I is None:
             self.compute_inertias()
-        return self.__I[1]
+        return tuple(self.__I)
 
-    @property
-    def Iz(self) -> float:
-        if self.__I is None:
-            self.compute_inertias()
-        return self.__I[2]
-
-    @property
-    def I(self) -> np.ndarray:
-        if self.__I is None:
-            self.compute_inertias()
-        return self.__I
-
-    @nu.setter
-    def nu(self, value: float):
-        value = float(value)
-        if value < 0:
-            raise ValueError(f"The poisson value cannot be less than 0: nu={value}")
-        if value > 0.5:
-            raise ValueError(
-                f"The poisson value cannot be greater than 0.5: nu={value}"
-            )
-        self.__nu = value
-
-    @Ax.setter
-    def Ax(self, value: float):
-        value = float(value)
-        if value <= 0:
-            raise ValueError(f"Cannot set a area as zero or negative: {value}")
-        if self.__A is None:
-            self.init_zeros_A()
-        self.__A[0] = value
-
-    @Ay.setter
-    def Ay(self, value: float):
-        if value <= 0:
-            raise ValueError(f"Cannot set a area as zero or negative: {value}")
-        if self.__A is None:
-            self.init_zeros_A()
-        self.__A[1] = value
-
-    @Az.setter
-    def Az(self, value: float):
-        if value <= 0:
-            raise ValueError(f"Cannot set a area as zero or negative: {value}")
-        if self.__A is None:
-            self.init_zeros_A()
-        self.__A[2] = value
-
-    @Ix.setter
-    def Ix(self, value: float):
-        if value <= 0:
-            raise ValueError(f"Cannot set a inertia as zero or negative: {value}")
-        if self.__I is None:
-            self.init_zeros_I()
-        self.__I[0] = value
-
-    @Iy.setter
-    def Iy(self, value: float):
-        if value <= 0:
-            raise ValueError(f"Cannot set a inertia as zero or negative: {value}")
-        if self.__I is None:
-            self.init_zeros_I()
-        self.__I[1] = value
-
-    @Iz.setter
-    def Iz(self, value: float):
-        if value <= 0:
-            raise ValueError(f"Cannot set a inertia as zero or negative: {value}")
-        if self.__I is None:
-            self.init_zeros_I()
-        self.__I[2] = value
-
-    def shear_coefficient(self):
-        raise NotImplementedError("This function must be overwritten")
-
+    @abc.abstractmethod
     def compute_areas(self):
-        raise NotImplementedError("This function must be overwritten")
+        raise NotImplementedError
 
+    @abc.abstractmethod
     def compute_inertias(self):
-        raise NotImplementedError("This function must be overwritten")
+        raise NotImplementedError
 
 
 class Structural1DInterface(abc.ABC):

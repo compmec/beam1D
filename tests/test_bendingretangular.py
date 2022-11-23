@@ -3,7 +3,7 @@ import pytest
 
 from compmec.strct.element import EulerBernoulli
 from compmec.strct.material import Isotropic
-from compmec.strct.section import Retangular
+from compmec.strct.profile import Retangular
 from compmec.strct.solver import solve
 
 

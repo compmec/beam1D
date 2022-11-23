@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from compmec.strct.element import EulerBernoulli
 from compmec.strct.material import Isotropic
-from compmec.strct.section import Circle, Square
+from compmec.strct.profile import Circle, Square
 from compmec.strct.system import StaticSystem
 from matplotlib import pyplot as plt
 
