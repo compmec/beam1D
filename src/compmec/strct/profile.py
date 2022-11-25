@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from compmec.strct.__classes__ import ProfileInterface
+from compmec.strct.__classes__ import Profile
 from compmec.strct.verifytype import PositiveFloat
 
 
@@ -21,7 +21,7 @@ class ThinProfile(abc.ABC):
         self.__e = value
 
 
-class Retangular(ProfileInterface):
+class Retangular(Profile):
     def __init__(self, b: PositiveFloat, h: PositiveFloat):
         self.b = b
         self.h = h
@@ -135,7 +135,7 @@ class ThinSquare(ThinRetangular):
         super().__init__(b, b, e)
 
 
-class Circle(ProfileInterface):
+class Circle(Profile):
     def __init__(self, R: PositiveFloat):
         self.R = R
 
@@ -196,7 +196,7 @@ class HollowCircle(Circle):
 class ThinCircle(HollowCircle, ThinProfile):
     def __init__(self, R: PositiveFloat, e: Optional[PositiveFloat] = None):
         """
-        Creates a thin circle ProfileInterface.
+        Creates a thin circle Profile.
         * R is the mean radius.
         * e is optional thickness.
             If not given, it's 0.01*R
@@ -212,7 +212,7 @@ class ThinCircle(HollowCircle, ThinProfile):
         super().__init__(Ri=Ri, Re=Re)
 
 
-class ProfileI(ProfileInterface):
+class ProfileI(Profile):
     def __init__(
         self,
         b: PositiveFloat,

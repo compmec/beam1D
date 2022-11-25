@@ -77,7 +77,7 @@ class Point(object):
         return list(self.p)
 
 
-class ProfileInterface(abc.ABC):
+class Profile(abc.ABC):
     pass
 
 
@@ -91,7 +91,7 @@ class Section(abc.ABC):
 
 
 class HomogeneousSection(Section):
-    def __init__(self, material: Material, profile: ProfileInterface):
+    def __init__(self, material: Material, profile: Profile):
         self.material = material
         self.profile = profile
         self.__A = None
@@ -102,7 +102,7 @@ class HomogeneousSection(Section):
         return self.__material
 
     @property
-    def profile(self) -> ProfileInterface:
+    def profile(self) -> Profile:
         return self.__profile
 
     @property
@@ -132,8 +132,8 @@ class HomogeneousSection(Section):
         self.__material = value
 
     @profile.setter
-    def profile(self, value: ProfileInterface):
-        if not isinstance(value, ProfileInterface):
+    def profile(self, value: Profile):
+        if not isinstance(value, Profile):
             raise TypeError
         self.__profile = value
 
@@ -151,37 +151,13 @@ class Structural1DInterface(abc.ABC):
     def __init__(self, path: Union[nurbs.SplineCurve, np.ndarray]):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def valid_path(self, value):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def valid_material(self, value):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def valid_section(self, value):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def valid_field(self, value):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def valid_t(self, value):
-        raise NotImplementedError
-
     @property
     def path(self) -> nurbs.SplineCurve:
         return self.__path
 
     @property
     def ts(self) -> Tuple[float]:
-        return tuple(self.__ts)
-
-    @property
-    def material(self) -> Material:
-        return self.__material
+        return tuple(set(self.path.U))
 
     @property
     def section(self) -> Section:
@@ -189,36 +165,24 @@ class Structural1DInterface(abc.ABC):
 
     @property
     def field(self) -> Callable[[str], nurbs.SplineCurve]:
-        """Returns function which receives an string and returns an nurbs.SplineCurve"""
+        """Returns function which receives a string and returns an nurbs.SplineCurve"""
         try:
             return self.__field
         except AttributeError as e:
             raise ValueError("You must run the simulation before calling 'field'")
 
-    @path.setter
-    def path(self, value: nurbs.SplineCurve):
-        self.valid_path(value)
+    def set_path(self, value: nurbs.SplineCurve):
+        if not isinstance(value, nurbs.SplineCurve):
+            raise TypeError
         self.__path = value
 
-    @material.setter
-    def material(self, value: Material):
-        self.valid_material(value)
-        self.__material = value
-
-    @section.setter
-    def section(self, value: Section):
-        self.valid_section(value)
+    def set_section(self, value: Section):
+        if not isinstance(value, Section):
+            raise TypeError
         self.__section = value
 
-    @field.setter
-    def field(self, value):
-        """After the simulation we use it to make an reference to the field computer"""
-        self.valid_field(value)
+    def set_field(self, value):
         self.__field = value
-
-    @abc.abstractmethod
-    def addt(self, t: float):
-        raise NotImplementedError
 
 
 class TrussInterface(Structural1DInterface):

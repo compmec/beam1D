@@ -2,8 +2,8 @@ from typing import Optional
 
 import numpy as np
 
-import compmec.strct.profile as profile
-from compmec.strct.__classes__ import HomogeneousSection, Material
+from compmec.strct.__classes__ import HomogeneousSection, Material, Profile
+from compmec.strct.profile import *
 
 
 class RetangularSection(HomogeneousSection):
@@ -171,22 +171,22 @@ class GeneralSection(HomogeneousSection):
 
 
 def create_section_from_material_profile(
-    material: Material, profile: profile.ProfileInterface
+    material: Material, profile: Profile
 ) -> HomogeneousSection:
     if not isinstance(material, Material):
         raise TypeError
-    if not isinstance(profile, profile.ProfileInterface):
+    if not isinstance(profile, Profile):
         raise TypeError
     mapto = {
-        profile.Retangular: RetangularSection,
-        profile.HollowRetangular: HollowRetangularSection,
-        profile.ThinRetangular: ThinRetangularSection,
-        profile.Square: SquareSection,
-        profile.HollowSquare: HollowSquareSection,
-        profile.ThinSquare: ThinSquareSection,
-        profile.Circle: CircleSection,
-        profile.HollowCircle: HollowCircleSection,
-        profile.ThinCircle: ThinCircleSection,
+        Retangular: RetangularSection,
+        HollowRetangular: HollowRetangularSection,
+        ThinRetangular: ThinRetangularSection,
+        Square: SquareSection,
+        HollowSquare: HollowSquareSection,
+        ThinSquare: ThinSquareSection,
+        Circle: CircleSection,
+        HollowCircle: HollowCircleSection,
+        ThinCircle: ThinCircleSection,
     }
     for profileclass, sectionclass in mapto.items():
         if type(profile) == profileclass:

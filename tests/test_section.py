@@ -97,12 +97,9 @@ class TestHollowCircleSection(TestSection):
         Ri = self.section.profile.Ri
         Re = self.section.profile.Re
         m2 = (Ri / Re) ** 2
-        coef = (
-            6
-            * (1 + nu)
-            * (1 + m2) ** 2
-            / ((7 + 6 * nu) * (1 + m2) ** 2 + 4 * m2 * (5 + 3 * nu))
-        )
+        numerator = 6 * (1 + nu) * (1 + m2) ** 2
+        denominator = (7 + 6 * nu) * (1 + m2) ** 2 + 4 * m2 * (5 + 3 * nu)
+        coef = numerator / denominator
         Ax = PI * (Re**2 - Ri**2)
         Ay = coef * Ax
         Az = coef * Ax
@@ -250,6 +247,12 @@ class TestThinSquareSection:
         "TestCircleSection::test_end",
         "TestHollowCircleSection::test_end",
         "TestThinCircleSection::test_end",
+        "TestRetangularSection::test_end",
+        "TestHollowRetangularSection::test_end",
+        "TestThinRetangularSection::test_end",
+        "TestSquareSection::test_end",
+        "TestHollowSquareSection::test_end",
+        "TestThinSquareSection::test_end",
     ]
 )
 def test_end():
