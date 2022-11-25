@@ -89,16 +89,13 @@ class Material(object):
 class Section(abc.ABC):
     pass
 
+
 class HomogeneousSection(Section):
     def __init__(self, material: Material, profile: ProfileInterface):
         self.material = material
         self.profile = profile
-
-    def init_zeros_A(self):
-        self.__A = np.zeros(3, dtype="float64")
-
-    def init_zeros_I(self):
-        self.__I = np.zeros(3, dtype="float64")
+        self.__A = None
+        self.__I = None
 
     @property
     def material(self) -> Material:
@@ -107,7 +104,7 @@ class HomogeneousSection(Section):
     @property
     def profile(self) -> ProfileInterface:
         return self.__profile
-    
+
     @property
     def A(self) -> Tuple[float, float, float]:
         if self.__A is None:
@@ -120,15 +117,25 @@ class HomogeneousSection(Section):
             self.compute_inertias()
         return tuple(self.__I)
 
+    @A.setter
+    def A(self, value: Tuple[float, float, float]):
+        self.__A = tuple(value)
+
+    @I.setter
+    def I(self, value: Tuple[float, float, float]):
+        self.__I = tuple(value)
+
     @material.setter
     def material(self, value: Material):
+        if not isinstance(value, Material):
+            raise TypeError
         self.__material = value
 
     @profile.setter
     def profile(self, value: ProfileInterface):
-        if self.__I is None:
-            self.compute_inertias()
-        return tuple(self.__I)
+        if not isinstance(value, ProfileInterface):
+            raise TypeError
+        self.__profile = value
 
     @abc.abstractmethod
     def compute_areas(self):
