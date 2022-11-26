@@ -17,7 +17,7 @@ from compmec.strct.solver import solve
         "tests/test_material.py::test_end",
         "tests/test_structural1D.py::test_end",
         "tests/test_section.py::TestRetangularSection::test_end",
-        "tests/test_one_rod_beam_charges.py::test_end",
+        "tests/test_one_circle_beam_charges.py::test_end",
     ],
     scope="session",
 )
