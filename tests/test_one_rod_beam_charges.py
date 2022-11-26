@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import pytest
@@ -25,6 +25,26 @@ def test_begin():
 
 
 class InitRodBeamEuler(object):
+    def get_random_unit_vector(
+        self, directionstr: str, perpendicular_to: Optional[Tuple[float]] = None
+    ):
+        if not isinstance(directionstr, str):
+            raise TypeError
+        if perpendicular_to is not None:
+            if not isinstance(perpendicular_to, str):
+                raise TypeError
+        vector = np.random.uniform(-1, 1, 3)
+        for i, s in enumerate(["x", "y", "z"]):
+            if s not in directionstr:
+                vector[i] = 0
+        norm = np.linalg.norm(vector)
+        if perpendicular_to is None:
+            return vector / norm
+        perpendicular_to /= np.linalg.norm(perpendicular_to)
+        vector -= np.inner(vector, perpendicular_to) * perpendicular_to
+        norm = np.linalg.norm(vector)
+        return vector / norm
+
     def set_random_material(self):
         E = np.random.uniform(1, 2)
         nu = np.random.uniform(0, 0.49)
@@ -40,7 +60,7 @@ class InitRodBeamEuler(object):
         self.section = CircleSection(self.material, self.profile)
 
     def set_random_beam(self):
-        direction = np.array(self.direction) / np.linalg.norm(self.direction)
+        direction = np.array(self.direction_beam) / np.linalg.norm(self.direction_beam)
         self.lenght = np.random.uniform(1, 2)
         A = (0, 0, 0)
         B = tuple(self.lenght * direction)
@@ -67,7 +87,7 @@ class TestOneRodBeamTraction(InitRodBeamEuler):
         U = np.empty((2, 6), dtype="object")
         F = np.zeros((2, 6))
         U[0, :] = 0
-        F[1, :3] = P * self.direction
+        F[1, :3] = P * self.direction_beam
 
         K = self.beam.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
@@ -75,9 +95,9 @@ class TestOneRodBeamTraction(InitRodBeamEuler):
         ur = self.compute_analitic_displacement_field()
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
-        Ugood[1, :3] = ur * self.direction
-        Fgood[0, :3] = -P * self.direction
-        Fgood[1, :3] = P * self.direction
+        Ugood[1, :3] = ur * self.direction_beam
+        Fgood[0, :3] = -P * self.direction_beam
+        Fgood[1, :3] = P * self.direction_beam
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
@@ -85,25 +105,22 @@ class TestOneRodBeamTraction(InitRodBeamEuler):
     @pytest.mark.order(6)
     @pytest.mark.dependency(depends=["test_begin"])
     def test_random_x(self, ntests=10):
-        self.direction = [1 if np.random.randint(2) else -1, 0, 0]
-        self.direction = np.array(self.direction)
         for i in range(ntests):
+            self.direction_beam = self.get_random_unit_vector("x")
             self.run_test()
 
     @pytest.mark.order(6)
     @pytest.mark.dependency(depends=["test_begin"])
     def test_random_y(self, ntests=10):
-        self.direction = [0, 1 if np.random.randint(2) else -1, 0]
-        self.direction = np.array(self.direction)
         for i in range(ntests):
+            self.direction_beam = self.get_random_unit_vector("y")
             self.run_test()
 
     @pytest.mark.order(6)
     @pytest.mark.dependency(depends=["test_begin"])
     def test_random_z(self, ntests=10):
-        self.direction = [0, 0, 1 if np.random.randint(2) else -1]
-        self.direction = np.array(self.direction)
         for i in range(ntests):
+            self.direction_beam = self.get_random_unit_vector("z")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -116,8 +133,7 @@ class TestOneRodBeamTraction(InitRodBeamEuler):
     )
     def test_random_xy(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3) * [True, True, False]
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("xy")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -130,8 +146,7 @@ class TestOneRodBeamTraction(InitRodBeamEuler):
     )
     def test_random_yz(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3) * [False, True, True]
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("yz")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -144,8 +159,7 @@ class TestOneRodBeamTraction(InitRodBeamEuler):
     )
     def test_random_xz(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3) * [True, False, True]
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("xz")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -159,8 +173,7 @@ class TestOneRodBeamTraction(InitRodBeamEuler):
     )
     def test_random_xyz(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3)
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("xyz")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -185,7 +198,7 @@ class TestOneRodBeamTorsion(InitRodBeamEuler):
         U = np.empty((2, 6), dtype="object")
         F = np.zeros((2, 6))
         U[0, :] = 0
-        F[1, 3:] = T * self.direction
+        F[1, 3:] = T * self.direction_beam
 
         K = self.beam.stiffness_matrix()
         Utest, Ftest = solve(K, F, U)
@@ -193,9 +206,9 @@ class TestOneRodBeamTorsion(InitRodBeamEuler):
         tr = self.compute_analitic_rotation_field()
         Ugood = np.zeros((2, 6))
         Fgood = np.zeros((2, 6))
-        Ugood[1, 3:] = tr * self.direction
-        Fgood[0, 3:] = -T * self.direction
-        Fgood[1, 3:] = T * self.direction
+        Ugood[1, 3:] = tr * self.direction_beam
+        Fgood[0, 3:] = -T * self.direction_beam
+        Fgood[1, 3:] = T * self.direction_beam
 
         np.testing.assert_almost_equal(Utest, Ugood)
         np.testing.assert_almost_equal(Ftest, Fgood)
@@ -203,25 +216,22 @@ class TestOneRodBeamTorsion(InitRodBeamEuler):
     @pytest.mark.order(6)
     @pytest.mark.dependency(depends=["test_begin"])
     def test_random_x(self, ntests=10):
-        self.direction = [1 if np.random.randint(2) else -1, 0, 0]
-        self.direction = np.array(self.direction)
         for i in range(ntests):
+            self.direction_beam = self.get_random_unit_vector("x")
             self.run_test()
 
     @pytest.mark.order(6)
     @pytest.mark.dependency(depends=["test_begin"])
     def test_random_y(self, ntests=10):
-        self.direction = [0, 1 if np.random.randint(2) else -1, 0]
-        self.direction = np.array(self.direction)
         for i in range(ntests):
+            self.direction_beam = self.get_random_unit_vector("y")
             self.run_test()
 
     @pytest.mark.order(6)
     @pytest.mark.dependency(depends=["test_begin"])
     def test_random_z(self, ntests=10):
-        self.direction = [0, 0, 1 if np.random.randint(2) else -1]
-        self.direction = np.array(self.direction)
         for i in range(ntests):
+            self.direction_beam = self.get_random_unit_vector("z")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -234,8 +244,7 @@ class TestOneRodBeamTorsion(InitRodBeamEuler):
     )
     def test_random_xy(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3) * [True, True, False]
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("xy")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -248,8 +257,7 @@ class TestOneRodBeamTorsion(InitRodBeamEuler):
     )
     def test_random_yz(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3) * [False, True, True]
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("yz")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -262,8 +270,7 @@ class TestOneRodBeamTorsion(InitRodBeamEuler):
     )
     def test_random_xz(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3) * [True, False, True]
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("xz")
             self.run_test()
 
     @pytest.mark.order(6)
@@ -277,8 +284,7 @@ class TestOneRodBeamTorsion(InitRodBeamEuler):
     )
     def test_random_xyz(self, ntests=10):
         for i in range(ntests):
-            self.direction = np.random.uniform(-1, 1, 3)
-            self.direction /= np.linalg.norm(self.direction)
+            self.direction_beam = self.get_random_unit_vector("xyz")
             self.run_test()
 
     @pytest.mark.order(6)
