@@ -1,6 +1,8 @@
+from typing import Iterable, Tuple, Type, Union
+
 import numpy as np
-from typing import Iterable, Type, Union, Tuple
-from compmec.strct.__classes__ import Structural1DInterface, ComputeFieldBeamInterface
+
+from compmec.strct.__classes__ import ComputeFieldBeamInterface, Structural1DInterface
 from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.solver import solve
 
@@ -35,12 +37,14 @@ class Geometry1D(object):
     @points.setter
     def points(self, value: np.ndarray):
         if self._points is not None:
-            raise ValueError("There are points. Cannot subcribe. Use add_point(point) instead")
+            raise ValueError(
+                "There are points. Cannot subcribe. Use add_point(point) instead"
+            )
         value = np.array(value, dtype="float64")
         if value.ndim != 2:
             raise ValueError("Set points must have shape (npts, dim)")
         self._points = value
-    
+
     def create_point(self, point: tuple) -> int:
         """
         Returns the index of the new created point.
@@ -57,16 +61,16 @@ class Geometry1D(object):
         if self._points is None:
             self.dim = 3
             self.points = np.zeros((1, 3))
-            self.points[0, :len(point)] = point
+            self.points[0, : len(point)] = point
             return 0
         npts, dim = self.points.shape
-        newpoints = np.zeros((npts+1, dim))
+        newpoints = np.zeros((npts + 1, dim))
         newpoints[:-1, :] = self.points[:, :]
-        newpoints[-1, :len(point)] = point
+        newpoints[-1, : len(point)] = point
         self._points = newpoints
         return npts
 
-    def find_point(self, point: tuple, tolerance: float=1e-6) -> int:
+    def find_point(self, point: tuple, tolerance: float = 1e-6) -> int:
         """
         Given a point like (0.1, 3.1), it returns the index of this point.
         If the point is too far (bigger than tolerance), it returns None
@@ -84,7 +88,9 @@ class Geometry1D(object):
         Internal unprotected function. See docs of the original function
         """
         n = len(point)
-        distsquare = np.array([sum((pi[:n] - point)**2) for pi in self.points], dtype="float64")
+        distsquare = np.array(
+            [sum((pi[:n] - point) ** 2) for pi in self.points], dtype="float64"
+        )
         mindistsquare = np.min(distsquare)
         if np.all(mindistsquare > tolerance):
             return None
@@ -107,6 +113,7 @@ class Geometry1D(object):
     def index_exists(self, index: int) -> bool:
         return index < self.npts
 
+
 class StaticLoad(object):
     def __init__(self):
         self._loads = []
@@ -119,20 +126,22 @@ class StaticLoad(object):
         if not isinstance(key, str):
             raise TypeError(f"Key must be an string. Received {type(key)}")
         if key not in ["Fx", "Fy", "Fz", "Mx", "My", "Mz"]:
-            raise ValueError(f"Received key is invalid: {key}. Must be Fx, Fy, Fz, Mx, My, Mz")
+            raise ValueError(
+                f"Received key is invalid: {key}. Must be Fx, Fy, Fz, Mx, My, Mz"
+            )
         return self._key2pos(key)
 
     def _key2pos(self, key: str) -> int:
         if key[0] == "F":
             pos = 0
         elif key[0] == "M":
-            pos = 3        
+            pos = 3
         if key[1] == "x":
             return pos
         if key[1] == "y":
-            return pos+1
+            return pos + 1
         if key[1] == "z":
-            return pos+2
+            return pos + 2
 
     def _pos2key(self, pos: int) -> str:
         if pos == 0:
@@ -150,14 +159,18 @@ class StaticLoad(object):
 
     def add_load(self, index: int, values: dict) -> None:
         if not isinstance(index, int):
-            raise TypeError(f"Index must be an integer, not {type(index)}")    
+            raise TypeError(f"Index must be an integer, not {type(index)}")
         if not isinstance(values, dict):
             raise TypeError(f"Values must be a dictionary, not {type(values)}")
         for key, item in values.items():
             if not isinstance(key, str):
-                raise TypeError(f"Every key in dictionary must be a string, not {type(key)}")
+                raise TypeError(
+                    f"Every key in dictionary must be a string, not {type(key)}"
+                )
             if not isinstance(item, (float, int)):
-                raise TypeError(f"Every item in dictionary must be a float, not {type(item)}")
+                raise TypeError(
+                    f"Every item in dictionary must be a float, not {type(item)}"
+                )
         return self._add_load_at_index(index, values)
 
     def add_dist_load(self, indexs: Iterable[int], values: dict, Ls: Iterable[float]):
@@ -186,12 +199,12 @@ class StaticLoad(object):
             position = self.key2pos(key)
             concload[:] = 0
             for i, Li in enumerate(Ls):
-                qa, qb = values[i], values[i+1]
-                concload[i] += Li*(2*qa+qb)/6
-                concload[i+1] += Li*(qa+2*qb)/6
+                qa, qb = values[i], values[i + 1]
+                concload[i] += Li * (2 * qa + qb) / 6
+                concload[i + 1] += Li * (qa + 2 * qb) / 6
             for i, index in enumerate(indexs):
                 self._loads.append((index, position, concload[i]))
-        
+
     def _add_load_at_index(self, index: int, values: dict):
         for key, value in values.items():
             position = self.key2pos(key)
@@ -210,20 +223,22 @@ class StaticBoundaryCondition(object):
         if not isinstance(key, str):
             raise TypeError(f"Key must be an string. Received {type(key)}")
         if key not in ["ux", "uy", "uz", "tx", "ty", "tz"]:
-            raise ValueError(f"Received key is invalid: {key}. Must be ux, uy, uz, tx, ty, tz")
+            raise ValueError(
+                f"Received key is invalid: {key}. Must be ux, uy, uz, tx, ty, tz"
+            )
         return self._key2pos(key)
 
     def _key2pos(self, key: str) -> int:
         if key[0] == "u":
             pos = 0
         elif key[0] == "t":
-            pos = 3        
+            pos = 3
         if key[1] == "x":
             return pos
         if key[1] == "y":
-            return pos+1
+            return pos + 1
         if key[1] == "z":
-            return pos+2
+            return pos + 2
 
     def _pos2key(self, pos: int) -> str:
         if pos == 0:
@@ -242,13 +257,12 @@ class StaticBoundaryCondition(object):
     def add_BC(self, index: int, values: dict):
         if not isinstance(values, dict):
             raise TypeError("Values must be dict")
-        return self._add_BC(index, values)        
+        return self._add_BC(index, values)
 
     def _add_BC(self, index: int, values: dict):
         for key, value in values.items():
             bcpos = self.key2pos(key)
-            self._BCs.append( (index, bcpos, value) )
-
+            self._BCs.append((index, bcpos, value))
 
 
 class StaticStructure(object):
@@ -267,9 +281,10 @@ class StaticStructure(object):
     def _add_element(self, value: Structural1DInterface) -> None:
         self._elements.append(value)
 
-class StaticSystem():
+
+class StaticSystem:
     def __new__(cls):
-        if not hasattr(cls, 'instance'):
+        if not hasattr(cls, "instance"):
             cls.instance = super(StaticSystem, cls).__new__(cls)
         return cls.instance
 
@@ -279,11 +294,10 @@ class StaticSystem():
         self._loads = StaticLoad()
         self._boundarycondition = StaticBoundaryCondition()
         self._solution = None
-    
+
     def add_element(self, element: Structural1DInterface):
         self._structure.add_element(element)
         self.__getpointsfrom(element)
-
 
     def add_load(self, point: tuple, loads: dict):
         """
@@ -299,13 +313,15 @@ class StaticSystem():
         index = self._geometry.index_point_at(point)
         self._loads.add_load(index, loads)
 
-    def add_dist_load(self, element: Structural1DInterface, interval: Iterable[float], values: dict):
+    def add_dist_load(
+        self, element: Structural1DInterface, interval: Iterable[float], values: dict
+    ):
         """
         Add a distribueted load in a interval.
         Example:
             beamAB = EulerBernoulli([A, B])
             interval = (0.2, 0.5, 0.7)
-            loadsFy = (10, -30, 30) 
+            loadsFy = (10, -30, 30)
             system.add_dist_load(beamAB, interval, {"Fy": loadsFy})
         All the values inside interval must be in [0, 1]
         The available loads are the same as 'add_load' function:
@@ -324,15 +340,17 @@ class StaticSystem():
                 float(t)
         except Exception as e:
             raise TypeError("Interval must be a tuple of floats")
-        
+
         interval, values = self.__compute_dist_points(element.ts, interval, values)
         points3D = np.array([element.path(t) for t in interval], dtype="float64")
         npts, dim = points3D.shape
         indexs = [self._geometry.index_point_at(point) for point in points3D]
-        Ls = [np.linalg.norm(points3D[i+1]-points3D[i]) for i in range(npts-1)]
+        Ls = [np.linalg.norm(points3D[i + 1] - points3D[i]) for i in range(npts - 1)]
         self._loads.add_dist_load(indexs, values, Ls)
 
-    def __compute_dist_points(self, ts: Iterable[float], interval: Iterable[float], values: dict):
+    def __compute_dist_points(
+        self, ts: Iterable[float], interval: Iterable[float], values: dict
+    ):
         """
         There's an element with the ts values:
             ts = [0, 0.2, 0.4, 0.6, 0.8, 1]
@@ -349,7 +367,7 @@ class StaticSystem():
         ts = np.array(ts)
         interval = list(interval)
         newinterval = interval.copy()
-        mask = (ts - min(interval))*(max(interval) - ts) > 0
+        mask = (ts - min(interval)) * (max(interval) - ts) > 0
         newinterval.extend(ts[mask])
         newinterval.sort()
         npts = len(newinterval)
@@ -361,23 +379,24 @@ class StaticSystem():
                     newvals[i] = vals[indvalue]
                 else:
                     indvalue = 0
-                    while not (interval[indvalue] < t < interval[indvalue+1]):
-                        indvalue += 1 
-                    ta, tb = interval[indvalue], interval[indvalue+1]
-                    qa, qb = vals[indvalue], vals[indvalue+1]
-                    newvals[i] = (qa*(tb-t) + qb*(t-ta))/(tb-ta)
+                    while not (interval[indvalue] < t < interval[indvalue + 1]):
+                        indvalue += 1
+                    ta, tb = interval[indvalue], interval[indvalue + 1]
+                    qa, qb = vals[indvalue], vals[indvalue + 1]
+                    newvals[i] = (qa * (tb - t) + qb * (t - ta)) / (tb - ta)
             values[key] = newvals
         return newinterval, values
-        
 
     def add_BC(self, point: tuple, bcvals: dict):
         index = self._geometry.index_point_at(point)
         self._boundarycondition.add_BC(index, bcvals)
-        
+
     @property
     def solution(self):
         if self._solution is None:
-            raise ValueError("You must run the simulation before getting the solution values")
+            raise ValueError(
+                "You must run the simulation before getting the solution values"
+            )
         return self._solution
 
     def __getpointsfrom(self, element: Structural1DInterface):
@@ -435,8 +454,4 @@ class StaticSystem():
             for i, j in enumerate(indexs):
                 Uelem[i, :] = self._solution[j, :]
             field = ComputeFieldBeam(element, Uelem)
-            element.field = field
-
-
-    
-    
+            element.set_field(field)
