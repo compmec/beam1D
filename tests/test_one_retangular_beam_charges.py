@@ -550,6 +550,13 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
 
     @pytest.mark.order(7)
     @pytest.mark.dependency(depends=["test_begin"])
+    def test_begin(self):
+        pass
+
+    @pytest.mark.order(7)
+    @pytest.mark.dependency(
+        depends=["TestOneRetangularBarBeamBendingMomentum::test_begin"]
+    )
     def test_random_x2y(self, ntests=1):
         for i in range(ntests):
             self.direction_beam = self.get_random_unit_vector("x")
@@ -562,7 +569,7 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
     @pytest.mark.order(7)
     @pytest.mark.dependency(
         depends=[
-            "test_begin",
+            "TestOneRetangularBarBeamBendingMomentum::test_begin",
             "TestOneRetangularBarBeamBendingMomentum::test_random_x2y",
         ]
     )
@@ -578,7 +585,7 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
     @pytest.mark.order(7)
     @pytest.mark.dependency(
         depends=[
-            "test_begin",
+            "TestOneRetangularBarBeamBendingMomentum::test_begin",
             "TestOneRetangularBarBeamBendingMomentum::test_random_x2y",
         ]
     )
@@ -594,7 +601,7 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
     @pytest.mark.order(7)
     @pytest.mark.dependency(
         depends=[
-            "test_begin",
+            "TestOneRetangularBarBeamBendingMomentum::test_begin",
             "TestOneRetangularBarBeamBendingMomentum::test_random_x2y",
         ]
     )
@@ -610,7 +617,7 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
     @pytest.mark.order(7)
     @pytest.mark.dependency(
         depends=[
-            "test_begin",
+            "TestOneRetangularBarBeamBendingMomentum::test_begin",
             "TestOneRetangularBarBeamBendingMomentum::test_random_x2y",
         ]
     )
@@ -626,7 +633,7 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
     @pytest.mark.order(7)
     @pytest.mark.dependency(
         depends=[
-            "test_begin",
+            "TestOneRetangularBarBeamBendingMomentum::test_begin",
             "TestOneRetangularBarBeamBendingMomentum::test_random_x2y",
         ]
     )
@@ -804,7 +811,12 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
             self.run_test()
 
     @pytest.mark.order(7)
-    @pytest.mark.dependency()
+    @pytest.mark.dependency(
+        depends=[
+            "TestOneRetangularBarBeamBendingMomentum::test_begin",
+            "TestOneRetangularBarBeamBendingMomentum::test_random_xyz2xyz",
+        ]
+    )
     def test_end(self):
         pass
 
