@@ -21,7 +21,7 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
         self.result = result
         degree = 1
         npts = self.result.shape[0]
-        self.U = nurbs.GeneratorKnotVector.uniform(degree, npts)
+        self.knotvector = element.path.knotvector
 
     def __call__(self, fieldname: str) -> nurbs.SplineCurve:
         return self.field(fieldname)
@@ -29,26 +29,33 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
     def field(self, fieldname: str) -> nurbs.SplineCurve:
         keys = list(self.NAME2FUNCTIONS.keys())
         if fieldname not in keys:
-            raise ValueError(
+            error_msg = (
                 f"Received fieldname '{fieldname}' is not valid. They are {keys}"
             )
+            raise ValueError(error_msg)
         function = self.NAME2FUNCTIONS[fieldname]
         curve = function()
         return curve
 
     def displacement(self) -> nurbs.SplineCurve:
         ctrlpts = np.copy(self.result[:, :3])
-        curve = nurbs.SplineCurve(self.U, ctrlpts)
+        curve = nurbs.SplineCurve(self.knotvector, ctrlpts)
         return curve
 
     def position(self) -> nurbs.SplineCurve:
         return self.element.path
 
     def deformed(self) -> nurbs.SplineCurve:
-        return self.element.path + self.field("u")
+        original_position = self.element.path
+        displacement = self.field("u")
+        print("original_position = ")
+        print(original_position.knotvector)
+        print("displcamenet ")
+        print(displacement.knotvector)
+        return original_position + displacement
 
     def internalforce(self) -> nurbs.SplineCurve:
-        ctrlpts = np.zeros((self.N.n, 3))
+        ctrlpts = np.zeros((self.knotvector.npts, 3))
         pairs = np.array([self.element.ts[:-1], self.element.ts[1:]], dtype="float64").T
         for i, (t0, t1) in enumerate(pairs):
             p0, p1 = self.element.path(t0), self.element.path(t1)
@@ -57,18 +64,18 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
             FM = np.einsum("ijkl,kl", KG, UR)
             ctrlpts[i, :] = FM[0, :3]
         ctrlpts[-1, :] = -FM[-1, :3]
-        curve = nurbs.SplineCurve(self.U, ctrlpts)
+        curve = nurbs.SplineCurve(self.knotvector, ctrlpts)
         return curve
 
     def externalforce(self) -> nurbs.SplineCurve:
         K = self.element.stiffness_matrix()
         FM = np.einsum("ijkl,kl", K, self.result)
         ctrlpts = FM[:, :3]
-        curve = nurbs.SplineCurve(self.U, ctrlpts)
+        curve = nurbs.SplineCurve(self.knotvector, ctrlpts)
         return curve
 
     def internalmomentum(self) -> nurbs.SplineCurve:
-        ctrlpts = np.zeros((self.N.n, 3))
+        ctrlpts = np.zeros((self.knotvector.npts, 3))
         pairs = np.array([self.element.ts[:-1], self.element.ts[1:]], dtype="float64").T
         for i, (t0, t1) in enumerate(pairs):
             p0, p1 = self.element.path(t0), self.element.path(t1)
@@ -77,14 +84,14 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
             FM = np.einsum("ijkl,kl", KG, UR)
             ctrlpts[i, :] = FM[0, 3:]
         ctrlpts[-1, :] = -FM[-1, 3:]
-        curve = nurbs.SplineCurve(self.U, ctrlpts)
+        curve = nurbs.SplineCurve(self.knotvector, ctrlpts)
         return curve
 
     def externalmomentum(self) -> nurbs.SplineCurve:
         K = self.element.stiffness_matrix()
         FM = np.einsum("ijkl,kl", K, self.result)
         ctrlpts = FM[:, 3:]
-        curve = nurbs.SplineCurve(self.U, ctrlpts)
+        curve = nurbs.SplineCurve(self.knotvector, ctrlpts)
         return curve
 
     def rotations(self) -> nurbs.SplineCurve:
