@@ -228,7 +228,7 @@ class ComputeFieldInterface(abc.ABC):
     def result(self, value: np.ndarray):
         if self.element is None:
             raise ValueError("To set result, you must set element first")
-        ctrlpts = self.element.path.P
+        ctrlpts = self.element.path.ctrlpoints
         npts, dim = ctrlpts.shape
         if value.shape[0] != npts:
             raise ValueError(

@@ -51,9 +51,8 @@ def init_linear_spline(P: np.ndarray):
         raise ValueError("The points must have 3 floats")
     for i in range(P.shape[0]):
         Point(P[i])  # To create a point if it doesn't exist
-    U = [0] * degree + list(np.linspace(0, 1, npts - degree + 1)) + [1] * degree
-    N = nurbs.SplineBaseFunction(U)
-    return nurbs.SplineCurve(N, P)
+    U = nurbs.GeneratorKnotVector.uniform(degree, npts)
+    return nurbs.SplineCurve(U, P)
 
 
 class Structural1D(Structural1DInterface):
@@ -77,7 +76,7 @@ class Structural1D(Structural1DInterface):
 
     @property
     def ts(self) -> Tuple[float]:
-        return tuple(set(self.path.U))
+        return self.path.knotvector.knots
 
     @property
     def path(self) -> nurbs.SplineCurve:

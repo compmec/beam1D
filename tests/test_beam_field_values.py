@@ -40,7 +40,6 @@ class TestFieldCantileverCircularEulerBeam:
         pass
 
     @pytest.mark.order(9)
-    @pytest.mark.skip(reason="Needs update of nurbs package to insert knot")
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )
@@ -48,7 +47,7 @@ class TestFieldCantileverCircularEulerBeam:
         F0 = 10
         ts = np.linspace(0, 1, 11)
         self.setup_system()
-        self.beam.path.insert_knot(ts)
+        self.beam.path.knot_insert(ts)
         self.system.add_load(self.beam.path(1), {"Fx": F0})
         self.system.run()
         Utest = self.beam.field("u")

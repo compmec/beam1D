@@ -821,12 +821,12 @@ class TestOneRetangularBarBeamBendingMomentum(InitRetangularBarBeamEuler):
         pass
 
 
-class TestOneRodBeamAllCharges(InitRetangularBarBeamEuler):
+class TestOneRetangularBarBeamAllCharges(InitRetangularBarBeamEuler):
     @pytest.mark.order(7)
     @pytest.mark.dependency(
         depends=[
             "TestOneRetangularBarBeamTraction::test_end",
-            "TestOneRetangularBarBeamTorsion::test_end"
+            "TestOneRetangularBarBeamTorsion::test_end",
             "TestOneRetangularBarBeamBendingForce::test_end",
             "TestOneRetangularBarBeamBendingMomentum::test_end",
         ]
@@ -844,9 +844,11 @@ class TestOneRodBeamAllCharges(InitRetangularBarBeamEuler):
 @pytest.mark.dependency(
     depends=[
         "test_begin",
-        "TestOneRetangularBarBeamTraction::test_end"
+        "TestOneRetangularBarBeamTraction::test_end",
+        "TestOneRetangularBarBeamTorsion::test_end",
         "TestOneRetangularBarBeamBendingForce::test_end",
         "TestOneRetangularBarBeamBendingMomentum::test_end",
+        "TestOneRetangularBarBeamAllCharges::test_end",
     ]
 )
 def test_end():
