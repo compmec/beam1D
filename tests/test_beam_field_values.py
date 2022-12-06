@@ -50,7 +50,8 @@ class TestFieldSingleBeamUncharged:
         self.setup_system()
         curve = self.beam.field("p")  # Position curve
         values_test = curve(self.ts)
-        values_good = np.tensordot(self.ts, [self.lenght, 0, 0], axes=0)
+        values_good = np.zeros((self.npts, 3))
+        values_good[:, 0] = self.lenght * self.ts
         np.testing.assert_allclose(values_test, values_good)
 
     @pytest.mark.order(9)
@@ -68,7 +69,8 @@ class TestFieldSingleBeamUncharged:
         self.setup_system()
         curve = self.beam.field("d")  # Deformed curve
         values_test = curve(self.ts)
-        values_good = np.tensordot(self.ts, [self.lenght, 0, 0], axes=0)
+        values_good = np.zeros((self.npts, 3))
+        values_good[:, 0] = self.lenght * self.ts
         np.testing.assert_allclose(values_test, values_good)
 
     @pytest.mark.order(9)
@@ -204,7 +206,7 @@ class TestFieldCantileverCircularEulerBeam:
         np.testing.assert_allclose(values_test, values_good)
 
     @pytest.mark.order(9)
-    @pytest.mark.skip()
+    # @pytest.mark.skip()
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )
@@ -213,10 +215,10 @@ class TestFieldCantileverCircularEulerBeam:
         curve = self.beam.field("FI")  # Internal Force
         values_test = curve(self.ts)
         values_good = np.zeros((self.npts, 3))
-        np.testing.assert_allclose(values_test, values_good)
+        values_good[1:-1, 1] = -self.applied_force
+        np.testing.assert_allclose(values_test, values_good, atol=1e-6)
 
     @pytest.mark.order(9)
-    @pytest.mark.skip()
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )
@@ -225,10 +227,12 @@ class TestFieldCantileverCircularEulerBeam:
         curve = self.beam.field("FE")  # External Force
         values_test = curve(self.ts)
         values_good = np.zeros((self.npts, 3))
-        np.testing.assert_allclose(values_test, values_good)
+        values_good[0, 1] = -self.applied_force
+        values_good[-1, 1] = self.applied_force
+        np.testing.assert_allclose(values_test, values_good, atol=1e-6)
 
     @pytest.mark.order(9)
-    @pytest.mark.skip()
+    # @pytest.mark.skip()
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )
@@ -237,10 +241,11 @@ class TestFieldCantileverCircularEulerBeam:
         curve = self.beam.field("MI")  # Internal Momentum
         values_test = curve(self.ts)
         values_good = np.zeros((self.npts, 3))
-        np.testing.assert_allclose(values_test, values_good)
+        values_good[1:-1, 2] = -self.applied_force * self.lenght * (1 - self.ts[1:-1])
+        np.testing.assert_allclose(values_test, values_good, atol=1e-4)
 
     @pytest.mark.order(9)
-    @pytest.mark.skip()
+    # @pytest.mark.skip()
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )
@@ -249,7 +254,8 @@ class TestFieldCantileverCircularEulerBeam:
         curve = self.beam.field("ME")  # External Momentum
         values_test = curve(self.ts)
         values_good = np.zeros((self.npts, 3))
-        np.testing.assert_allclose(values_test, values_good)
+        values_good[0, 2] = -self.applied_force * self.lenght
+        np.testing.assert_allclose(values_test, values_good, atol=1e-4)
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(

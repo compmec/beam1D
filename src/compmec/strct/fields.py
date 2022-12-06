@@ -63,7 +63,13 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
             UR = self.result[i : i + 2, :]
             FM = np.einsum("ijkl,kl", KG, UR)
             ctrlpts[i, :] = FM[0, :3]
-        ctrlpts[-1, :] = -FM[-1, :3]
+        # Now correct the first value
+        t0, t1 = pairs[0]
+        p0, p1 = self.element.path(t0), self.element.path(t1)
+        KG = self.element.global_stiffness_matrix(p0, p1)
+        UR = self.result[0 : 0 + 2, :]
+        FM = np.einsum("ijkl,kl", KG, UR)
+        ctrlpts[0, :] -= FM[0, :3]
         curve = nurbs.SplineCurve(self.knotvector, ctrlpts)
         return curve
 
@@ -83,7 +89,12 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
             UR = self.result[i : i + 2, :]
             FM = np.einsum("ijkl,kl", KG, UR)
             ctrlpts[i, :] = FM[0, 3:]
-        ctrlpts[-1, :] = -FM[-1, 3:]
+        t0, t1 = pairs[0]
+        p0, p1 = self.element.path(t0), self.element.path(t1)
+        KG = self.element.global_stiffness_matrix(p0, p1)
+        UR = self.result[0:2, :]
+        FM = np.einsum("ijkl,kl", KG, UR)
+        ctrlpts[0, :] -= FM[0, 3:]
         curve = nurbs.SplineCurve(self.knotvector, ctrlpts)
         return curve
 
