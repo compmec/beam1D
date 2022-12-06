@@ -13,7 +13,8 @@ from compmec.strct.system import StaticSystem
 @pytest.mark.dependency(
     depends=[
         "tests/test_one_circle_beam_charges.py::test_end",
-        "tests/test_one_retangular_beam_charges.py::test_end",
+        # "tests/test_one_retangular_beam_charges.py::test_end",
+        "tests/test_beam_field_values.py::test_end",
     ],
     scope="session",
 )
@@ -28,17 +29,16 @@ def test_example1():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
     system.add_load(B, {"Fx": 10})
     system.run()
-    Usolu = system.solution
-    Ugood = np.zeros((2, 6))
-    Ugood[1, 0] = 4 * 10 * 1000 / (210e3 * np.pi * 8**2)
-    np.testing.assert_almost_equal(Usolu, Ugood)
+
+    displacement = beamAB.field("u")
 
 
 @pytest.mark.order(10)
@@ -48,8 +48,9 @@ def test_example2():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
@@ -69,9 +70,9 @@ def test_example3():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
-    beamAB.addt(0.6)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     C = beamAB.path(0.6)
     system = StaticSystem()
     system.add_element(beamAB)
@@ -94,28 +95,17 @@ def test_example4():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     C = beamAB.path(0.3)
     D = beamAB.path(0.7)
-    beamAB.addt(0.3)
-    beamAB.addt(0.7)
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
     system.add_load(C, {"Fy": -12})
     system.add_load(D, {"Fy": -24})
     system.run()
-    Usolu = system.solution
-    EI = 210e3 * np.pi * 8**4 / 64
-    Ugood = np.zeros((4, 6))
-    Ugood[1, 1] = -0.756e9 / EI
-    Ugood[2, 1] = -3.068e9 / EI
-    Ugood[3, 1] = -4.994e9 / EI
-    Ugood[1, 5] = -4.5e6 / EI
-    Ugood[2, 5] = -6.42e6 / EI
-    Ugood[3, 5] = -6.42e6 / EI
-    np.testing.assert_almost_equal(Usolu, Ugood)
 
 
 @pytest.mark.order(10)
@@ -128,18 +118,14 @@ def test_example5():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
     system.add_dist_load(beamAB, (0, 1), {"Fy": (q0, q0)})
     system.run()
-    Usolu = system.solution
-    Ugood = np.zeros((2, 6))
-    Ugood[1, 1] = q0 * L**4 / (6 * EI)  # q0*L**4/(8*EI) for many intermediate points
-    Ugood[1, 5] = q0 * L**3 / (4 * EI)  # q0*L**3/(6*EI) for many intermediate points
-    np.testing.assert_almost_equal(Usolu, Ugood)
 
 
 @pytest.mark.order(10)
@@ -149,8 +135,9 @@ def test_example6():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
@@ -165,8 +152,9 @@ def test_example7():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
@@ -181,8 +169,9 @@ def test_example8():
     A = (0, 0, 0)
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
-    beamAB.section = Circle(R=8 / 2, nu=0.3)
-    beamAB.material = Isotropic(E=210e3, nu=0.3)
+    steel = Isotropic(E=210e3, nu=0.3)
+    circle = Circle(R=8 / 2)
+    beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
@@ -200,14 +189,12 @@ def test_example9():
     beamAB = EulerBernoulli([A, B])
     beamAC = EulerBernoulli([A, C])
     beamBC = EulerBernoulli([B, C])
-    circle = Circle(R=8 / 2, nu=0.3)
-    square = Square(b=8, nu=0.3)
+    circle = Circle(R=8 / 2)
+    square = Square(b=8)
     steel = Isotropic(E=210e3, nu=0.3)
-    beamAB.section = square
-    beamBC.section = circle
-    beamAC.section = circle
-    for beam in [beamAB, beamBC, beamAC]:
-        beam.material = steel
+    beamAB.section = steel, square
+    beamBC.section = steel, circle
+    beamAC.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
     system.add_element(beamBC)
@@ -227,12 +214,10 @@ def test_example10():
     C = (300, 500, 0)
     beamAC = EulerBernoulli([A, C])
     beamBC = EulerBernoulli([B, C])
-    circle = Circle(R=8 / 2, nu=0.3)
+    circle = Circle(R=8 / 2)
     steel = Isotropic(E=210e3, nu=0.3)
-    beamAC.section = circle
-    beamBC.section = circle
-    beamAC.material = steel
-    beamBC.material = steel
+    beamAC.section = steel, circle
+    beamBC.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAC)
     system.add_element(beamBC)
@@ -247,23 +232,3 @@ def test_example10():
 @pytest.mark.dependency(depends=["test_begin", "test_example10"])
 def test_end():
     pass
-
-
-def main():
-    test_begin()
-    test_example1()
-    test_example2()
-    test_example3()
-    test_example4()
-    test_example5()
-    test_example6()
-    test_example7()
-    test_example8()
-    test_example9()
-    test_example10()
-    test_end()
-    plt.show()
-
-
-if __name__ == "__main__":
-    main()

@@ -58,7 +58,7 @@ class SquareSection(HomogeneousSection):
     def compute_inertias(self):
         print("Warning: Inertias for a square is not yet well defined")
         I = np.zeros(3, dtype="float64")
-        I[1] = self.b**4 / 12
+        I[1] = self.profile.b**4 / 12
         I[2] = I[1]
         I[0] = 2 * I[1]
         self.I = I

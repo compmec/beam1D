@@ -24,6 +24,16 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
         self.knotvector = element.path.knotvector
 
     def __call__(self, fieldname: str) -> nurbs.SplineCurve:
+        """
+        Computes the field of the element. Fields are:
+            ``u``: displacement of the neutral line
+            ``p``: position of neutral line (not deformed)
+            ``d``: position of neutral line (deformed)
+            ``FI``: internal forces on the middle of element
+            ``FE``: external forces applied on the element
+            ``MI``: internal moment on the middle of the element
+            ``ME``: external moment applied on the elmenet
+        """
         return self.field(fieldname)
 
     def field(self, fieldname: str) -> nurbs.SplineCurve:
