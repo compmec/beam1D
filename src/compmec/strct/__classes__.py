@@ -78,7 +78,9 @@ class Point(object):
 
 
 class Profile(abc.ABC):
-    pass
+    @abc.abstractmethod
+    def area(self) -> float:
+        raise NotImplementedError
 
 
 class Material(object):

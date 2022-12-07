@@ -1,6 +1,4 @@
-import abc
 from math import isnan, nan
-from typing import Optional, overload
 
 import numpy as np
 
@@ -23,18 +21,8 @@ class Retangular(Profile):
     def height(self) -> PositiveFloat:
         return self._height
 
-    @base.setter
-    def base(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "b")
-        self._base = value
-
-    @height.setter
-    def height(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "h")
-        self._height = value
-
     @property
-    def area(self):
+    def area(self) -> PositiveFloat:
         return self.base * self.height
 
 
@@ -73,21 +61,13 @@ class HollowRetangular(Retangular):
         return self._he
 
     @property
-    def area(self):
+    def area(self) -> PositiveFloat:
         return self.be * self.he - self.bi * self.hi
 
 
 class Circle(Profile):
-    @overload
-    def __init__(self, *, radius: PositiveFloat) -> None:
-        ...
-
-    @overload
-    def __init__(self, *, diameter: PositiveFloat) -> None:
-        ...
-
     def __init__(
-        self, *, radius: PositiveFloat = nan, diameter: PositiveFloat = nan
+        self, diameter: PositiveFloat = nan, radius: PositiveFloat = nan
     ) -> None:
         """Takes either a `radius` or a `diameter` but not both."""
         if not isnan(radius) ^ isnan(diameter):
@@ -108,7 +88,7 @@ class Circle(Profile):
         return 2 * self._radius
 
     @property
-    def area(self):
+    def area(self) -> PositiveFloat:
         return np.pi * self.radius**2
 
 
@@ -140,7 +120,7 @@ class HollowCircle(Circle):
         return self.__e
 
     @property
-    def area(self):
+    def area(self) -> PositiveFloat:
         return np.pi * (self.Re**2 - self.Ri**2)
 
 
@@ -151,9 +131,32 @@ class ProfileI(Profile):
         h: PositiveFloat,
         t1: PositiveFloat,
         t2: PositiveFloat,
-        nu: PositiveFloat,
     ):
-        self.b = b
-        self.h = h
-        self.t1 = t1
-        self.t2 = t2
+        PositiveFloat.verify(b, "b")
+        PositiveFloat.verify(h, "h")
+        PositiveFloat.verify(t1, "t1")
+        PositiveFloat.verify(t2, "t2")
+        self._b = b
+        self._h = h
+        self._t1 = t1
+        self._t2 = t2
+
+    @property
+    def b(self) -> PositiveFloat:
+        return self._b
+
+    @property
+    def h(self) -> PositiveFloat:
+        return self._h
+
+    @property
+    def t1(self) -> PositiveFloat:
+        return self._t1
+
+    @property
+    def t2(self) -> PositiveFloat:
+        return self._t2
+
+    @property
+    def area(self) -> PositiveFloat:
+        return self.b * self.h - (self.b - self.t1) * (self.h - 2 * self.t2)

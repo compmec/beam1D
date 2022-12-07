@@ -14,10 +14,13 @@ def test_begin():
 @pytest.mark.order(1)
 @pytest.mark.dependency()
 def test_circle():
+    Circle(5)  # Diameter
     Circle(radius=1)
     Circle(radius=3)
     Circle(radius=2.5)
     Circle(diameter=5)
+    with pytest.raises(TypeError):
+        Circle(diameter=5, radius=2.5)
     with pytest.raises(TypeError):
         Circle("asd")
     with pytest.raises(TypeError):
@@ -31,6 +34,7 @@ def test_circle():
     A = np.pi * R**2
     circle = Circle(radius=R)
     assert abs(circle.radius - R) < TOLERANCE
+    assert abs(circle.diameter - 2 * R) < TOLERANCE
     assert abs(circle.area - A) < TOLERANCE
 
 
@@ -127,6 +131,19 @@ def test_hollowretangular():
     assert abs(hollowretangular.hi - hi) < TOLERANCE
     assert abs(hollowretangular.he - he) < TOLERANCE
     assert abs(hollowretangular.height - 0.5 * (hi + he)) < TOLERANCE
+    assert abs(hollowretangular.area - (be * he - bi * hi)) < TOLERANCE
+
+
+@pytest.mark.order(1)
+@pytest.mark.dependency()
+def test_Iprofile():
+    b, h, t1, t2 = np.random.uniform(1, 4, 4)
+    iprofile = ProfileI(b, h, t1, t2)
+    assert abs(iprofile.b - b) < TOLERANCE
+    assert abs(iprofile.h - h) < TOLERANCE
+    assert abs(iprofile.t1 - t1) < TOLERANCE
+    assert abs(iprofile.t2 - t2) < TOLERANCE
+    assert iprofile.area > 0
 
 
 @pytest.mark.order(1)
