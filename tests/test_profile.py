@@ -137,7 +137,7 @@ def test_hollowretangular():
 @pytest.mark.order(1)
 @pytest.mark.dependency()
 def test_Iprofile():
-    b, h, t1, t2 = np.random.uniform(1, 4, 4)
+    b, h, t1, t2 = 4, 4, 1, 1
     iprofile = ProfileI(b, h, t1, t2)
     assert abs(iprofile.b - b) < TOLERANCE
     assert abs(iprofile.h - h) < TOLERANCE

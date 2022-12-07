@@ -3,7 +3,7 @@ from typing import Iterable, List, Optional, Tuple
 import matplotlib as mpl
 import numpy as np
 
-from compmec.strct.__classes__ import Structural1DInterface
+from compmec.strct.__classes__ import Element1D
 from compmec.strct.profile import Circle, HollowCircle
 from compmec.strct.system import StaticSystem
 
@@ -135,7 +135,7 @@ class ShowerStaticSystem(Shower):
         super().__init__()
         self.__system = system
 
-    def getonesplinecurve(self, element: Structural1DInterface, deformed: bool = False):
+    def getonesplinecurve(self, element: Element1D, deformed: bool = False):
         if not deformed:
             return element.path
         raise NotImplementedError("Deformed: Should be implemented")

@@ -6,8 +6,8 @@ import numpy as np
 
 
 class Point(object):
-    __instances = []
-    __points = []
+    _instances = []
+    _points = []
 
     @staticmethod
     def validation_point(value: Tuple[float]):
@@ -17,18 +17,18 @@ class Point(object):
         if len(value) != 3:
             raise ValueError("The point must be a 3D-point, with three values")
 
-    def __new__(cls, value: Tuple[float]):
-        if len(Point.__instances) == 0:
+    def _new_(cls, value: Tuple[float]):
+        if len(Point._instances) == 0:
             return Point.new(value)
         id = Point.get_id(value)
         if id is None:
             return Point.new(value)
-        return Point.__instances[id]
+        return Point._instances[id]
 
     @staticmethod
     def new(value: Tuple[float]):
-        self = object.__new__(Point)
-        Point.__instances.append(self)
+        self = object._new_(Point)
+        Point._instances.append(self)
         return self
 
     @staticmethod
@@ -36,11 +36,11 @@ class Point(object):
         """
         Precisa testar
         """
-        if len(Point.__instances) == 0:
+        if len(Point._instances) == 0:
             return None
         value = np.array(value, dtype="float64")
         distances = np.array(
-            [np.sum((point.p - value) ** 2) for point in Point.__instances]
+            [np.sum((point.p - value) ** 2) for point in Point._instances]
         )
         mask = distances < distmax
         if not np.any(mask):
@@ -48,32 +48,32 @@ class Point(object):
         return np.where(mask)[0][0]
 
     def __init__(self, value: Tuple[float]):
-        self.__p = np.array(value, dtype="float64")
-        self.__r = np.zeros(3, dtype="float64")
-        self.__id = len(Point.__instances) - 1
+        self._p = np.array(value, dtype="float64")
+        self._r = np.zeros(3, dtype="float64")
+        self._id = len(Point._instances) - 1
 
     @property
     def id(self):
-        return self.__id
+        return self._id
 
     @property
     def p(self):
-        return self.__p
+        return self._p
 
     @property
     def r(self):
-        return self.__r
+        return self._r
 
-    def __str__(self):
+    def _str_(self):
         return str(self.p)
 
-    def __repr__(self):
+    def _repr_(self):
         return str(self)
 
-    def __iter__(self):
+    def _iter_(self):
         return tuple(self.p)
 
-    def __list__(self):
+    def _list_(self):
         return list(self.p)
 
 
@@ -92,116 +92,13 @@ class Section(abc.ABC):
     pass
 
 
-class HomogeneousSection(Section):
-    def __init__(self, material: Material, profile: Profile):
-        self.material = material
-        self.profile = profile
-        self.__A = None
-        self.__I = None
-
-    @property
-    def material(self) -> Material:
-        return self.__material
-
-    @property
-    def profile(self) -> Profile:
-        return self.__profile
-
-    @property
-    def A(self) -> Tuple[float, float, float]:
-        if self.__A is None:
-            self.compute_areas()
-        return tuple(self.__A)
-
-    @property
-    def I(self) -> Tuple[float, float, float]:
-        if self.__I is None:
-            self.compute_inertias()
-        return tuple(self.__I)
-
-    @A.setter
-    def A(self, value: Tuple[float, float, float]):
-        self.__A = tuple(value)
-
-    @I.setter
-    def I(self, value: Tuple[float, float, float]):
-        self.__I = tuple(value)
-
-    @material.setter
-    def material(self, value: Material):
-        if not isinstance(value, Material):
-            raise TypeError
-        self.__material = value
-
-    @profile.setter
-    def profile(self, value: Profile):
-        if not isinstance(value, Profile):
-            raise TypeError
-        self.__profile = value
-
-    @abc.abstractmethod
-    def compute_areas(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def compute_inertias(self):
-        raise NotImplementedError
-
-
-class Structural1DInterface(abc.ABC):
-    @abc.abstractmethod
-    def __init__(self, path: Union[nurbs.SplineCurve, np.ndarray]):
-        raise NotImplementedError
-
-    @property
-    def path(self) -> nurbs.SplineCurve:
-        return self.__path
-
-    @property
-    def ts(self) -> Tuple[float]:
-        return tuple(set(self.path.U))
-
-    @property
-    def section(self) -> Section:
-        return self.__section
-
-    @property
-    def field(self) -> Callable[[str], nurbs.SplineCurve]:
-        """Returns function which receives a string and returns an nurbs.SplineCurve"""
-        try:
-            return self.__field
-        except AttributeError as e:
-            raise ValueError("You must run the simulation before calling 'field'")
-
-    def set_path(self, value: nurbs.SplineCurve):
-        if not isinstance(value, nurbs.SplineCurve):
-            raise TypeError
-        self.__path = value
-
-    def set_section(self, value: Section):
-        if not isinstance(value, Section):
-            raise TypeError
-        self.__section = value
-
-    def set_field(self, value):
-        self.__field = value
-
-
-class TrussInterface(Structural1DInterface):
-    @abc.abstractmethod
-    def stiffness_matrix(self) -> np.ndarray:
-        raise NotImplementedError
-
-
-class BeamInterface(Structural1DInterface):
-    @abc.abstractmethod
-    def stiffness_matrix(self) -> np.ndarray:
-        raise NotImplementedError
+class Element1D(abc.ABC):
+    pass
 
 
 class ComputeFieldInterface(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, element: Structural1DInterface, result: np.ndarray):
+    def __init__(self, element: Element1D, result: np.ndarray):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -213,18 +110,18 @@ class ComputeFieldInterface(abc.ABC):
         raise NotImplementedError
 
     @property
-    def element(self) -> Structural1DInterface:
-        return self.__element
+    def element(self) -> Element1D:
+        return self._element
 
     @property
     def result(self) -> np.ndarray:
-        return np.copy(self.__result)
+        return np.copy(self._result)
 
     @element.setter
-    def element(self, value: Structural1DInterface):
-        if not isinstance(value, Structural1DInterface):
-            raise TypeError("The element must be a Structural1D instance")
-        self.__element = value
+    def element(self, value: Element1D):
+        if not isinstance(value, Element1D):
+            raise TypeError("The element must be a Element1D instance")
+        self._element = value
 
     @result.setter
     def result(self, value: np.ndarray):
@@ -240,7 +137,7 @@ class ComputeFieldInterface(abc.ABC):
             raise ValueError(
                 f"The number of results in must be {6}, received {value.shape[1]}"
             )
-        self.__result = value
+        self._result = value
 
     @abc.abstractmethod
     def position(self):

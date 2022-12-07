@@ -1,11 +1,11 @@
 import compmec.nurbs as nurbs
 import numpy as np
 
-from compmec.strct.__classes__ import ComputeFieldBeamInterface, Structural1DInterface
+from compmec.strct.__classes__ import ComputeFieldBeamInterface, Element1D
 
 
 class ComputeFieldBeam(ComputeFieldBeamInterface):
-    def __init__(self, element: Structural1DInterface, result: np.ndarray):
+    def __init__(self, element: Element1D, result: np.ndarray):
         self.NAME2FUNCTIONS = {
             "u": self.displacement,
             "p": self.position,

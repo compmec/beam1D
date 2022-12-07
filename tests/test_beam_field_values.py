@@ -271,6 +271,61 @@ class TestFieldCantileverCircularEulerBeam:
         pass
 
 
+class TestFailCases:
+    def setup_system(self):
+        self.lenght = 1000
+        A = (0, 0, 0)
+        B = (self.lenght, 0, 0)
+        self.beam = EulerBernoulli([A, B])
+
+        self.E = 210e3
+        self.nu = 0.3
+        self.d = 8
+        profile = Circle(diameter=self.d)
+        material = Isotropic(E=self.E, nu=self.nu)
+        self.beam.section = material, profile
+
+        system = StaticSystem()
+        system.add_element(self.beam)
+        boundary_conditions = {"ux": 0, "uy": 0, "tz": 0}
+        system.add_BC(A, boundary_conditions)
+
+        self.applied_force = 10
+        system.add_load(B, {"Fy": self.applied_force})
+
+        self.npts = 101
+        self.ts = np.linspace(0, 1, self.npts)
+        self.beam.path.knot_insert(self.ts)
+        system.run()
+
+    @pytest.mark.order(9)
+    @pytest.mark.timeout(5)
+    @pytest.mark.dependency(
+        depends=[
+            "TestFieldCantileverCircularEulerBeam::test_end",
+        ]
+    )
+    def test_begin(self):
+        pass
+
+    @pytest.mark.order(9)
+    @pytest.mark.dependency(depends=["TestFailCases::test_begin"])
+    def test_try_to_get_wrong_field(self):
+        self.setup_system()
+        with pytest.raises(ValueError):
+            self.beam.field("SIG")  # Position curve
+
+    @pytest.mark.order(9)
+    @pytest.mark.dependency(
+        depends=[
+            "TestFailCases::test_begin",
+            "TestFailCases::test_try_to_get_wrong_field",
+        ]
+    )
+    def test_end(self):
+        pass
+
+
 @pytest.mark.order(9)
 @pytest.mark.dependency(
     depends=[

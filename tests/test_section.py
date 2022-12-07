@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from compmec.strct.material import Isotropic
-from compmec.strct.profile import Circle, HollowCircle, Retangular
-from compmec.strct.section import CircleSection, HollowCircleSection
+from compmec.strct.profile import Circle, HollowCircle
+from compmec.strct.section import CircleSection, GeneralSection, HollowCircleSection
 
 TOLERANCE = 1e-9
 PI = np.pi
@@ -170,6 +170,49 @@ class TestHollowRetangularSection:
         pass
 
 
+class TestGeneralSection:
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["test_begin"])
+    def test_begin(self):
+        pass
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["TestGeneralSection::test_begin"])
+    def test_set_get(self):
+        section = GeneralSection()
+        with pytest.raises(ValueError):
+            section.A
+        with pytest.raises(ValueError):
+            section.I
+        with pytest.raises(ValueError):
+            section.A = (-1, 1, 1)
+        with pytest.raises(ValueError):
+            section.A = (0, 1, 1)
+        with pytest.raises(ValueError):
+            section.A = (0, 1, 1, 4)
+        with pytest.raises(ValueError):
+            section.A = [(0, 1, 1, 4)]
+        with pytest.raises(ValueError):
+            section.I = (-1, 1, 1)
+        with pytest.raises(ValueError):
+            section.I = (0, 1, 1)
+        with pytest.raises(ValueError):
+            section.I = (0, 1, 1, 4)
+        with pytest.raises(ValueError):
+            section.I = [(0, 1, 1, 4)]
+        section.A = (1, 3, 4)
+        section.I = (5, 8, 9)
+        np.testing.assert_allclose(section.A, (1, 3, 4))
+        np.testing.assert_allclose(section.I, (5, 8, 9))
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=["TestGeneralSection::test_set_get", "TestGeneralSection::test_begin"]
+    )
+    def test_end(self):
+        pass
+
+
 @pytest.mark.order(2)
 @pytest.mark.dependency(
     depends=[
@@ -178,6 +221,7 @@ class TestHollowRetangularSection:
         "TestHollowCircleSection::test_end",
         "TestRetangularSection::test_end",
         "TestHollowRetangularSection::test_end",
+        "TestGeneralSection::test_end",
     ]
 )
 def test_end():

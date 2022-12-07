@@ -9,11 +9,12 @@ import numpy as np
 from scipy import sparse
 
 from compmec.strct.__classes__ import (
+    ComputeFieldInterface,
+    Element1D,
     Material,
     Point,
     Profile,
     Section,
-    Structural1DInterface,
 )
 from compmec.strct.section import create_section_from_material_profile
 
@@ -41,38 +42,45 @@ def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
     return R.T
 
 
-def init_linear_spline(P: np.ndarray):
-    P = np.array(P, dtype="float64")
-    degree = 1
-    if P.ndim != 2:
-        raise ValueError("P must be a 2D array")
-    npts, dim = P.shape
+def init_from_tuple_points(points: Tuple[Point]):
+    try:
+        points = np.array(points, dtype="float64")
+    except Exception as e:
+        error_msg = f"Could not convert points to a numpy array of floats.\n"
+        error_msg += f"   Cause: {str(e)}"
+        raise ValueError(error_msg)
+    if points.ndim != 2:
+        error_msg = f"The points must be a 2D array, received {points.ndim}D array"
+        raise ValueError(error_msg)
+    npts, dim = points.shape
     if dim != 3:
-        raise ValueError("The points must have 3 floats")
-    for i in range(P.shape[0]):
-        Point(P[i])  # To create a point if it doesn't exist
-    U = nurbs.GeneratorKnotVector.uniform(degree, npts)
-    return nurbs.SplineCurve(U, P)
+        error_msg = f"Each point must have 3 floats. Current dim = {dim}"
+        raise ValueError(error_msg)
+    points = list(points)
+    degree = 1
+    knotvector = nurbs.GeneratorKnotVector.uniform(degree, npts)
+    return nurbs.SplineCurve(knotvector, points)
 
 
-class Structural1D(Structural1DInterface):
-    def __init__(self, path: Union[nurbs.SplineCurve, np.ndarray]):
-        self._dofs = None
-        self.path = path
-
-    def set_path(self, value: nurbs.SplineCurve):
-        if not isinstance(value, nurbs.SplineCurve):
-            raise TypeError
-        self.__path = value
-
-    def set_section(self, value: Section):
-        if not isinstance(value, Section):
-            raise TypeError
-        self.__section = value
+class Structural1D(Element1D):
+    def __init__(self, path: Union[nurbs.SplineCurve, Tuple[Point]]):
+        if isinstance(path, nurbs.SplineCurve):
+            self._path = path
+            return
+        self._path = init_from_tuple_points(path)
 
     @property
-    def dofs(self) -> int:
-        return self._dofs
+    def field(self) -> Callable[[str], nurbs.SplineCurve]:
+        """Returns function which receives a string and returns an nurbs.SplineCurve"""
+        try:
+            return self._field
+        except AttributeError as e:
+            raise ValueError("You must run the simulation before calling 'field'")
+
+    def set_field(self, value: ComputeFieldInterface):
+        if not isinstance(value, ComputeFieldInterface):
+            raise TypeError
+        self._field = value
 
     @property
     def ts(self) -> Tuple[float]:
@@ -80,47 +88,35 @@ class Structural1D(Structural1DInterface):
 
     @property
     def path(self) -> nurbs.SplineCurve:
-        return self.__path
+        return self._path
 
     @property
     def section(self) -> Section:
-        return self.__section
-
-    @path.setter
-    def path(self, value: Union[nurbs.SplineCurve, np.ndarray]):
-        if isinstance(value, nurbs.SplineCurve):
-            self.set_path(value)
-            return
-        value = init_linear_spline(value)
-        self.set_path(value)
+        return self._section
 
     @section.setter
     def section(self, value: Union[Section, Tuple[Material, Profile]]):
         if isinstance(value, Section):
-            self.set_section(value)
+            self._section = value
             return
+        if not isinstance(value, (tuple, list)):
+            error_msg = f"The section must be <Section> or (<Material>, <Profile>)."
+            error_msg += f"Received type = {type(value)}"
+            raise TypeError(error_msg)
+        if len(value) != 2:
+            error_msg = f"The section must be <Section> or (<Material>, <Profile>)."
+            error_msg += f"Received {str(value)[:400]}"
+            raise ValueError(error_msg)
         material, profile = value
         value = create_section_from_material_profile(material, profile)
-        self.set_section(value)
+        self._section = value
 
 
 class Truss(Structural1D):
-    def __init__(self, path):
-        self._dofs = 3
-        super().__init__(path)
-
-
-class Cable(Structural1D):
-    def __init__(self, path):
-        self._dofs = 3
-        super().__init__(path)
+    pass
 
 
 class Beam(Structural1D):
-    def __init__(self, path):
-        self._dofs = 6
-        super().__init__(path)
-
     def local_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
         raise NotImplementedError("This function must be overwritten by the child")
 
@@ -148,9 +144,6 @@ class Beam(Structural1D):
 
 
 class EulerBernoulli(Beam):
-    def __init__(self, path):
-        super().__init__(path)
-
     def local_stiffness_matrix_Kx(self, L: float) -> np.ndarray:
         E = self.section.material.E
         A = self.section.A[0]

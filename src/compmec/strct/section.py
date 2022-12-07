@@ -1,12 +1,51 @@
-from typing import Optional
+import abc
+from typing import Optional, Tuple
 
 import numpy as np
 
-from compmec.strct.__classes__ import HomogeneousSection, Material, Profile
+from compmec.strct.__classes__ import Material, Profile, Section
 from compmec.strct.profile import *
 
 
-class RetangularSection(HomogeneousSection):
+class HomogeneousSection(Section):
+    @property
+    def A(self) -> Tuple[float, float, float]:
+        return tuple(self._A)
+
+    @property
+    def I(self) -> Tuple[float, float, float]:
+        return tuple(self._I)
+
+
+class HomogeneousSectionFromMaterialProfile(HomogeneousSection):
+    def __init__(self, material: Material, profile: Profile):
+        if not isinstance(material, Material):
+            raise TypeError
+        if not isinstance(profile, Profile):
+            raise TypeError
+        self._material = material
+        self._profile = profile
+        self._A = self.compute_areas()
+        self._I = self.compute_inertias()
+
+    @property
+    def material(self) -> Material:
+        return self._material
+
+    @property
+    def profile(self) -> Profile:
+        return self._profile
+
+    @abc.abstractmethod
+    def compute_areas(self) -> Tuple[PositiveFloat]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def compute_inertias(self) -> Tuple[PositiveFloat]:
+        raise NotImplementedError
+
+
+class RetangularSection(HomogeneousSectionFromMaterialProfile):
     def shear_coefficient(self):
         nu = self.material.nu
         return 10 * (1 + nu) / (12 + 11 * nu)
@@ -17,7 +56,7 @@ class RetangularSection(HomogeneousSection):
         A[0] = self.profile.area
         A[1] = k * self.profile.area
         A[2] = k * self.profile.area
-        self.A = A
+        return A
 
     def compute_inertias(self):
         b, h = self.profile.base, self.profile.height
@@ -26,15 +65,14 @@ class RetangularSection(HomogeneousSection):
         I[2] = h * b**3 / 12
         I[0] = I[1] + I[2]
         print("Warning: Inertia for torsional of retangular is not yet defined")
-        self.I = I
-        # raise NotImplementedError("Torsion for a retangular is not defined yet")
+        return I
 
 
-class HollowRetangularSection(HomogeneousSection):
+class HollowRetangularSection(HomogeneousSectionFromMaterialProfile):
     pass
 
 
-class CircleSection(HomogeneousSection):
+class CircleSection(HomogeneousSectionFromMaterialProfile):
     def shear_coefficient(self):
         nu = self.material.nu
         return 6 * (1 + nu) / (7 + 6 * nu)
@@ -45,7 +83,7 @@ class CircleSection(HomogeneousSection):
         A[0] = self.profile.area
         A[1] = k * self.profile.area
         A[2] = k * self.profile.area
-        self.A = A
+        return A
 
     def compute_inertias(self):
         R4 = self.profile.radius**4
@@ -53,10 +91,10 @@ class CircleSection(HomogeneousSection):
         I[0] = np.pi * R4 / 2
         I[1] = np.pi * R4 / 4
         I[2] = np.pi * R4 / 4
-        self.I = I
+        return I
 
 
-class HollowCircleSection(CircleSection):
+class HollowCircleSection(HomogeneousSectionFromMaterialProfile):
     def shear_coefficient(self):
         Ri, Re = self.profile.Ri, self.profile.Re
         nu = self.material.nu
@@ -69,7 +107,7 @@ class HollowCircleSection(CircleSection):
         A[0] = self.profile.area
         A[1] = k * self.profile.area
         A[2] = k * self.profile.area
-        self.A = A
+        return A
 
     def compute_inertias(self):
         Ri4 = self.profile.Ri**4
@@ -78,10 +116,10 @@ class HollowCircleSection(CircleSection):
         I[0] = np.pi * (Re4 - Ri4) / 2
         I[1] = np.pi * (Re4 - Ri4) / 4
         I[2] = np.pi * (Re4 - Ri4) / 4
-        self.I = I
+        return I
 
 
-class PerfilISection(HomogeneousSection):
+class PerfilISection(HomogeneousSectionFromMaterialProfile):
     def shear_coefficient(self):
         nu = self.material.nu
         b, h = self.profile.base, self.profile.height
@@ -97,15 +135,39 @@ class PerfilISection(HomogeneousSection):
 
 
 class GeneralSection(HomogeneousSection):
-    def __init__(self, curves: list, nu: float):
-        """
-        curves is a list of closed curves that defines the geometry
-        Each curve is a Nurbs, with the points.
-        It's possible to have a circle, only with one curve, a circle
-        Until now, it's not implemented
-        """
-        super().__init__(nu)
-        raise Exception("Not implemented")
+    def __init__(self):
+        self._A = None
+        self._I = None
+
+    @property
+    def A(self) -> Tuple[float, float, float]:
+        if self._A is None:
+            raise ValueError("You must set A to use general section!")
+        return tuple(self._A)
+
+    @property
+    def I(self) -> Tuple[float, float, float]:
+        if self._I is None:
+            raise ValueError("You must set I to use general section!")
+        return tuple(self._I)
+
+    @A.setter
+    def A(self, value: Tuple[PositiveFloat]):
+        value = np.array(value, dtype="float64")
+        if len(value) != 3 or value.ndim != 1:
+            raise ValueError("The argument must be 3 floats")
+        if np.any(value <= 0):
+            raise ValueError("All the elements in value must be positive")
+        self._A = value
+
+    @I.setter
+    def I(self, value: Tuple[PositiveFloat]):
+        value = np.array(value, dtype="float64")
+        if len(value) != 3 or value.ndim != 1:
+            raise ValueError("The argument must be 3 floats")
+        if np.any(value <= 0):
+            raise ValueError("All the elements in value must be positive")
+        self._I = value
 
 
 def create_section_from_material_profile(
@@ -124,4 +186,3 @@ def create_section_from_material_profile(
     for profileclass, sectionclass in mapto.items():
         if type(profile) == profileclass:
             return sectionclass(material, profile)
-    raise ValueError(f"Could not translate profile {type(profile)} to a section")

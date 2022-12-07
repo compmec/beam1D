@@ -2,7 +2,7 @@ from typing import Iterable, Tuple, Type, Union
 
 import numpy as np
 
-from compmec.strct.__classes__ import ComputeFieldBeamInterface, Structural1DInterface
+from compmec.strct.__classes__ import ComputeFieldBeamInterface, Element1D
 from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.solver import solve
 
@@ -273,12 +273,12 @@ class StaticStructure(object):
     def elements(self):
         return self._elements
 
-    def add_element(self, value: Structural1DInterface) -> None:
-        if not isinstance(value, Structural1DInterface):
+    def add_element(self, value: Element1D) -> None:
+        if not isinstance(value, Element1D):
             raise TypeError("To add an element, it must be a Structural 1D instance")
         return self._add_element(value)
 
-    def _add_element(self, value: Structural1DInterface) -> None:
+    def _add_element(self, value: Element1D) -> None:
         self._elements.append(value)
 
 
@@ -295,7 +295,7 @@ class StaticSystem:
         self._boundarycondition = StaticBoundaryCondition()
         self._solution = None
 
-    def add_element(self, element: Structural1DInterface):
+    def add_element(self, element: Element1D):
         self._structure.add_element(element)
         self.__getpointsfrom(element)
 
@@ -314,7 +314,7 @@ class StaticSystem:
         self._loads.add_load(index, loads)
 
     def add_dist_load(
-        self, element: Structural1DInterface, interval: Iterable[float], values: dict
+        self, element: Element1D, interval: Iterable[float], values: dict
     ):
         """
         Add a distribueted load in a interval.
@@ -333,8 +333,8 @@ class StaticSystem:
             At (0.6) the value of "Fy" is 0
             At (0.7) the value of "Fy" is 30
         """
-        if not isinstance(element, Structural1DInterface):
-            raise TypeError("Element must be Structural1DInterface")
+        if not isinstance(element, Element1D):
+            raise TypeError("Element must be Element1D")
         try:
             for t in interval:
                 float(t)
@@ -399,7 +399,7 @@ class StaticSystem:
             )
         return self._solution
 
-    def __getpointsfrom(self, element: Structural1DInterface):
+    def __getpointsfrom(self, element: Element1D):
         for t in element.ts:
             p = element.path(t)
             self._geometry.index_point_at(p)
