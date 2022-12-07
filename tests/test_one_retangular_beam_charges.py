@@ -53,7 +53,7 @@ class InitRetangularBarBeamEuler(object):
         b, h = np.random.uniform(1, 2, 2)
         b = h  # To make the tests sucessful, needs futher implementation
         # by changing Ir = Iy * cos^2 + Iz * sin^2
-        self.profile = Retangular(b=b, h=h)
+        self.profile = Retangular(base=b, height=h)
 
     def set_random_section(self):
         self.set_random_material()
@@ -101,7 +101,7 @@ class InitRetangularBarBeamEuler(object):
 
 class TestOneRetangularBarBeamTraction(InitRetangularBarBeamEuler):
     def compute_analitic_displacement_field(self):
-        A = self.profile.A
+        A = self.profile.area
         P = self.charge
         L = self.lenght
         E = self.material.E

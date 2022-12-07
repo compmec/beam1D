@@ -37,7 +37,7 @@ class InitBeam(object):
 
     def create_random_circle_profile(self):
         R = np.random.uniform(1, 2)
-        self.profile = Circle(R=R)
+        self.profile = Circle(radius=R)
 
     def create_random_circle_section(self):
         self.create_random_circle_profile()

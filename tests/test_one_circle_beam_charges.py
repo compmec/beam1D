@@ -50,7 +50,7 @@ class InitRodBeamEuler(object):
 
     def set_random_profile(self):
         R = np.random.uniform(1, 2)
-        self.profile = Circle(R=R)
+        self.profile = Circle(radius=R)
 
     def set_random_section(self):
         self.set_random_material()
@@ -98,7 +98,7 @@ class InitRodBeamEuler(object):
 
 class TestOneRodBeamTraction(InitRodBeamEuler):
     def compute_analitic_displacement_field(self):
-        A = self.profile.A
+        A = self.profile.area
         P = self.charge
         L = self.lenght
         E = self.material.E

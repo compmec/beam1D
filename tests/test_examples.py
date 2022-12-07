@@ -4,12 +4,11 @@ from matplotlib import pyplot as plt
 
 from compmec.strct.element import EulerBernoulli
 from compmec.strct.material import Isotropic
-from compmec.strct.profile import Circle, Square
+from compmec.strct.profile import Circle, Retangular
 from compmec.strct.system import StaticSystem
 
 
 @pytest.mark.order(10)
-# @pytest.mark.skip(reason="Must implement the functions to get displacements, momentums and etc from the beam")
 @pytest.mark.dependency(
     depends=[
         "tests/test_one_circle_beam_charges.py::test_end",
@@ -30,7 +29,7 @@ def test_example1():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
@@ -49,7 +48,7 @@ def test_example2():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
@@ -71,7 +70,7 @@ def test_example3():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     C = beamAB.path(0.6)
     system = StaticSystem()
@@ -96,7 +95,7 @@ def test_example4():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     C = beamAB.path(0.3)
     D = beamAB.path(0.7)
@@ -119,7 +118,7 @@ def test_example5():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
@@ -136,7 +135,7 @@ def test_example6():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
@@ -153,7 +152,7 @@ def test_example7():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
@@ -170,7 +169,7 @@ def test_example8():
     B = (1000, 0, 0)
     beamAB = EulerBernoulli([A, B])
     steel = Isotropic(E=210e3, nu=0.3)
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
@@ -189,8 +188,8 @@ def test_example9():
     beamAB = EulerBernoulli([A, B])
     beamAC = EulerBernoulli([A, C])
     beamBC = EulerBernoulli([B, C])
-    circle = Circle(R=8 / 2)
-    square = Square(b=8)
+    circle = Circle(diameter=8)
+    square = Retangular(8, 8)
     steel = Isotropic(E=210e3, nu=0.3)
     beamAB.section = steel, square
     beamBC.section = steel, circle
@@ -214,7 +213,7 @@ def test_example10():
     C = (300, 500, 0)
     beamAC = EulerBernoulli([A, C])
     beamBC = EulerBernoulli([B, C])
-    circle = Circle(R=8 / 2)
+    circle = Circle(diameter=8)
     steel = Isotropic(E=210e3, nu=0.3)
     beamAC.section = steel, circle
     beamBC.section = steel, circle

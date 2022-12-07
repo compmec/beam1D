@@ -14,13 +14,13 @@ class RetangularSection(HomogeneousSection):
     def compute_areas(self):
         k = self.shear_coefficient()
         A = np.zeros(3, dtype="float64")
-        A[0] = self.profile.A
-        A[1] = k * self.profile.A
-        A[2] = k * self.profile.A
+        A[0] = self.profile.area
+        A[1] = k * self.profile.area
+        A[2] = k * self.profile.area
         self.A = A
 
     def compute_inertias(self):
-        b, h = self.profile.b, self.profile.h
+        b, h = self.profile.base, self.profile.height
         I = np.zeros(3, dtype="float64")
         I[1] = b * h**3 / 12
         I[2] = h * b**3 / 12
@@ -34,45 +34,6 @@ class HollowRetangularSection(HomogeneousSection):
     pass
 
 
-class ThinRetangularSection(HomogeneousSection):
-    pass
-
-
-class SquareSection(HomogeneousSection):
-    pass
-
-    def shear_coefficient(self):
-        nu = self.material.nu
-        return 20 * (1 + nu) / (4 + 3 * nu)
-
-    def compute_areas(self):
-        k = self.shear_coefficient()
-        A = np.zeros(3, dtype="float64")
-        A[0] = self.profile.A
-        A[1] = k * A[0]
-        A[2] = k * A[0]
-        print("Warning: Areas for a square is not yet well defined")
-        self.A = A
-        # raise NotImplementedError("Areas for a square are not defined")
-
-    def compute_inertias(self):
-        print("Warning: Inertias for a square is not yet well defined")
-        I = np.zeros(3, dtype="float64")
-        I[1] = self.profile.b**4 / 12
-        I[2] = I[1]
-        I[0] = 2 * I[1]
-        self.I = I
-        # raise NotImplementedError("Inertias for a square are not defined")
-
-
-class HollowSquareSection(HomogeneousSection):
-    pass
-
-
-class ThinSquareSection(HomogeneousSection):
-    pass
-
-
 class CircleSection(HomogeneousSection):
     def shear_coefficient(self):
         nu = self.material.nu
@@ -80,15 +41,14 @@ class CircleSection(HomogeneousSection):
 
     def compute_areas(self):
         k = self.shear_coefficient()
-        R = self.profile.R
         A = np.zeros(3, dtype="float64")
-        A[0] = self.profile.A
-        A[1] = k * self.profile.A
-        A[2] = k * self.profile.A
+        A[0] = self.profile.area
+        A[1] = k * self.profile.area
+        A[2] = k * self.profile.area
         self.A = A
 
     def compute_inertias(self):
-        R4 = self.profile.R**4
+        R4 = self.profile.radius**4
         I = np.zeros(3, dtype="float64")
         I[0] = np.pi * R4 / 2
         I[1] = np.pi * R4 / 4
@@ -106,9 +66,9 @@ class HollowCircleSection(CircleSection):
     def compute_areas(self):
         k = self.shear_coefficient()
         A = np.zeros(3, dtype="float64")
-        A[0] = self.profile.A
-        A[1] = k * self.profile.A
-        A[2] = k * self.profile.A
+        A[0] = self.profile.area
+        A[1] = k * self.profile.area
+        A[2] = k * self.profile.area
         self.A = A
 
     def compute_inertias(self):
@@ -121,32 +81,10 @@ class HollowCircleSection(CircleSection):
         self.I = I
 
 
-class ThinCircleSection(HollowCircleSection):
-    def shear_coefficient(self):
-        nu = self.material.nu
-        return 2 * (1 + nu) / (4 + 3 * nu)
-
-    def compute_areas(self):
-        k = self.shear_coefficient()
-        A = np.zeros(3, dtype="float64")
-        A[0] = self.profile.A
-        A[1] = k * A[0]
-        A[2] = k * A[0]
-        self.A = A
-
-    def compute_inertias(self):
-        eR3 = self.profile.e * self.profile.R**3
-        I = np.zeros(3, dtype="float64")
-        I[0] = 2 * np.pi * eR3
-        I[1] = np.pi * eR3
-        I[2] = np.pi * eR3
-        self.I = I
-
-
 class PerfilISection(HomogeneousSection):
     def shear_coefficient(self):
         nu = self.material.nu
-        b, h = self.profile.b, self.profile.h
+        b, h = self.profile.base, self.profile.height
         t1, t2 = self.profile.t1, self.profile.t2
         n = b / h
         m = n * t1 / t2
@@ -180,13 +118,8 @@ def create_section_from_material_profile(
     mapto = {
         Retangular: RetangularSection,
         HollowRetangular: HollowRetangularSection,
-        ThinRetangular: ThinRetangularSection,
-        Square: SquareSection,
-        HollowSquare: HollowSquareSection,
-        ThinSquare: ThinSquareSection,
         Circle: CircleSection,
         HollowCircle: HollowCircleSection,
-        ThinCircle: ThinCircleSection,
     }
     for profileclass, sectionclass in mapto.items():
         if type(profile) == profileclass:

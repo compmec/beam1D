@@ -9,10 +9,9 @@ from compmec.strct.system import StaticSystem
 
 
 @pytest.mark.order(9)
-# @pytest.mark.dependency(
-#     depends=["tests/test_one_circle_beam_charges.py::test_end"], scope="session"
-# )
-@pytest.mark.dependency()
+@pytest.mark.dependency(
+    depends=["tests/test_one_circle_beam_charges.py::test_end"], scope="session"
+)
 def test_begin():
     pass
 
@@ -24,7 +23,7 @@ class TestFieldSingleBeamUncharged:
         B = (self.lenght, 0, 0)
         self.beam = EulerBernoulli([A, B])
 
-        profile = Circle(R=4)
+        profile = Circle(radius=4)
         material = Isotropic(E=210e3, nu=0.3)
         self.beam.section = material, profile
 
@@ -39,13 +38,13 @@ class TestFieldSingleBeamUncharged:
         system.run()
 
     @pytest.mark.order(9)
-    @pytest.mark.timeout(5)
     @pytest.mark.dependency(depends=["test_begin"])
     def test_begin(self):
         pass
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    @pytest.mark.timeout(5)
     def test_position(self):
         self.setup_system()
         curve = self.beam.field("p")  # Position curve
@@ -126,6 +125,7 @@ class TestFieldSingleBeamUncharged:
         pass
 
 
+@pytest.mark.dependency(depends=["test_begin"])
 class TestFieldCantileverCircularEulerBeam:
     def setup_system(self):
         self.lenght = 1000
@@ -136,7 +136,7 @@ class TestFieldCantileverCircularEulerBeam:
         self.E = 210e3
         self.nu = 0.3
         self.d = 8
-        profile = Circle(R=self.d / 2)
+        profile = Circle(diameter=self.d)
         material = Isotropic(E=self.E, nu=self.nu)
         self.beam.section = material, profile
 
@@ -157,7 +157,6 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.timeout(5)
     @pytest.mark.dependency(
         depends=[
-            "test_begin",
             "TestFieldSingleBeamUncharged::test_end",
         ]
     )
@@ -232,7 +231,6 @@ class TestFieldCantileverCircularEulerBeam:
         np.testing.assert_allclose(values_test, values_good, atol=1e-6)
 
     @pytest.mark.order(9)
-    # @pytest.mark.skip()
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )
@@ -245,7 +243,6 @@ class TestFieldCantileverCircularEulerBeam:
         np.testing.assert_allclose(values_test, values_good, atol=1e-4)
 
     @pytest.mark.order(9)
-    # @pytest.mark.skip()
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )

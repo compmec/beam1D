@@ -1,14 +1,16 @@
-from compmec.strct.element import EulerBernoulli
-from compmec.strct.profile import Circle, Square
-from compmec.strct.material import Isotropic
-from compmec.strct.system import StaticSystem
-from compmec.strct.shower import ShowerStaticSystem
-from matplotlib import pyplot as plt
 import numpy as np
+from matplotlib import pyplot as plt
+
+from compmec.strct.element import EulerBernoulli
+from compmec.strct.material import Isotropic
+from compmec.strct.profile import Circle
+from compmec.strct.shower import ShowerStaticSystem
+from compmec.strct.system import StaticSystem
 
 
 def tst_example09():
     pass
+
 
 def tst_example20():
     A = (0, 0, 0)
@@ -21,8 +23,8 @@ def tst_example20():
     beamBC = EulerBernoulli([B, C])
     beamBD = EulerBernoulli([B, D])
     beamCD = EulerBernoulli([C, D])
-    circle = Circle(R=8/2, nu=0.3)
-    steel = Isotropic(E=210e+3, nu=0.3)
+    circle = Circle(diameter=8)
+    steel = Isotropic(E=210e3, nu=0.3)
     system = StaticSystem()
     for beam in [beamAB, beamAC, beamAD, beamBC, beamBD, beamCD]:
         for t in np.linspace(0, 1, 21):
@@ -31,12 +33,7 @@ def tst_example20():
         beam.section = circle
         system.add_element(beam)
     E = beamBC.path(0.5)
-    system.add_BC(A, {"ux": 0,
-                    "uy": 0,
-                    "uz": 0,
-                    "tx": 0,
-                    "ty": 0,
-                    "tz": 0})
+    system.add_BC(A, {"ux": 0, "uy": 0, "uz": 0, "tx": 0, "ty": 0, "tz": 0})
     system.add_BC(B, {"uz": 0})
     system.add_BC(C, {"uz": 0})
     system.add_load(D, {"Fz": 5000000})
@@ -46,10 +43,10 @@ def tst_example20():
 
     plt.figure()
     ax = plt.gca()
-    shower.plot2D(projector='xy', deformed=False, axes=ax)
-    shower.plot2D(projector='xy', deformed=True, axes=ax)
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
     plt.figure()
-    ax = plt.axes(projection='3d')
+    ax = plt.axes(projection="3d")
     shower.plot3D(deformed=False, axes=ax)
     shower.plot3D(deformed=True, axes=ax)
     plt.legend()
@@ -58,6 +55,7 @@ def tst_example20():
 
 def main():
     tst_example20()
+
 
 if __name__ == "__main__":
     main()

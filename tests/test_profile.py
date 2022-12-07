@@ -14,23 +14,24 @@ def test_begin():
 @pytest.mark.order(1)
 @pytest.mark.dependency()
 def test_circle():
-    Circle(1)
-    Circle(3)
-    Circle(2.5)
+    Circle(radius=1)
+    Circle(radius=3)
+    Circle(radius=2.5)
+    Circle(diameter=5)
     with pytest.raises(TypeError):
         Circle("asd")
     with pytest.raises(TypeError):
         Circle("3")
     with pytest.raises(ValueError):
-        Circle(-2)
+        Circle(radius=-2)
     with pytest.raises(ValueError):
-        Circle(0)
+        Circle(radius=0)
 
     R = np.random.uniform(1, 2)
     A = np.pi * R**2
-    circle = Circle(R)
-    assert abs(circle.R - R) < TOLERANCE
-    assert abs(circle.A - A) < TOLERANCE
+    circle = Circle(radius=R)
+    assert abs(circle.radius - R) < TOLERANCE
+    assert abs(circle.area - A) < TOLERANCE
 
 
 @pytest.mark.order(1)
@@ -67,111 +68,9 @@ def test_hollowcircle():
     hollowcircle = HollowCircle(Ri=Ri, Re=Re)
     assert abs(hollowcircle.Ri - Ri) < TOLERANCE
     assert abs(hollowcircle.Re - Re) < TOLERANCE
-    assert abs(hollowcircle.R - R) < TOLERANCE
-    assert abs(hollowcircle.e - e) < TOLERANCE
-    assert abs(hollowcircle.A - A) < TOLERANCE
-
-
-@pytest.mark.order(1)
-@pytest.mark.dependency()
-def test_thincircle():
-    ThinCircle(1)
-    ThinCircle(3)
-    with pytest.raises(TypeError):
-        ThinCircle("asd")
-    with pytest.raises(TypeError):
-        ThinCircle("3")
-    with pytest.raises(ValueError):
-        ThinCircle(-2)
-    with pytest.raises(ValueError):
-        ThinCircle(0)
-
-    R = np.random.uniform(1, 2)
-    thincircle = ThinCircle(R)
-    assert abs(thincircle.R - R) < TOLERANCE
-    assert thincircle.e < 0.2 * R
-
-    R = np.random.uniform(1, 2)
-    e = R * np.random.uniform(0.02, 0.1)
-    A = 2 * np.pi * R * e
-
-    thincircle = ThinCircle(R, e)
-    assert abs(thincircle.R - R) < TOLERANCE
-    assert abs(thincircle.e - e) < TOLERANCE
-    assert abs(thincircle.A - A) < TOLERANCE
-
-
-@pytest.mark.order(1)
-@pytest.mark.dependency()
-def test_square():
-    Square(2)
-    Square(2.3)
-    with pytest.raises(TypeError):
-        Square("asd")
-    with pytest.raises(TypeError):
-        Square("3")
-    with pytest.raises(ValueError):
-        Square(-2)
-    b = np.random.uniform(1, 2)
-    square = Square(b)
-    assert abs(square.b - b) < TOLERANCE
-    assert abs(square.A - b**2) < TOLERANCE
-
-
-@pytest.mark.order(1)
-@pytest.mark.dependency()
-def test_hollowsquare():
-    HollowSquare(1, 2)
-    HollowSquare(2, 2.3)
-    with pytest.raises(TypeError):
-        HollowSquare("asd", 3)
-    with pytest.raises(TypeError):
-        HollowSquare("3", 4)
-    with pytest.raises(ValueError):
-        HollowSquare(-2, 3)
-    with pytest.raises(ValueError):
-        HollowSquare(0, 3)
-    with pytest.raises(ValueError):
-        HollowSquare(3, 3)
-    with pytest.raises(ValueError):
-        HollowSquare(3, 2)
-    bi = np.random.uniform(1, 2)
-    be = np.random.uniform(2, 3)
-    hollowsquare = HollowSquare(bi, be)
-    assert abs(hollowsquare.bi - bi) < TOLERANCE
-    assert abs(hollowsquare.be - be) < TOLERANCE
-    assert abs(hollowsquare.b - 0.5 * (bi + be)) < TOLERANCE
-    assert abs(hollowsquare.hi - bi) < TOLERANCE
-    assert abs(hollowsquare.he - be) < TOLERANCE
-    assert abs(hollowsquare.h - 0.5 * (bi + be)) < TOLERANCE
-    assert abs(hollowsquare.A - be**2 + bi**2) < TOLERANCE
-
-
-@pytest.mark.order(1)
-@pytest.mark.dependency()
-def test_thinsquare():
-    ThinSquare(1)
-    ThinSquare(3)
-    with pytest.raises(TypeError):
-        ThinSquare("asd")
-    with pytest.raises(TypeError):
-        ThinSquare("3")
-    with pytest.raises(ValueError):
-        ThinSquare(-2)
-    with pytest.raises(ValueError):
-        ThinSquare(0)
-
-    b = np.random.uniform(1, 2)
-    thinsquare = ThinSquare(b)
-    assert abs(thinsquare.b - b) < TOLERANCE
-    assert thinsquare.e < 0.2 * b
-
-    b = np.random.uniform(1, 2)
-    e = b * np.random.uniform(0.02, 0.1)
-    thinsquare = ThinSquare(b, e)
-    assert abs(thinsquare.b - b) < TOLERANCE
-    assert abs(thinsquare.e - e) < TOLERANCE
-    assert abs(thinsquare.A - 4 * b * e) < TOLERANCE
+    assert abs(hollowcircle.radius - R) < TOLERANCE
+    assert abs(hollowcircle.thickness - e) < TOLERANCE
+    assert abs(hollowcircle.area - A) < TOLERANCE
 
 
 @pytest.mark.order(1)
@@ -183,6 +82,8 @@ def test_retangular():
         Retangular("asd", 3)
     with pytest.raises(TypeError):
         Retangular("3", 4)
+    with pytest.raises(TypeError):
+        Retangular(3, "4")
     with pytest.raises(ValueError):
         Retangular(-2, 3)
     with pytest.raises(ValueError):
@@ -192,8 +93,8 @@ def test_retangular():
     b = np.random.uniform(1, 2)
     h = np.random.uniform(2, 3)
     retangular = Retangular(b, h)
-    assert abs(retangular.b - b) < TOLERANCE
-    assert abs(retangular.h - h) < TOLERANCE
+    assert abs(retangular.base - b) < TOLERANCE
+    assert abs(retangular.height - h) < TOLERANCE
 
 
 @pytest.mark.order(1)
@@ -222,43 +123,21 @@ def test_hollowretangular():
     hollowretangular = HollowRetangular(bi, hi, be, he)
     assert abs(hollowretangular.bi - bi) < TOLERANCE
     assert abs(hollowretangular.be - be) < TOLERANCE
-    assert abs(hollowretangular.b - 0.5 * (bi + be)) < TOLERANCE
+    assert abs(hollowretangular.base - 0.5 * (bi + be)) < TOLERANCE
     assert abs(hollowretangular.hi - hi) < TOLERANCE
     assert abs(hollowretangular.he - he) < TOLERANCE
-    assert abs(hollowretangular.h - 0.5 * (hi + he)) < TOLERANCE
+    assert abs(hollowretangular.height - 0.5 * (hi + he)) < TOLERANCE
 
 
 @pytest.mark.order(1)
-@pytest.mark.dependency()
-def test_retangular():
-    ThinRetangular(1, 2)
-    ThinRetangular(7, 4)
-    with pytest.raises(TypeError):
-        ThinRetangular("asd", 3)
-    with pytest.raises(TypeError):
-        ThinRetangular("3", 4)
-    with pytest.raises(ValueError):
-        ThinRetangular(-2, 3)
-    with pytest.raises(ValueError):
-        ThinRetangular(0, 3)
-    with pytest.raises(ValueError):
-        ThinRetangular(3, 0)
-
-    b = np.random.uniform(1, 2)
-    h = np.random.uniform(1, 2)
-    thinretangular = ThinRetangular(b, h)
-    assert abs(thinretangular.b - b) < TOLERANCE
-    assert abs(thinretangular.h - h) < TOLERANCE
-
-    b = np.random.uniform(1, 2)
-    h = np.random.uniform(1, 2)
-    e = min(b, h) * np.random.uniform(0.02, 0.1)
-    thinretangular = ThinRetangular(b, h, e)
-    assert abs(thinretangular.b - b) < TOLERANCE
-    assert abs(thinretangular.h - h) < TOLERANCE
-
-
-@pytest.mark.order(1)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(
+    depends=[
+        "test_begin",
+        "test_circle",
+        "test_hollowcircle",
+        "test_retangular",
+        "test_hollowretangular",
+    ]
+)
 def test_end():
     pass

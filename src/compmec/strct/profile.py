@@ -1,5 +1,6 @@
 import abc
-from typing import Optional
+from math import isnan, nan
+from typing import Optional, overload
 
 import numpy as np
 
@@ -7,159 +8,124 @@ from compmec.strct.__classes__ import Profile
 from compmec.strct.verifytype import PositiveFloat
 
 
-class ThinProfile(abc.ABC):
-    _ratiomax = 0.2
-    _ratiodefault = 0.01
-
-    @property
-    def e(self) -> PositiveFloat:
-        return self.__e
-
-    @e.setter
-    def e(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "e")
-        self.__e = value
-
-
 class Retangular(Profile):
-    def __init__(self, b: PositiveFloat, h: PositiveFloat):
-        self.b = b
-        self.h = h
+    def __init__(self, base: PositiveFloat, height: PositiveFloat):
+        PositiveFloat.verify(base, "base")
+        PositiveFloat.verify(height, "height")
+        self._base = base
+        self._height = height
 
     @property
-    def b(self) -> PositiveFloat:
-        return self.__b
+    def base(self) -> PositiveFloat:
+        return self._base
 
     @property
-    def h(self) -> PositiveFloat:
-        return self.__h
+    def height(self) -> PositiveFloat:
+        return self._height
 
-    @b.setter
-    def b(self, value: PositiveFloat):
+    @base.setter
+    def base(self, value: PositiveFloat):
         PositiveFloat.verify(value, "b")
-        self.__b = value
+        self._base = value
 
-    @h.setter
-    def h(self, value: PositiveFloat):
+    @height.setter
+    def height(self, value: PositiveFloat):
         PositiveFloat.verify(value, "h")
-        self.__h = value
+        self._height = value
 
     @property
-    def A(self):
-        return self.b * self.h
+    def area(self):
+        return self.base * self.height
 
 
 class HollowRetangular(Retangular):
     def __init__(
         self, bi: PositiveFloat, hi: PositiveFloat, be: PositiveFloat, he: PositiveFloat
     ):
-        super().__init__(b=(bi + be) / 2, h=(hi + he) / 2)
+        PositiveFloat.verify(bi, "bi")
+        PositiveFloat.verify(be, "be")
+        PositiveFloat.verify(hi, "hi")
+        PositiveFloat.verify(he, "he")
+        super().__init__(base=(bi + be) / 2, height=(hi + he) / 2)
         if bi >= be:
             raise ValueError("Value of `bi` must be less than `be`")
         if hi >= he:
             raise ValueError("Value of `hi` must be less than `he`")
-        self.be = be
-        self.he = he
-        self.bi = bi
-        self.hi = hi
-        self.e = min([be - bi, he - hi]) / 2
+        self._be = be
+        self._he = he
+        self._bi = bi
+        self._hi = hi
 
     @property
     def bi(self) -> PositiveFloat:
-        return self.__bi
+        return self._bi
 
     @property
     def hi(self) -> PositiveFloat:
-        return self.__hi
+        return self._hi
 
     @property
     def be(self) -> PositiveFloat:
-        return self.__be
+        return self._be
 
     @property
     def he(self) -> PositiveFloat:
-        return self.__he
-
-    @bi.setter
-    def bi(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "bi")
-        self.__bi = value
-
-    @hi.setter
-    def hi(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "hi")
-        self.__hi = value
-
-    @be.setter
-    def be(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "be")
-        self.__be = value
-
-    @he.setter
-    def he(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "he")
-        self.__he = value
+        return self._he
 
     @property
-    def A(self):
+    def area(self):
         return self.be * self.he - self.bi * self.hi
 
 
-class ThinRetangular(HollowRetangular, ThinProfile):
-    def __init__(
-        self, b: PositiveFloat, h: PositiveFloat, e: Optional[PositiveFloat] = None
-    ):
-        if e is None:
-            e = self._ratiodefault * min([b, h])
-        elif e > self._ratiomax * min([b, h]):
-            raise ValueError(
-                f"The ratio e/min(b, h)={e/min([b,h])} is too big. Use HollowRetangular instead"
-            )
-        bi, be = b - e, b + e
-        hi, he = h - e, h + e
-        super().__init__(bi, hi, be, he)
-
-
-class Square(Retangular):
-    def __init__(self, b: PositiveFloat):
-        super().__init__(b, b)
-
-
-class HollowSquare(HollowRetangular):
-    def __init__(self, bi: PositiveFloat, be: PositiveFloat):
-        super().__init__(bi, bi, be, be)
-
-
-class ThinSquare(ThinRetangular):
-    def __init__(self, b: PositiveFloat, e: Optional[PositiveFloat] = None):
-        super().__init__(b, b, e)
-
-
 class Circle(Profile):
-    def __init__(self, R: PositiveFloat):
-        self.R = R
+    @overload
+    def __init__(self, *, radius: PositiveFloat) -> None:
+        ...
+
+    @overload
+    def __init__(self, *, diameter: PositiveFloat) -> None:
+        ...
+
+    def __init__(
+        self, *, radius: PositiveFloat = nan, diameter: PositiveFloat = nan
+    ) -> None:
+        """Takes either a `radius` or a `diameter` but not both."""
+        if not isnan(radius) ^ isnan(diameter):
+            raise TypeError("Either radius or diameter required")
+        if isnan(diameter):
+            PositiveFloat.verify(radius, "radius")
+            self._radius = radius
+        else:
+            PositiveFloat.verify(diameter, "diameter")
+            self._radius = diameter / 2
 
     @property
-    def R(self) -> PositiveFloat:
-        return self.__R
-
-    @R.setter
-    def R(self, value: PositiveFloat) -> None:
-        PositiveFloat.verify(value, "R")
-        self.__R = value
+    def radius(self) -> PositiveFloat:
+        return self._radius
 
     @property
-    def A(self):
-        return np.pi * self.R**2
+    def diameter(self) -> PositiveFloat:
+        return 2 * self._radius
+
+    @property
+    def area(self):
+        return np.pi * self.radius**2
 
 
 class HollowCircle(Circle):
     def __init__(self, Ri: PositiveFloat, Re: PositiveFloat):
-        R = (Ri + Re) / 2
-        super().__init__(R=R)
-        self.Ri = Ri
-        self.Re = Re
-        self.e = self.Re - self.Ri
+        PositiveFloat.verify(Ri, "Ri")
+        PositiveFloat.verify(Re, "Re")
+        radius = (Ri + Re) / 2
+        super().__init__(radius=radius)
+        if Ri >= Re:
+            error_msg = (
+                f"The internal radius Ri = {Ri:.2f} must be less than Re = {Re:.2f}"
+            )
+            raise ValueError(error_msg)
+        self.__Ri = Ri
+        self.__Re = Re
+        self.__e = self.Re - self.Ri
 
     @property
     def Ri(self) -> PositiveFloat:
@@ -170,46 +136,12 @@ class HollowCircle(Circle):
         return self.__Re
 
     @property
-    def e(self) -> PositiveFloat:
+    def thickness(self) -> PositiveFloat:
         return self.__e
 
-    @Ri.setter
-    def Ri(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "Ri")
-        self.__Ri = value
-
-    @Re.setter
-    def Re(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "Re")
-        self.__Re = value
-
-    @e.setter
-    def e(self, value: PositiveFloat):
-        PositiveFloat.verify(value, "e")
-        self.__e = value
-
     @property
-    def A(self):
+    def area(self):
         return np.pi * (self.Re**2 - self.Ri**2)
-
-
-class ThinCircle(HollowCircle, ThinProfile):
-    def __init__(self, R: PositiveFloat, e: Optional[PositiveFloat] = None):
-        """
-        Creates a thin circle Profile.
-        * R is the mean radius.
-        * e is optional thickness.
-            If not given, it's 0.01*R
-        """
-        if e is None:
-            e = self._ratiodefault * R
-        if e > R * self._ratiomax:
-            raise ValueError(
-                f"The ratio e/R={e/R} is too big. Use HollowCircle instead"
-            )
-        Ri = R - 0.5 * e
-        Re = R + 0.5 * e
-        super().__init__(Ri=Ri, Re=Re)
 
 
 class ProfileI(Profile):
