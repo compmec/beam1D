@@ -58,10 +58,6 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
     def deformed(self) -> nurbs.SplineCurve:
         original_position = self.element.path
         displacement = self.field("u")
-        print("original_position = ")
-        print(original_position.knotvector)
-        print("displcamenet ")
-        print(displacement.knotvector)
         return original_position + displacement
 
     def internalforce(self) -> nurbs.SplineCurve:
