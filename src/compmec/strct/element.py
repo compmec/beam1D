@@ -6,7 +6,6 @@ from typing import Callable, Iterable, List, Tuple, Union
 
 import compmec.nurbs as nurbs
 import numpy as np
-from scipy import sparse
 
 from compmec.strct.__classes__ import (
     ComputeFieldInterface,
