@@ -135,18 +135,14 @@ class ShowerStaticSystem(Shower):
         super().__init__()
         self.__system = system
 
-    def getonesplinecurve(self, element: Element1D, deformed: bool = False):
-        if not deformed:
-            return element.path
-        raise NotImplementedError("Deformed: Should be implemented")
-
     def getAll2DPoints(
         self, tplot: Iterable[float], deformed: Optional[bool], projector: Projector
     ):
         all2Dpoints = []
         npts = len(tplot)
         for element in self.__system._structure.elements:
-            element3Dpoints = element.evaluate(tplot, deformed)
+            curve = element.field("d") if deformed else element.field("p")
+            element3Dpoints = curve.evaluate(tplot)
             element2Dpoints = np.zeros((npts, 2))
             for j, point3D in enumerate(element3Dpoints):
                 element2Dpoints[j] = projector(point3D)
@@ -176,7 +172,7 @@ class ShowerStaticSystem(Shower):
         maxfield = -1e9
         for element in self.__system._structure.elements:
             fieldcurve = element.field(fieldname)
-            fieldvalues = fieldcurve(tmed).reshape(-1)
+            fieldvalues = fieldcurve.evaluate(tmed).reshape(-1)
             if np.min(fieldvalues) < minfield:
                 minfield = np.min(fieldvalues)
             if np.max(fieldvalues) > maxfield:
@@ -243,8 +239,8 @@ class ShowerStaticSystem(Shower):
         if fieldname is not None:
             cmap = mpl.pyplot.get_cmap("bwr")
         for element in self.__system._structure.elements:
-            curve3D = self.getonesplinecurve(element, deformed)
-            points3D = curve3D(tplot)
+            curve3D = element.field("d") if deformed else element.field("p")
+            points3D = curve3D.evaluate(tplot)
             if fieldname is None:
                 axes.plot(points3D[:, 0], points3D[:, 1], points3D[:, 2], color="k")
             else:

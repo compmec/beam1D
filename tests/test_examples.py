@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from compmec.strct.element import EulerBernoulli
 from compmec.strct.material import Isotropic
 from compmec.strct.profile import Circle, Retangular
+from compmec.strct.shower import ShowerStaticSystem
 from compmec.strct.system import StaticSystem
 
 
@@ -14,6 +15,7 @@ from compmec.strct.system import StaticSystem
         "tests/test_one_circle_beam_charges.py::test_end",
         # "tests/test_one_retangular_beam_charges.py::test_end",
         "tests/test_beam_field_values.py::test_end",
+        "tests/test_shower.py::test_end",
     ],
     scope="session",
 )
@@ -22,7 +24,7 @@ def test_begin():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(15)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_example1():
     A = (0, 0, 0)
@@ -37,7 +39,25 @@ def test_example1():
     system.add_load(B, {"Fx": 10})
     system.run()
 
-    displacement = beamAB.field("u")
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
 
 
 @pytest.mark.order(10)
@@ -55,11 +75,26 @@ def test_example2():
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
     system.add_load(B, {"Fy": -10})
     system.run()
-    Usolu = system.solution
-    Ugood = np.zeros((2, 6))
-    Ugood[1, 1] = -64 * 10 * (1000**3) / (3 * np.pi * 210e3 * 8**4)
-    Ugood[1, 5] = -32 * 10 * (1000**2) / (np.pi * 210e3 * 8**4)
-    np.testing.assert_almost_equal(Usolu, Ugood)
+
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
 
 
 @pytest.mark.order(10)
@@ -78,13 +113,26 @@ def test_example3():
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
     system.add_load(C, {"Fy": -10})
     system.run()
-    Usolu = system.solution
-    Ugood = np.zeros((3, 6))
-    Ugood[1, 1] = -64 * 10 * (600**3) / (3 * np.pi * 210e3 * 8**4)
-    Ugood[1, 5] = -32 * 10 * (600**2) / (np.pi * 210e3 * 8**4)
-    Ugood[2, 5] = Ugood[1, 5]
-    Ugood[2, 1] = Ugood[1, 1] + 400 * Ugood[1, 5]
-    np.testing.assert_almost_equal(Usolu, Ugood)
+
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
 
 
 @pytest.mark.order(10)
@@ -106,6 +154,26 @@ def test_example4():
     system.add_load(D, {"Fy": -24})
     system.run()
 
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
+
 
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
@@ -126,6 +194,26 @@ def test_example5():
     system.add_dist_load(beamAB, (0, 1), {"Fy": (q0, q0)})
     system.run()
 
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
+
 
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
@@ -142,6 +230,26 @@ def test_example6():
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
     system.add_dist_load(beamAB, (0.3, 0.7), {"Fy": (-10, -10)})
     system.run()
+
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
 
 
 @pytest.mark.order(10)
@@ -160,6 +268,26 @@ def test_example7():
     system.add_dist_load(beamAB, (0, 1), {"Fy": (-10, 0)})
     system.run()
 
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
+
 
 @pytest.mark.order(10)
 @pytest.mark.timeout(2)
@@ -176,6 +304,26 @@ def test_example8():
     system.add_BC(A, {"ux": 0, "uy": 0, "tz": 0})
     system.add_dist_load(beamAB, (0, 0.3, 0.7, 1), {"Fy": (0, -10, -10, 0)})
     system.run()
+
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
 
 
 @pytest.mark.order(10)
@@ -203,6 +351,26 @@ def test_example9():
     system.add_load(C, {"Fx": 1500000, "Fy": -1000000})
     system.run()
 
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAB.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
+
 
 @pytest.mark.order(10)
 @pytest.mark.timeout(6)
@@ -225,6 +393,26 @@ def test_example10():
     system.add_dist_load(beamBC, (0, 1), {"Fy": (-0.1, -0.1)})
     system.add_dist_load(beamAC, (0, 1), {"Fx": (-0.1, -0.1)})
     system.run()
+
+    tsample = np.linspace(0, 1, 129)
+    displacement = beamAC.field("u")(tsample)
+    plt.close("all")
+    plt.figure()
+    plt.plot(tsample, displacement[:, 0], label="ux")
+    plt.plot(tsample, displacement[:, 1], label="uy")
+    plt.plot(tsample, displacement[:, 2], label="uz")
+    plt.legend()
+
+    shower = ShowerStaticSystem(system)
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xy", deformed=False, axes=ax)
+    shower.plot2D(projector="xy", deformed=True, axes=ax)
+    plt.figure()
+    ax = plt.axes(projection="3d")
+    shower.plot3D(deformed=False, axes=ax)
+    shower.plot3D(deformed=True, axes=ax)
+    plt.legend()
 
 
 @pytest.mark.order(10)

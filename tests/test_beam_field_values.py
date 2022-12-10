@@ -285,18 +285,17 @@ class TestFailCases:
         material = Isotropic(E=self.E, nu=self.nu)
         self.beam.section = material, profile
 
-        system = StaticSystem()
-        system.add_element(self.beam)
+        self.system = StaticSystem()
+        self.system.add_element(self.beam)
         boundary_conditions = {"ux": 0, "uy": 0, "tz": 0}
-        system.add_BC(A, boundary_conditions)
+        self.system.add_BC(A, boundary_conditions)
 
         self.applied_force = 10
-        system.add_load(B, {"Fy": self.applied_force})
+        self.system.add_load(B, {"Fy": self.applied_force})
 
         self.npts = 101
         self.ts = np.linspace(0, 1, self.npts)
         self.beam.path.knot_insert(self.ts)
-        system.run()
 
     @pytest.mark.order(9)
     @pytest.mark.timeout(5)
@@ -312,14 +311,32 @@ class TestFailCases:
     @pytest.mark.dependency(depends=["TestFailCases::test_begin"])
     def test_try_to_get_wrong_field(self):
         self.setup_system()
+        self.system.run()
         with pytest.raises(ValueError):
             self.beam.field("SIG")  # Position curve
+
+    @pytest.mark.order(9)
+    @pytest.mark.dependency(depends=["TestFailCases::test_begin"])
+    def test_get_field_before_run(self):
+        self.setup_system()
+        with pytest.raises(ValueError):
+            self.beam.field("SIG")  # Position curve
+
+    @pytest.mark.order(9)
+    @pytest.mark.dependency(depends=["TestFailCases::test_begin"])
+    def test_set_wrong_field(self):
+        self.setup_system()
+        with pytest.raises(TypeError):
+            self.beam.set_field("SIG")
+        with pytest.raises(TypeError):
+            self.beam.set_field(1)
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(
         depends=[
             "TestFailCases::test_begin",
             "TestFailCases::test_try_to_get_wrong_field",
+            "TestFailCases::test_get_field_before_run",
         ]
     )
     def test_end(self):
@@ -332,6 +349,7 @@ class TestFailCases:
         "test_begin",
         "TestFieldSingleBeamUncharged::test_end",
         "TestFieldCantileverCircularEulerBeam::test_end",
+        "TestFailCases::test_end",
     ]
 )
 def test_end():

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from matplotlib import pyplot as plt
 
 from compmec.strct.element import EulerBernoulli
@@ -8,11 +9,15 @@ from compmec.strct.shower import ShowerStaticSystem
 from compmec.strct.system import StaticSystem
 
 
-def tst_example09():
+@pytest.mark.order(9)
+@pytest.mark.dependency()
+def test_begin():
     pass
 
 
-def tst_example20():
+@pytest.mark.order(9)
+@pytest.mark.dependency(depends=["test_begin"])
+def test_example20():
     A = (0, 0, 0)
     B = (1000, 500, 0)
     C = (1000, -500, 0)
@@ -29,8 +34,7 @@ def tst_example20():
     for beam in [beamAB, beamAC, beamAD, beamBC, beamBD, beamCD]:
         for t in np.linspace(0, 1, 21):
             beam.path(t)
-        beam.material = steel
-        beam.section = circle
+        beam.section = steel, circle
         system.add_element(beam)
     E = beamBC.path(0.5)
     system.add_BC(A, {"ux": 0, "uy": 0, "uz": 0, "tx": 0, "ty": 0, "tz": 0})
@@ -46,16 +50,25 @@ def tst_example20():
     shower.plot2D(projector="xy", deformed=False, axes=ax)
     shower.plot2D(projector="xy", deformed=True, axes=ax)
     plt.figure()
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="yz", deformed=False, axes=ax)
+    shower.plot2D(projector="yz", deformed=True, axes=ax)
+    plt.figure()
+    plt.figure()
+    ax = plt.gca()
+    shower.plot2D(projector="xz", deformed=False, axes=ax)
+    shower.plot2D(projector="xz", deformed=True, axes=ax)
+    plt.figure()
     ax = plt.axes(projection="3d")
     shower.plot3D(deformed=False, axes=ax)
     shower.plot3D(deformed=True, axes=ax)
     plt.legend()
-    plt.show()
+    # plt.show()
+    plt.close("all")
 
 
-def main():
-    tst_example20()
-
-
-if __name__ == "__main__":
-    main()
+@pytest.mark.order(9)
+@pytest.mark.dependency(depends=["test_begin", "test_example20"])
+def test_end():
+    pass
