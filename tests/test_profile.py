@@ -136,14 +136,14 @@ def test_hollowretangular():
 
 @pytest.mark.order(1)
 @pytest.mark.dependency()
-def test_Iprofile():
-    b, h, t1, t2 = 4, 4, 1, 1
-    iprofile = ProfileI(b, h, t1, t2)
+def test_perfilI():
+    b, h, t, s = 4, 8, 3, 2
+    iprofile = PerfilI(b, h, t, s)
     assert abs(iprofile.b - b) < TOLERANCE
     assert abs(iprofile.h - h) < TOLERANCE
-    assert abs(iprofile.t1 - t1) < TOLERANCE
-    assert abs(iprofile.t2 - t2) < TOLERANCE
-    assert iprofile.area > 0
+    assert abs(iprofile.t - t) < TOLERANCE
+    assert abs(iprofile.s - s) < TOLERANCE
+    assert iprofile.area == 34
 
 
 @pytest.mark.order(1)
@@ -154,6 +154,7 @@ def test_Iprofile():
         "test_hollowcircle",
         "test_retangular",
         "test_hollowretangular",
+        "test_perfilI",
     ]
 )
 def test_end():

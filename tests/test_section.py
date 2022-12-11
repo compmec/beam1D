@@ -1,9 +1,11 @@
+from typing import List, TypeVar
+
 import numpy as np
 import pytest
 
+from compmec.strct import profile as prof
+from compmec.strct import section as sect
 from compmec.strct.material import Isotropic
-from compmec.strct.profile import Circle, HollowCircle
-from compmec.strct.section import CircleSection, GeneralSection, HollowCircleSection
 
 TOLERANCE = 1e-9
 PI = np.pi
@@ -21,20 +23,18 @@ def test_begin():
     pass
 
 
-@pytest.mark.dependency(depends=["test_begin"])
-class TestSection(object):
+class TestSection:
     pass
 
 
-@pytest.mark.dependency(depends=["test_begin"])
 class TestCircleSection(TestSection):
     def setup_random(self):
         E = np.random.uniform(100, 200)
         nu = np.random.uniform(0.01, 0.49)
         material = Isotropic(E=E, nu=nu)
         R = np.random.uniform(1, 2)
-        profile = Circle(radius=R)
-        self.section = CircleSection(material, profile)
+        profile = prof.Circle(radius=R)
+        self.section = sect.CircleSection(material, profile)
 
     def compute_correct_areas(self):
         nu = self.section.material.nu
@@ -59,6 +59,16 @@ class TestCircleSection(TestSection):
 
     @pytest.mark.order(2)
     @pytest.mark.dependency(depends=["TestCircleSection::test_begin"])
+    def test_creation(self, ntests=10):
+        for i in range(ntests):
+            self.setup_random()
+            self.compute_correct_areas()
+            np.testing.assert_almost_equal(self.section.A, self.goodA)
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=["TestCircleSection::test_begin", "TestCircleSection::test_creation"]
+    )
     def test_random_areas(self, ntests=10):
         for i in range(ntests):
             self.setup_random()
@@ -66,7 +76,9 @@ class TestCircleSection(TestSection):
             np.testing.assert_almost_equal(self.section.A, self.goodA)
 
     @pytest.mark.order(2)
-    @pytest.mark.dependency(depends=["TestCircleSection::test_begin"])
+    @pytest.mark.dependency(
+        depends=["TestCircleSection::test_begin", "TestCircleSection::test_creation"]
+    )
     def test_random_inertias(self, ntests=10):
         for i in range(ntests):
             self.setup_random()
@@ -77,6 +89,7 @@ class TestCircleSection(TestSection):
     @pytest.mark.dependency(
         depends=[
             "TestCircleSection::test_begin",
+            "TestCircleSection::test_creation",
             "TestCircleSection::test_random_areas",
             "TestCircleSection::test_random_inertias",
         ]
@@ -85,7 +98,6 @@ class TestCircleSection(TestSection):
         pass
 
 
-@pytest.mark.dependency(depends=["test_begin"])
 class TestHollowCircleSection(TestSection):
     def setup_random(self):
         E = np.random.uniform(100, 200)
@@ -95,8 +107,8 @@ class TestHollowCircleSection(TestSection):
         e = np.random.uniform(0.1, 0.3) * R
         Ri = R - 0.5 * e
         Re = R + 0.5 * e
-        profile = HollowCircle(Ri=Ri, Re=Re)
-        self.section = HollowCircleSection(material, profile)
+        profile = prof.HollowCircle(Ri=Ri, Re=Re)
+        self.section = sect.HollowCircleSection(material, profile)
 
     def compute_correct_areas(self):
         nu = self.section.material.nu
@@ -121,6 +133,21 @@ class TestHollowCircleSection(TestSection):
 
     @pytest.mark.order(2)
     @pytest.mark.dependency(depends=["test_begin"])
+    def test_begin(self):
+        pass
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["TestHollowCircleSection::test_begin"])
+    def test_creation(self):
+        pass
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=[
+            "TestHollowCircleSection::test_begin",
+            "TestHollowCircleSection::test_creation",
+        ]
+    )
     def test_random_areas(self, ntests=10):
         for i in range(ntests):
             self.setup_random()
@@ -128,7 +155,12 @@ class TestHollowCircleSection(TestSection):
             np.testing.assert_almost_equal(self.section.A, self.goodA)
 
     @pytest.mark.order(2)
-    @pytest.mark.dependency(depends=["test_begin"])
+    @pytest.mark.dependency(
+        depends=[
+            "TestHollowCircleSection::test_begin",
+            "TestHollowCircleSection::test_creation",
+        ]
+    )
     def test_random_inertias(self, ntests=10):
         for i in range(ntests):
             self.setup_random()
@@ -138,6 +170,8 @@ class TestHollowCircleSection(TestSection):
     @pytest.mark.order(2)
     @pytest.mark.dependency(
         depends=[
+            "TestHollowCircleSection::test_begin",
+            "TestHollowCircleSection::test_creation",
             "TestHollowCircleSection::test_random_areas",
             "TestHollowCircleSection::test_random_inertias",
         ]
@@ -154,6 +188,18 @@ class TestRetangularSection:
 
     @pytest.mark.order(2)
     @pytest.mark.dependency(depends=["TestRetangularSection::test_begin"])
+    def test_creation(self):
+        retangular = prof.Retangular(2, 3)
+        steel = Isotropic(E=210e3, nu=0.3)
+        sect.RetangularSection(steel, retangular)
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=[
+            "TestRetangularSection::test_begin",
+            "TestRetangularSection::test_creation",
+        ]
+    )
     def test_end(self):
         pass
 
@@ -166,6 +212,68 @@ class TestHollowRetangularSection:
 
     @pytest.mark.order(2)
     @pytest.mark.dependency(depends=["TestHollowRetangularSection::test_begin"])
+    def test_creation(self):
+        retangular = prof.HollowRetangular(4, 4, 5, 5)
+        steel = Isotropic(E=210e3, nu=0.3)
+        sect.HollowRetangularSection(steel, retangular)
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=[
+            "TestHollowRetangularSection::test_begin",
+            "TestHollowRetangularSection::test_creation",
+        ]
+    )
+    def test_end(self):
+        pass
+
+
+class TestPerfilISection:
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["test_begin"])
+    def test_begin(self):
+        pass
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["TestPerfilISection::test_begin"])
+    def test_creation(self):
+        profile = prof.PerfilI(3, 4, 1, 1)
+        steel = Isotropic(E=210e3, nu=0.3)
+        sect.PerfilISection(steel, profile)
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=["TestPerfilISection::test_begin", "TestPerfilISection::test_creation"]
+    )
+    def test_areas(self):
+        profile = prof.PerfilI(4, 8, 3, 2)
+        steel = Isotropic(E=210e3, nu=0.3)
+        section = sect.PerfilISection(steel, profile)
+        coeff = 43940 / 80343
+        assert section.A[0] == 34
+        assert section.A[1] == 34 * coeff
+        assert section.A[2] == 34 * coeff
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=["TestPerfilISection::test_begin", "TestPerfilISection::test_creation"]
+    )
+    def test_inertias(self):
+        profile = prof.PerfilI(4, 8, 3, 2)
+        steel = Isotropic(E=210e3, nu=0.3)
+        section = sect.PerfilISection(steel, profile)
+        assert section.I[1] == 106 / 3
+        assert section.I[2] == 2537 / 6
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=[
+            "TestPerfilISection::test_begin",
+            "TestPerfilISection::test_creation",
+            "TestPerfilISection::test_areas",
+            "TestPerfilISection::test_inertias",
+        ]
+    )
     def test_end(self):
         pass
 
@@ -178,8 +286,15 @@ class TestGeneralSection:
 
     @pytest.mark.order(2)
     @pytest.mark.dependency(depends=["TestGeneralSection::test_begin"])
+    def test_creation(self):
+        section = sect.GeneralSection()
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=["TestGeneralSection::test_begin", "TestGeneralSection::test_creation"]
+    )
     def test_set_get(self):
-        section = GeneralSection()
+        section = sect.GeneralSection()
         with pytest.raises(ValueError):
             section.A
         with pytest.raises(ValueError):
@@ -207,10 +322,38 @@ class TestGeneralSection:
 
     @pytest.mark.order(2)
     @pytest.mark.dependency(
-        depends=["TestGeneralSection::test_set_get", "TestGeneralSection::test_begin"]
+        depends=[
+            "TestGeneralSection::test_begin",
+            "TestGeneralSection::test_creation",
+            "TestGeneralSection::test_set_get",
+            "TestGeneralSection::test_begin",
+        ]
     )
     def test_end(self):
         pass
+
+
+class TestFail:
+    def test_begin(self):
+        steel = Isotropic(E=210e3, nu=0.3)
+        circle = prof.Circle(diameter=3)
+        with pytest.raises(TypeError):
+            sect.CircleSection(1, circle)
+        with pytest.raises(TypeError):
+            sect.CircleSection(steel, 1)
+        with pytest.raises(TypeError):
+            sect.CircleSection("asd", circle)
+        with pytest.raises(TypeError):
+            sect.CircleSection(steel, "asd")
+        holcirc = prof.HollowCircle(1, 2)
+        with pytest.raises(TypeError):
+            sect.HollowCircleSection(1, circle)
+        with pytest.raises(TypeError):
+            sect.HollowCircleSection(steel, 1)
+        with pytest.raises(TypeError):
+            sect.HollowCircleSection("asd", circle)
+        with pytest.raises(TypeError):
+            sect.HollowCircleSection(steel, "asd")
 
 
 @pytest.mark.order(2)
@@ -221,6 +364,7 @@ class TestGeneralSection:
         "TestHollowCircleSection::test_end",
         "TestRetangularSection::test_end",
         "TestHollowRetangularSection::test_end",
+        "TestPerfilISection::test_end",
         "TestGeneralSection::test_end",
     ]
 )

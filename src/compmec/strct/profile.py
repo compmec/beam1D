@@ -124,22 +124,30 @@ class HollowCircle(Circle):
         return np.pi * (self.Re**2 - self.Ri**2)
 
 
-class ProfileI(Profile):
+class PerfilI(Profile):
+    """
+    https://engineering.stackexchange.com/questions/42689/shear-coefficient-for-an-i-beam
+    height h (z axis)
+    width w (y axis)
+    flange thickness t
+    web thickness s
+    """
+
     def __init__(
         self,
         b: PositiveFloat,
         h: PositiveFloat,
-        t1: PositiveFloat,
-        t2: PositiveFloat,
+        t: PositiveFloat,
+        s: PositiveFloat,
     ):
         PositiveFloat.verify(b, "b")
         PositiveFloat.verify(h, "h")
-        PositiveFloat.verify(t1, "t1")
-        PositiveFloat.verify(t2, "t2")
+        PositiveFloat.verify(t, "t")
+        PositiveFloat.verify(s, "s")
         self._b = b
         self._h = h
-        self._t1 = t1
-        self._t2 = t2
+        self._t = t
+        self._s = s
 
     @property
     def b(self) -> PositiveFloat:
@@ -150,13 +158,18 @@ class ProfileI(Profile):
         return self._h
 
     @property
-    def t1(self) -> PositiveFloat:
-        return self._t1
+    def t(self) -> PositiveFloat:
+        return self._t
 
     @property
-    def t2(self) -> PositiveFloat:
-        return self._t2
+    def s(self) -> PositiveFloat:
+        return self._s
 
     @property
     def area(self) -> PositiveFloat:
-        return self.b * self.h - (self.b - self.t1) * (self.h - 2 * self.t2)
+        print("b, h, t, s = ")
+        print(self.b)
+        print(self.h)
+        print(self.t)
+        print(self.s)
+        return 2 * self.b * self.t + self.s * (self.h - self.t)

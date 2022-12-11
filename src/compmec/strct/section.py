@@ -37,18 +37,8 @@ class HomogeneousSectionFromMaterialProfile(HomogeneousSection):
         return self._profile
 
     @abc.abstractmethod
-    def compute_areas(self) -> Tuple[PositiveFloat]:
+    def shear_coefficient(self) -> float:
         raise NotImplementedError
-
-    @abc.abstractmethod
-    def compute_inertias(self) -> Tuple[PositiveFloat]:
-        raise NotImplementedError
-
-
-class RetangularSection(HomogeneousSectionFromMaterialProfile):
-    def shear_coefficient(self):
-        nu = self.material.nu
-        return 10 * (1 + nu) / (12 + 11 * nu)
 
     def compute_areas(self):
         k = self.shear_coefficient()
@@ -57,6 +47,16 @@ class RetangularSection(HomogeneousSectionFromMaterialProfile):
         A[1] = k * self.profile.area
         A[2] = k * self.profile.area
         return A
+
+    @abc.abstractmethod
+    def compute_inertias(self) -> Tuple[float]:
+        raise NotImplementedError
+
+
+class RetangularSection(HomogeneousSectionFromMaterialProfile):
+    def shear_coefficient(self):
+        nu = self.material.nu
+        return 10 * (1 + nu) / (12 + 11 * nu)
 
     def compute_inertias(self):
         b, h = self.profile.base, self.profile.height
@@ -69,21 +69,34 @@ class RetangularSection(HomogeneousSectionFromMaterialProfile):
 
 
 class HollowRetangularSection(HomogeneousSectionFromMaterialProfile):
-    pass
+    def shear_coefficient(self) -> float:
+        nu = self.material.nu
+        bi, be = self.profile.bi, self.profile.be
+        hi, he = self.profile.hi, self.profile.he
+        t1, t2 = 0.5 * (he - hi), 0.5 * (be - bi)
+        n = bi / hi
+        m = n * t1 / t2
+        numer = 10 * (1 + nu) * (1 + 3 * m) ** 2
+        deno1 = 12 + 72 * m + 150 * m**2 + 90 * m**3
+        deno2 = 11 + 66 * m + 135 * m**2 + 90 * m**3
+        deno3 = 10 * n**2 * m * (3 + nu + 3 * m)
+        return numer / (deno1 + nu * deno2 + deno3)
+
+    def compute_inertias(self):
+        bi, be = self.profile.bi, self.profile.be
+        hi, he = self.profile.hi, self.profile.he
+        I = np.zeros(3, dtype="float64")
+        I[1] = (be * he**3 - bi * hi**3) / 12
+        I[2] = (he * be**3 - hi * bi**3) / 12
+        I[0] = I[1] + I[2]
+        print("Warning: Inertia for torsional of retangular is not yet defined")
+        return I
 
 
 class CircleSection(HomogeneousSectionFromMaterialProfile):
-    def shear_coefficient(self):
+    def shear_coefficient(self) -> float:
         nu = self.material.nu
         return 6 * (1 + nu) / (7 + 6 * nu)
-
-    def compute_areas(self):
-        k = self.shear_coefficient()
-        A = np.zeros(3, dtype="float64")
-        A[0] = self.profile.area
-        A[1] = k * self.profile.area
-        A[2] = k * self.profile.area
-        return A
 
     def compute_inertias(self):
         R4 = self.profile.radius**4
@@ -101,14 +114,6 @@ class HollowCircleSection(HomogeneousSectionFromMaterialProfile):
         m2 = (Ri / Re) ** 2
         return 6 * (1 + nu) / ((7 + 6 * nu) + 4 * m2 * (5 + 3 * nu) / (1 + m2) ** 2)
 
-    def compute_areas(self):
-        k = self.shear_coefficient()
-        A = np.zeros(3, dtype="float64")
-        A[0] = self.profile.area
-        A[1] = k * self.profile.area
-        A[2] = k * self.profile.area
-        return A
-
     def compute_inertias(self):
         Ri4 = self.profile.Ri**4
         Re4 = self.profile.Re**4
@@ -122,16 +127,27 @@ class HollowCircleSection(HomogeneousSectionFromMaterialProfile):
 class PerfilISection(HomogeneousSectionFromMaterialProfile):
     def shear_coefficient(self):
         nu = self.material.nu
-        b, h = self.profile.base, self.profile.height
-        t1, t2 = self.profile.t1, self.profile.t2
+        b, h = self.profile.b, self.profile.h
+        t, s = self.profile.t, self.profile.s
         n = b / h
-        m = n * t1 / t2
+        m = n * t / s
         pt1 = 12 + 72 * m + 150 * m**2 + 90 * m**3
         pt2 = 11 + 66 * m + 135 * m**2 + 90 * m**3
         pt3 = 10 * n**2 * ((3 + nu) * m + 3 * m**2)
         numerador = 10 * (1 + nu) * (1 + 3 * m) ** 2
         denominador = pt1 + nu * pt2 + pt3
         return numerador / denominador
+
+    def compute_inertias(self):
+        b, h = self.profile.b, self.profile.h
+        t, s = self.profile.t, self.profile.s
+        Iz = (b * t / 6) * (t**2 + 3 * h**2) + s * (h - t) ** 3 / 12  # int z^2
+        Iy = t * b**3 / 6 + (h - t) * s**3 / 12  # int y^2
+        I = np.zeros(3, dtype="float64")
+        I[0] = Iy + Iz
+        I[1] = Iy
+        I[2] = Iz
+        return I
 
 
 class GeneralSection(HomogeneousSection):
@@ -152,7 +168,7 @@ class GeneralSection(HomogeneousSection):
         return tuple(self._I)
 
     @A.setter
-    def A(self, value: Tuple[PositiveFloat]):
+    def A(self, value: Tuple[float]):
         value = np.array(value, dtype="float64")
         if len(value) != 3 or value.ndim != 1:
             raise ValueError("The argument must be 3 floats")
@@ -161,7 +177,7 @@ class GeneralSection(HomogeneousSection):
         self._A = value
 
     @I.setter
-    def I(self, value: Tuple[PositiveFloat]):
+    def I(self, value: Tuple[float]):
         value = np.array(value, dtype="float64")
         if len(value) != 3 or value.ndim != 1:
             raise ValueError("The argument must be 3 floats")
