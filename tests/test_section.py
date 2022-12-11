@@ -334,7 +334,24 @@ class TestGeneralSection:
 
 
 class TestFail:
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=[
+            "test_begin",
+            "TestCircleSection::test_end",
+            "TestHollowCircleSection::test_end",
+            "TestRetangularSection::test_end",
+            "TestHollowRetangularSection::test_end",
+            "TestPerfilISection::test_end",
+            "TestGeneralSection::test_end",
+        ]
+    )
     def test_begin(self):
+        pass
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["TestFail::test_begin"])
+    def test_fail1(self):
         steel = Isotropic(E=210e3, nu=0.3)
         circle = prof.Circle(diameter=3)
         with pytest.raises(TypeError):
@@ -355,6 +372,11 @@ class TestFail:
         with pytest.raises(TypeError):
             sect.HollowCircleSection(steel, "asd")
 
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["TestFail::test_begin", "TestFail::test_fail1"])
+    def test_end(self):
+        pass
+
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(
@@ -366,6 +388,7 @@ class TestFail:
         "TestHollowRetangularSection::test_end",
         "TestPerfilISection::test_end",
         "TestGeneralSection::test_end",
+        "TestFail::test_end",
     ]
 )
 def test_end():

@@ -4,10 +4,7 @@ from compmec.strct.material import Isotropic
 
 
 @pytest.mark.order(2)
-@pytest.mark.dependency(
-    depends=["tests/test_verifytype.py::test_end"],
-    scope="session",
-)
+@pytest.mark.dependency()
 def test_begin():
     pass
 

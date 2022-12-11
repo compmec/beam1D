@@ -84,8 +84,7 @@ class Profile(abc.ABC):
 
 
 class Material(object):
-    def __init__(self):
-        super().__init__(self)
+    pass
 
 
 class Section(abc.ABC):
