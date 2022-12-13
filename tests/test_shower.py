@@ -10,7 +10,13 @@ from compmec.strct.system import StaticSystem
 
 
 @pytest.mark.order(9)
-@pytest.mark.dependency()
+@pytest.mark.dependency(
+    depends=[
+        "tests/test_one_circle_beam_charges.py::test_end",
+        "tests/test_beam_field_values.py::test_end",
+    ],
+    scope="session",
+)
 def test_begin():
     pass
 

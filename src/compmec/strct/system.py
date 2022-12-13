@@ -2,9 +2,9 @@ from typing import Iterable, Tuple, Type, Union
 
 import numpy as np
 
-from compmec.strct.__classes__ import ComputeFieldBeamInterface, Element1D
+from compmec.strct.__classes__ import Element1D, Point
 from compmec.strct.fields import ComputeFieldBeam
-from compmec.strct.geometry import Geometry1D, Point3D
+from compmec.strct.geometry import Geometry1D
 from compmec.strct.solver import solve
 
 
@@ -192,7 +192,7 @@ class StaticSystem:
     def add_element(self, element: Element1D):
         self._structure.add_element(element)
 
-    def add_load(self, point: tuple, loads: dict):
+    def add_load(self, point: Point, loads: dict):
         """
         Add a load in a specific point.
         Example:
@@ -287,7 +287,7 @@ class StaticSystem:
             values[key] = newvals
         return newinterval, values
 
-    def add_BC(self, point: tuple, bcvals: dict):
+    def add_BC(self, point: Point, bcvals: dict):
         index = self._geometry.find_point(point)
         if index is None:
             index = self._geometry.create_point(point)

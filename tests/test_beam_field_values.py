@@ -3,6 +3,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 from compmec.strct.element import EulerBernoulli
+from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.material import Isotropic
 from compmec.strct.profile import Circle
 from compmec.strct.system import StaticSystem
@@ -14,6 +15,24 @@ from compmec.strct.system import StaticSystem
 )
 def test_begin():
     pass
+
+
+@pytest.mark.order(9)
+@pytest.mark.dependency(
+    depends=["tests/test_one_circle_beam_charges.py::test_end"], scope="session"
+)
+@pytest.mark.timeout(5)
+def test_field_creation():
+    A = (0, 0, 0)
+    B = (1000, 0, 0)
+    beam = EulerBernoulli([A, B])
+    ctrlpoints = ((0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0))
+    ComputeFieldBeam(beam, ctrlpoints)
+    with pytest.raises(TypeError):
+        ComputeFieldBeam(1, ctrlpoints)
+    with pytest.raises(ValueError):
+        ctrlpoints = ((0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0))
+        ComputeFieldBeam(beam, ctrlpoints)
 
 
 class TestFieldSingleBeamUncharged:
@@ -38,7 +57,7 @@ class TestFieldSingleBeamUncharged:
         system.run()
 
     @pytest.mark.order(9)
-    @pytest.mark.dependency(depends=["test_begin"])
+    @pytest.mark.dependency(depends=["test_begin", "test_field_creation"])
     def test_begin(self):
         pass
 

@@ -8,7 +8,7 @@ import compmec.nurbs as nurbs
 import numpy as np
 
 from compmec.strct.__classes__ import (
-    ComputeFieldInterface,
+    ComputeField,
     Element1D,
     Material,
     Point,
@@ -69,8 +69,8 @@ class Structural1D(Element1D):
         except AttributeError as e:
             raise ValueError("You must run the simulation before calling 'field'")
 
-    def set_field(self, value: ComputeFieldInterface):
-        if not isinstance(value, ComputeFieldInterface):
+    def set_field(self, value: ComputeField):
+        if not isinstance(value, ComputeField):
             raise TypeError
         self._field = value
 

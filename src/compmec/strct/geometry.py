@@ -35,14 +35,27 @@ class Point3D(Point, Tuple):
     def __rsub__(self, other: tuple[float]):
         return tuple([qi - pi for pi, qi in zip(self, other)])
 
+    def __eq__(self, other: tuple[float]):
+        if isinstance(other, Point3D):
+            pass
+        elif not isinstance(other, (tuple, list, np.ndarray)):
+            return False
+        try:
+            other = Point3D(other)
+        except Exception as e:
+            return False
+        for pi, qi in zip(self, other):
+            if pi != qi:
+                return False
+        return True
+
+    def __ne__(self, other: tuple[float]):
+        return not self.__eq__(other)
+
 
 class Geometry1D(object):
     def __init__(self):
         self._all_points = []
-
-    @property
-    def dim(self):
-        return 3
 
     @property
     def points(self):
@@ -59,8 +72,10 @@ class Geometry1D(object):
         Given a point like (0.1, 3.1, 5), it returns the index of this point.
         If the point is too far (bigger than tolerance), it returns None
         """
-        if not isinstance(tolerance, float):
+        if not isinstance(tolerance, (int, float)):
             raise TypeError("Tolerance to find point must be a float")
+        if tolerance <= 0:
+            raise ValueError("Tolerance must be positive!")
         if self.npts == 0:
             return None
         point = Point3D(point)
@@ -72,16 +87,13 @@ class Geometry1D(object):
         """
         distances = [sum((pi - point) ** 2) for pi in self.points]
         distsquare = np.array(distances, dtype="float64")
-        print("dist square = ")
-        print(distsquare)
         mindistsquare = np.min(distsquare)
-        print(mindistsquare)
-        if np.all(mindistsquare > tolerance):
+        if np.all(mindistsquare > tolerance**2):
             return None
-        index = np.where(distsquare == mindistsquare)
-        if len(index) > 1:
+        indexs = np.where(distsquare == mindistsquare)[0]
+        if len(indexs) > 1:
             raise ValueError("There's more than 1 point at the same position")
-        return int(index[0])
+        return int(indexs[0])
 
     def create_point(self, point: Tuple[float]) -> int:
         """

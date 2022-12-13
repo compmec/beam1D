@@ -15,6 +15,7 @@ PI = np.pi
 @pytest.mark.dependency(
     depends=[
         "tests/test_material.py::test_end",
+        "tests/test_geometry.py::test_end",
         "tests/test_profile.py::test_end",
     ],
     scope="session",
