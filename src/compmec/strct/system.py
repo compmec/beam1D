@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Type, Union
+from typing import Dict, Iterable, Tuple, Type, Union
 
 import numpy as np
 
@@ -26,16 +26,7 @@ class StaticLoad(object):
         return self._key2pos(key)
 
     def _key2pos(self, key: str) -> int:
-        if key[0] == "F":
-            pos = 0
-        elif key[0] == "M":
-            pos = 3
-        if key[1] == "x":
-            return pos
-        if key[1] == "y":
-            return pos + 1
-        if key[1] == "z":
-            return pos + 2
+        return 3 * (["F", "M"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
     def _pos2key(self, pos: int) -> str:
         if pos == 0:
@@ -123,37 +114,14 @@ class StaticBoundaryCondition(object):
         return self._key2pos(key)
 
     def _key2pos(self, key: str) -> int:
-        if key[0] == "u":
-            pos = 0
-        elif key[0] == "t":
-            pos = 3
-        if key[1] == "x":
-            return pos
-        if key[1] == "y":
-            return pos + 1
-        if key[1] == "z":
-            return pos + 2
+        return 3 * (["u", "t"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
-    def _pos2key(self, pos: int) -> str:
-        if pos == 0:
-            return "ux"
-        elif pos == 1:
-            return "uy"
-        elif pos == 2:
-            return "uz"
-        elif pos == 3:
-            return "tx"
-        elif pos == 4:
-            return "ty"
-        elif pos == 5:
-            return "tz"
-
-    def add_BC(self, index: int, values: dict):
+    def add_BC(self, index: int, values: Dict[str, float]):
         if not isinstance(values, dict):
             raise TypeError("Values must be dict")
         return self._add_BC(index, values)
 
-    def _add_BC(self, index: int, values: dict):
+    def _add_BC(self, index: int, values: Dict[str, float]):
         for key, value in values.items():
             bcpos = self.key2pos(key)
             self._BCs.append((index, bcpos, value))
