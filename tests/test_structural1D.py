@@ -90,9 +90,9 @@ class TestEulerBernoulli(InitBeam):
         with pytest.raises(ValueError):
             self.beam = EulerBernoulli([A, B])
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.beam = EulerBernoulli("asd")
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.beam = EulerBernoulli(1)
 
     @pytest.mark.dependency(depends=["TestEulerBernoulli::test_creation"])

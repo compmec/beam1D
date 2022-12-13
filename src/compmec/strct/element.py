@@ -15,6 +15,7 @@ from compmec.strct.__classes__ import (
     Profile,
     Section,
 )
+from compmec.strct.geometry import Point3D
 from compmec.strct.section import create_section_from_material_profile
 
 
@@ -41,22 +42,14 @@ def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
     return R.T
 
 
-def init_from_tuple_points(points: Tuple[Point]):
-    try:
-        points = np.array(points, dtype="float64")
-    except Exception as e:
-        error_msg = f"Could not convert points to a numpy array of floats.\n"
-        error_msg += f"   Cause: {str(e)}"
-        raise ValueError(error_msg)
-    if points.ndim != 2:
-        error_msg = f"The points must be a 2D array, received {points.ndim}D array"
-        raise ValueError(error_msg)
-    npts, dim = points.shape
-    if dim != 3:
-        error_msg = f"Each point must have 3 floats. Current dim = {dim}"
-        raise ValueError(error_msg)
+def init_from_tuple_points(points: Tuple[Point3D]):
+    if not isinstance(points, (list, tuple, np.ndarray)):
+        raise TypeError("Points must be list/tuple/numpy array")
     points = list(points)
-    degree = 1
+    for i, pi in enumerate(points):
+        points[i] = Point3D(pi)
+    points = np.array(points, dtype="float64")
+    degree, npts = 1, len(points)
     knotvector = nurbs.GeneratorKnotVector.uniform(degree, npts)
     return nurbs.SplineCurve(knotvector, points)
 

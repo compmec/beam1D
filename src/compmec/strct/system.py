@@ -4,114 +4,8 @@ import numpy as np
 
 from compmec.strct.__classes__ import ComputeFieldBeamInterface, Element1D
 from compmec.strct.fields import ComputeFieldBeam
+from compmec.strct.geometry import Geometry1D, Point3D
 from compmec.strct.solver import solve
-
-
-class Geometry1D(object):
-    def __init__(self):
-        self._dim = None
-        self._points = None
-
-    @property
-    def dim(self):
-        return self._dim
-
-    @property
-    def points(self):
-        if self._points is None:
-            raise ValueError("Points were requested, but None was found")
-        return self._points
-
-    @property
-    def npts(self):
-        return self.points.shape[0]
-
-    @dim.setter
-    def dim(self, value: int):
-        if not isinstance(value, int):
-            raise TypeError("Receveid dimension is not a integer: %s" % type(value))
-        if not 0 < value < 4:
-            raise ValueError("The dimension must be 1, 2 or 3")
-        self._dim = value
-
-    @points.setter
-    def points(self, value: np.ndarray):
-        if self._points is not None:
-            raise ValueError(
-                "There are points. Cannot subcribe. Use add_point(point) instead"
-            )
-        value = np.array(value, dtype="float64")
-        if value.ndim != 2:
-            raise ValueError("Set points must have shape (npts, dim)")
-        self._points = value
-
-    def create_point(self, point: tuple) -> int:
-        """
-        Returns the index of the new created point.
-        If the point exists, it returns ValueError
-        """
-        if not isinstance(point, (tuple, np.ndarray)):
-            raise TypeError("Point must be tuple")
-        index = self.find_point(point)
-        if index is not None:
-            raise ValueError(f"The received point already exists at index {index}")
-        return self._create_point(point)
-
-    def _create_point(self, point: tuple) -> int:
-        if self._points is None:
-            self.dim = 3
-            self.points = np.zeros((1, 3))
-            self.points[0, : len(point)] = point
-            return 0
-        npts, dim = self.points.shape
-        newpoints = np.zeros((npts + 1, dim))
-        newpoints[:-1, :] = self.points[:, :]
-        newpoints[-1, : len(point)] = point
-        self._points = newpoints
-        return npts
-
-    def find_point(self, point: tuple, tolerance: float = 1e-6) -> int:
-        """
-        Given a point like (0.1, 3.1), it returns the index of this point.
-        If the point is too far (bigger than tolerance), it returns None
-        """
-        if not isinstance(tolerance, float):
-            raise TypeError("Tolerance to find point must be a float")
-        if not isinstance(point, (tuple, np.ndarray)):
-            raise TypeError("Point must be a tuple")
-        if self.dim is None:
-            return None
-        return self._find_point(point, tolerance)
-
-    def _find_point(self, point: tuple, tolerance: float) -> int:
-        """
-        Internal unprotected function. See docs of the original function
-        """
-        n = len(point)
-        distsquare = np.array(
-            [sum((pi[:n] - point) ** 2) for pi in self.points], dtype="float64"
-        )
-        mindistsquare = np.min(distsquare)
-        if np.all(mindistsquare > tolerance):
-            return None
-        index = np.where(distsquare == mindistsquare)
-        if len(index) > 1:
-            raise ValueError("There's more than 1 point at the same position")
-        if len(index[0]) > 1:
-            raise ValueError("Not expected get here.")
-        return int(index[0])
-
-    def index_point_at(self, point: tuple) -> int:
-        """
-        If the point doesn't exist, a new one is created
-        """
-        index = self.find_point(point)
-        if index is None:
-            return self.create_point(point)
-        return index
-
-    def index_exists(self, index: int) -> bool:
-        return index < self.npts
 
 
 class StaticLoad(object):
@@ -297,7 +191,6 @@ class StaticSystem:
 
     def add_element(self, element: Element1D):
         self._structure.add_element(element)
-        self.__getpointsfrom(element)
 
     def add_load(self, point: tuple, loads: dict):
         """
@@ -310,7 +203,9 @@ class StaticSystem:
             Fx: Force in x direction
             Mn: Momentum in normal direction
         """
-        index = self._geometry.index_point_at(point)
+        index = self._geometry.find_point(point)
+        if index is None:
+            index = self._geometry.create_point(point)
         self._loads.add_load(index, loads)
 
     def add_dist_load(
@@ -344,7 +239,12 @@ class StaticSystem:
         interval, values = self.__compute_dist_points(element.ts, interval, values)
         points3D = np.array([element.path(t) for t in interval], dtype="float64")
         npts, dim = points3D.shape
-        indexs = [self._geometry.index_point_at(point) for point in points3D]
+        indexs = []
+        for point in points3D:
+            index = self._geometry.find_point(point)
+            if index is None:
+                index = self._geometry.create_point(point)
+            indexs.append(index)
         Ls = [np.linalg.norm(points3D[i + 1] - points3D[i]) for i in range(npts - 1)]
         self._loads.add_dist_load(indexs, values, Ls)
 
@@ -388,7 +288,9 @@ class StaticSystem:
         return newinterval, values
 
     def add_BC(self, point: tuple, bcvals: dict):
-        index = self._geometry.index_point_at(point)
+        index = self._geometry.find_point(point)
+        if index is None:
+            index = self._geometry.create_point(point)
         self._boundarycondition.add_BC(index, bcvals)
 
     @property
@@ -402,7 +304,9 @@ class StaticSystem:
     def __getpointsfrom(self, element: Element1D):
         for t in element.ts:
             p = element.path(t)
-            self._geometry.index_point_at(p)
+            index = self._geometry.find_point(p)
+            if index is None:
+                self._geometry.create_point(p)
 
     def mount_U(self) -> np.ndarray:
         npts = self._geometry.npts

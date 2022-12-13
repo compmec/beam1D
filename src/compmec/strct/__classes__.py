@@ -6,75 +6,7 @@ import numpy as np
 
 
 class Point(object):
-    _instances = []
-    _points = []
-
-    @staticmethod
-    def validation_point(value: Tuple[float]):
-        value = np.array(value, dtype="float64")
-        if value.ndim != 1:
-            raise ValueError("A point must be a 1D-array")
-        if len(value) != 3:
-            raise ValueError("The point must be a 3D-point, with three values")
-
-    def _new_(cls, value: Tuple[float]):
-        if len(Point._instances) == 0:
-            return Point.new(value)
-        id = Point.get_id(value)
-        if id is None:
-            return Point.new(value)
-        return Point._instances[id]
-
-    @staticmethod
-    def new(value: Tuple[float]):
-        self = object._new_(Point)
-        Point._instances.append(self)
-        return self
-
-    @staticmethod
-    def get_id(value: Tuple[float], distmax: float = 1e-9) -> int:
-        """
-        Precisa testar
-        """
-        if len(Point._instances) == 0:
-            return None
-        value = np.array(value, dtype="float64")
-        distances = np.array(
-            [np.sum((point.p - value) ** 2) for point in Point._instances]
-        )
-        mask = distances < distmax
-        if not np.any(mask):
-            return None
-        return np.where(mask)[0][0]
-
-    def __init__(self, value: Tuple[float]):
-        self._p = np.array(value, dtype="float64")
-        self._r = np.zeros(3, dtype="float64")
-        self._id = len(Point._instances) - 1
-
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def p(self):
-        return self._p
-
-    @property
-    def r(self):
-        return self._r
-
-    def _str_(self):
-        return str(self.p)
-
-    def _repr_(self):
-        return str(self)
-
-    def _iter_(self):
-        return tuple(self.p)
-
-    def _list_(self):
-        return list(self.p)
+    pass
 
 
 class Profile(abc.ABC):
@@ -193,3 +125,7 @@ class ComputeFieldBeamInterface(ComputeFieldInterface):
     def externalmomentum(self) -> nurbs.SplineCurve:
         """Computes the external momentum applied on the beam"""
         raise NotImplementedError
+
+
+class Conector(object):
+    pass
