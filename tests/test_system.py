@@ -41,16 +41,16 @@ class TestStaticSystem:
         beamAB = EulerBernoulli([(0, 0, 0), (1000, 0, 0)])
         system.add_element(beamAB)
         with pytest.raises(TypeError):
-            system.add_BC("asd", {"ux": 0, "uy": 0})
+            system.add_BC("asd", {"Ux": 0, "Uy": 0})
         with pytest.raises(TypeError):
-            system.add_BC(3.4, {"ux": 0, "uy": 0})
+            system.add_BC(3.4, {"Ux": 0, "Uy": 0})
         with pytest.raises(TypeError):
             system.add_BC((0, 0, 0), "asd")
         with pytest.raises(TypeError):
             system.add_BC((0, 0, 0), {1: 2, 3: 4})
         with pytest.raises(ValueError):
             system.add_BC((0, 0, 0), {"uf": 2, "mk": 4})
-        system.add_BC((0, 0, 0), {"ux": 0, "uy": 0})
+        system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0})
 
         with pytest.raises(TypeError):
             system.add_dist_load(1, [1.2, 3.4], {3.4: 1})

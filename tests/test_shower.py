@@ -43,9 +43,9 @@ def test_main1():
         beam.section = steel, circle
         system.add_element(beam)
     E = beamBC.path(0.5)
-    system.add_BC(A, {"ux": 0, "uy": 0, "uz": 0, "tx": 0, "ty": 0, "tz": 0})
-    system.add_BC(B, {"uz": 0})
-    system.add_BC(C, {"uz": 0})
+    system.add_BC(A, {"Ux": 0, "Uy": 0, "Uz": 0, "tx": 0, "ty": 0, "tz": 0})
+    system.add_BC(B, {"Uz": 0})
+    system.add_BC(C, {"Uz": 0})
     system.add_load(D, {"Fz": 5000000})
     system.run()
 
@@ -76,7 +76,7 @@ def test_main1():
 
 @pytest.mark.order(9)
 @pytest.mark.dependency(depends=["test_begin"])
-def test_main2():
+def test_fields():
     A = (0, 0, 0)
     B = (1000, 500, 0)
     C = (1000, -500, 0)
@@ -96,9 +96,9 @@ def test_main2():
         beam.section = steel, circle
         system.add_element(beam)
     E = beamBC.path(0.5)
-    system.add_BC(A, {"ux": 0, "uy": 0, "uz": 0, "tx": 0, "ty": 0, "tz": 0})
-    system.add_BC(B, {"uz": 0})
-    system.add_BC(C, {"uz": 0})
+    system.add_BC(A, {"Ux": 0, "Uy": 0, "Uz": 0, "tx": 0, "ty": 0, "tz": 0})
+    system.add_BC(B, {"Uz": 0})
+    system.add_BC(C, {"Uz": 0})
     system.add_load(D, {"Fz": 5000000})
     system.run()
 
@@ -106,28 +106,57 @@ def test_main2():
 
     plt.figure()
     ax = plt.gca()
-    shower.plot2D(projector="xy", deformed=False, fieldname="ux", axes=ax)
-    shower.plot2D(projector="xy", deformed=True, fieldname="ux", axes=ax)
+    shower.plot2D(projector="xy", deformed=False, fieldname="Ux", axes=ax)
+    shower.plot2D(projector="xy", deformed=True, fieldname="Ux", axes=ax)
+    shower.plot2D(projector="xy", deformed=False, fieldname="Uy", axes=ax)
+    shower.plot2D(projector="xy", deformed=True, fieldname="Uy", axes=ax)
+    shower.plot2D(projector="xy", deformed=False, fieldname="Uz", axes=ax)
+    shower.plot2D(projector="xy", deformed=True, fieldname="Uz", axes=ax)
     plt.figure()
     plt.figure()
     ax = plt.gca()
-    shower.plot2D(projector="yz", deformed=False, fieldname="ux", axes=ax)
-    shower.plot2D(projector="yz", deformed=True, fieldname="ux", axes=ax)
+    shower.plot2D(projector="yz", deformed=False, fieldname="Ux", axes=ax)
+    shower.plot2D(projector="yz", deformed=True, fieldname="Ux", axes=ax)
+    shower.plot2D(projector="yz", deformed=False, fieldname="Uy", axes=ax)
+    shower.plot2D(projector="yz", deformed=True, fieldname="Uy", axes=ax)
+    shower.plot2D(projector="yz", deformed=False, fieldname="Uz", axes=ax)
+    shower.plot2D(projector="yz", deformed=True, fieldname="Uz", axes=ax)
     plt.figure()
     plt.figure()
     ax = plt.gca()
-    shower.plot2D(projector="xz", deformed=False, fieldname="ux", axes=ax)
-    shower.plot2D(projector="xz", deformed=True, fieldname="ux", axes=ax)
+    shower.plot2D(projector="xz", deformed=False, fieldname="Ux", axes=ax)
+    shower.plot2D(projector="xz", deformed=True, fieldname="Ux", axes=ax)
+    shower.plot2D(projector="xz", deformed=False, fieldname="Uy", axes=ax)
+    shower.plot2D(projector="xz", deformed=True, fieldname="Uy", axes=ax)
+    shower.plot2D(projector="xz", deformed=False, fieldname="Uz", axes=ax)
+    shower.plot2D(projector="xz", deformed=True, fieldname="Uz", axes=ax)
     plt.figure()
     ax = plt.axes(projection="3d")
-    shower.plot3D(deformed=False, fieldname="ux", axes=ax)
-    shower.plot3D(deformed=True, fieldname="ux", axes=ax)
+    shower.plot3D(deformed=False, fieldname="Ux", axes=ax)
+    shower.plot3D(deformed=True, fieldname="Ux", axes=ax)
+    shower.plot3D(deformed=False, fieldname="Uy", axes=ax)
+    shower.plot3D(deformed=True, fieldname="Uy", axes=ax)
+    shower.plot3D(deformed=False, fieldname="Uz", axes=ax)
+    shower.plot3D(deformed=True, fieldname="Uz", axes=ax)
     plt.legend()
     # plt.show()
     plt.close("all")
 
 
 @pytest.mark.order(9)
-@pytest.mark.dependency(depends=["test_begin", "test_main1", "test_main2"])
+@pytest.mark.dependency(depends=["test_begin"])
+def test_fails():
+    system = StaticSystem()
+    shower = ShowerStaticSystem(system)
+    with pytest.raises(TypeError):
+        shower.plot2D(projector=1, deformed=False, fieldname="Ux")
+    with pytest.raises(TypeError):
+        shower.plot2D(projector="tt", deformed=False, fieldname="Ux")
+
+
+@pytest.mark.order(9)
+@pytest.mark.dependency(
+    depends=["test_begin", "test_main1", "test_fields", "test_fails"]
+)
 def test_end():
     pass

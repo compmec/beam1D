@@ -107,14 +107,14 @@ class StaticBoundaryCondition(object):
     def key2pos(self, key: str) -> int:
         if not isinstance(key, str):
             raise TypeError(f"Key must be an string. Received {type(key)}")
-        if key not in ["ux", "uy", "uz", "tx", "ty", "tz"]:
+        if key not in ["Ux", "Uy", "Uz", "tx", "ty", "tz"]:
             raise ValueError(
                 f"Received key is invalid: {key}. Must be ux, uy, uz, tx, ty, tz"
             )
         return self._key2pos(key)
 
     def _key2pos(self, key: str) -> int:
-        return 3 * (["u", "t"].index(key[0])) + ["x", "y", "z"].index(key[1])
+        return 3 * (["U", "t"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
     def add_BC(self, index: int, values: Dict[str, float]):
         if not isinstance(values, dict):

@@ -22,9 +22,7 @@ def test_begin():
 
 
 @pytest.mark.order(9)
-@pytest.mark.dependency(
-    depends=["tests/test_one_circle_beam_charges.py::test_end"], scope="session"
-)
+@pytest.mark.dependency(depends=["test_begin"])
 @pytest.mark.timeout(5)
 def test_field_creation():
     A = (0, 0, 0)
@@ -53,7 +51,7 @@ class TestFieldSingleBeamUncharged:
         system = StaticSystem()
         system.add_element(self.beam)
         A = self.beam.path(0)
-        boundary_conditions = {"ux": 0, "uy": 0, "tz": 0}
+        boundary_conditions = {"Ux": 0, "Uy": 0, "tz": 0}
         system.add_BC(A, boundary_conditions)
         self.npts = 11
         self.ts = np.linspace(0, 1, self.npts)
@@ -75,15 +73,21 @@ class TestFieldSingleBeamUncharged:
         values_good = np.zeros((self.npts, 3))
         values_good[:, 0] = self.lenght * self.ts
         np.testing.assert_allclose(values_test, values_good)
+        np.testing.assert_allclose(values_test[:, 0], self.beam.field("px")(self.ts))
+        np.testing.assert_allclose(values_test[:, 1], self.beam.field("py")(self.ts))
+        np.testing.assert_allclose(values_test[:, 2], self.beam.field("pz")(self.ts))
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
     def test_displacement(self):
         self.setup_system()
-        curve = self.beam.field("u")  # Displacement curve
+        curve = self.beam.field("U")  # Displacement curve
         values_test = curve(self.ts)
         values_good = np.zeros((self.npts, 3))
         np.testing.assert_allclose(values_test, values_good)
+        np.testing.assert_allclose(values_test[:, 0], self.beam.field("Ux")(self.ts))
+        np.testing.assert_allclose(values_test[:, 1], self.beam.field("Uy")(self.ts))
+        np.testing.assert_allclose(values_test[:, 2], self.beam.field("Uz")(self.ts))
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
@@ -94,6 +98,9 @@ class TestFieldSingleBeamUncharged:
         values_good = np.zeros((self.npts, 3))
         values_good[:, 0] = self.lenght * self.ts
         np.testing.assert_allclose(values_test, values_good)
+        np.testing.assert_allclose(values_test[:, 0], self.beam.field("dx")(self.ts))
+        np.testing.assert_allclose(values_test[:, 1], self.beam.field("dy")(self.ts))
+        np.testing.assert_allclose(values_test[:, 2], self.beam.field("dz")(self.ts))
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
@@ -165,7 +172,7 @@ class TestFieldCantileverCircularEulerBeam:
 
         system = StaticSystem()
         system.add_element(self.beam)
-        boundary_conditions = {"ux": 0, "uy": 0, "tz": 0}
+        boundary_conditions = {"Ux": 0, "Uy": 0, "tz": 0}
         system.add_BC(A, boundary_conditions)
 
         self.applied_force = 10
@@ -204,7 +211,7 @@ class TestFieldCantileverCircularEulerBeam:
     )
     def test_displacement(self):
         self.setup_system()
-        curve = self.beam.field("u")  # Displacement curve
+        curve = self.beam.field("U")  # Displacement curve
         values_test = curve(self.ts)
         values_good = np.zeros((self.npts, 3))
         values_good[:, 1] = 64 * self.applied_force * self.lenght**3
@@ -310,7 +317,7 @@ class TestFailCases:
 
         self.system = StaticSystem()
         self.system.add_element(self.beam)
-        boundary_conditions = {"ux": 0, "uy": 0, "tz": 0}
+        boundary_conditions = {"Ux": 0, "Uy": 0, "tz": 0}
         self.system.add_BC(A, boundary_conditions)
 
         self.applied_force = 10

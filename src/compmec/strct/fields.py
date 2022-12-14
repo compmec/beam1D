@@ -40,7 +40,7 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
     def __init__(self, element: Element1D, ctrlpointsresult: np.ndarray):
         super().__init__(element, ctrlpointsresult)
         self.NAME2FUNCTIONS = {
-            "u": self.displacement,
+            "U": self.displacement,
             "p": self.position,
             "d": self.deformed,
             "FI": self.internalforce,
@@ -54,7 +54,7 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
     def __call__(self, fieldname: str) -> nurbs.SplineCurve:
         """
         Computes the field of the element. Fields are:
-            ``u``: displacement of the neutral line
+            ``U``: displacement of the neutral line
             ``p``: position of neutral line (not deformed)
             ``d``: position of neutral line (deformed)
             ``FI``: internal forces on the middle of element
@@ -65,14 +65,34 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
         return self._field(fieldname)
 
     def _field(self, fieldname: str) -> nurbs.SplineCurve:
+        if fieldname[-1] in ["x", "y", "z", "n", "v", "w"]:
+            projection = fieldname[-1]
+            fieldname = fieldname[:-1]
+        else:
+            projection = None
         keys = list(self.NAME2FUNCTIONS.keys())
         if fieldname not in keys:
             error_msg = f"Received fieldname '{fieldname}' is not valid.\n"
+            error_msg = f"    With projection '{projection}'\n"
             error_msg += f"They are {keys}"
             raise ValueError(error_msg)
-        function = self.NAME2FUNCTIONS[fieldname]
-        curve = function()
-        return curve
+        print("fieldname = ", fieldname)
+        curve = self.NAME2FUNCTIONS[fieldname]()
+        if projection is None:
+            return curve
+        if projection in ["x", "y", "z"]:
+            print("curve.ctrlpoints = ")
+            print(curve.ctrlpoints)
+            if projection == "x":
+                curve.ctrlpoints = curve.ctrlpoints[:, 0]
+            elif projection == "y":
+                curve.ctrlpoints = curve.ctrlpoints[:, 1]
+            elif projection == "z":
+                curve.ctrlpoints = curve.ctrlpoints[:, 2]
+            return curve
+        print(" fieldname = ", fieldname)
+        print("projection = ", projection)
+        raise NotImplementedError
 
     def displacement(self) -> nurbs.SplineCurve:
         ctrlpoints = np.copy(self._curveresult.ctrlpoints[:, :3])
@@ -81,11 +101,11 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
         return curve
 
     def position(self) -> nurbs.SplineCurve:
-        return self._element.path
+        return self._element.path.copy()
 
     def deformed(self) -> nurbs.SplineCurve:
         original_position = self._element.path
-        displacement = self._field("u")
+        displacement = self._field("U")
         return original_position + displacement
 
     def internalforce(self) -> nurbs.SplineCurve:

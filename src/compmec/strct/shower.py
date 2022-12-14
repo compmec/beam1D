@@ -88,9 +88,8 @@ class Projector(object):
 
     def __init__(self, projectionname: str):
         if not isinstance(projectionname, str):
-            raise TypeError(
-                f"The received projectionname is type {type(projectionname)}, not 'str'"
-            )
+            error_msg = f"The projectionname must be 'str', not {type(projectionname)}"
+            raise TypeError(error_msg)
         if projectionname in AxonometricProjector.names:
             self.projector = AxonometricProjector(projectionname)
         elif projectionname in PerspectiveProjector.names:
