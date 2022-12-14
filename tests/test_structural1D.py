@@ -79,11 +79,11 @@ class TestEulerBernoulli(InitBeam):
     def test_fail_creation_class(self):
         A = [[0, 0, 0]]
         B = [[0, 0, 1]]
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.beam = EulerBernoulli([A, B])
         A = [(0, 0, 0), (1, 2, 3)]
         B = [(3, 4, 5), (6, 7, 8)]
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.beam = EulerBernoulli([A, B])
         A = [0, 0, 0, 0]
         B = [1, 0, 0, 0]

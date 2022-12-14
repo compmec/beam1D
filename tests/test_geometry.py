@@ -1,13 +1,94 @@
 import numpy as np
 import pytest
 
-from compmec.strct.geometry import Geometry1D, Point3D
+from compmec.strct.geometry import Geometry1D, Point2D, Point3D
 
 
 @pytest.mark.order(2)
 @pytest.mark.dependency()
 def test_begin():
     pass
+
+
+class TestPoint2D:
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(depends=["test_begin"])
+    def test_begin(self):
+        pass
+
+    @pytest.mark.order(2)
+    @pytest.mark.timeout(1)
+    @pytest.mark.dependency(depends=["TestPoint2D::test_begin"])
+    def test_creation(self):
+        Point2D([3, 4])
+
+    @pytest.mark.order(2)
+    @pytest.mark.timeout(1)
+    @pytest.mark.dependency(
+        depends=["TestPoint2D::test_begin", "TestPoint2D::test_creation"]
+    )
+    def test_comparation(self):
+        A = Point2D([4, 5])
+        B = Point2D([-3, 2.2])
+        C = Point2D([4.0, 5.0])
+        assert A == A
+        assert A != B
+        assert A == C
+        assert A == (4, 5)
+        assert B == (-3, 2.2)
+        assert B == (-3.0, 2.2)
+
+    @pytest.mark.order(2)
+    @pytest.mark.timeout(1)
+    @pytest.mark.dependency(
+        depends=["TestPoint2D::test_begin", "TestPoint2D::test_comparation"]
+    )
+    def test_add_sub(self):
+        A = Point2D([4, 5])
+        B = Point2D([-3, 2.2])
+        D = Point2D([1, 7.2])  # A+B
+        E = Point2D([7.0, 2.8])  # A-B
+        assert A + B == D
+        assert A - B == E
+        assert A - (4, 5) == (0, 0)
+        assert A + (4, 5) == (8, 10)
+        assert (4, 5) - A == (0, 0)
+        assert (4, 5) + A == (8, 10)
+
+    @pytest.mark.order(2)
+    @pytest.mark.timeout(1)
+    @pytest.mark.dependency(
+        depends=[
+            "TestPoint2D::test_begin",
+            "TestPoint2D::test_creation",
+            "TestPoint2D::test_comparation",
+            "TestPoint2D::test_add_sub",
+        ]
+    )
+    def test_fail(self):
+        with pytest.raises(TypeError):
+            Point2D("asd")
+        with pytest.raises(ValueError):
+            Point2D([1, 2, 3, 4])
+        with pytest.raises(TypeError):
+            Point2D([1, "4"])
+        with pytest.raises(TypeError):
+            Point2D(["asd", {1: 2}])
+        A = Point2D([3, 5])
+        assert A != 1
+        assert A != "asd"
+        assert A != [3, 2]
+
+    @pytest.mark.order(2)
+    @pytest.mark.dependency(
+        depends=[
+            "TestPoint2D::test_begin",
+            "TestPoint2D::test_add_sub",
+            "TestPoint2D::test_fail",
+        ]
+    )
+    def test_end(self):
+        pass
 
 
 class TestPoint3D:
@@ -158,7 +239,12 @@ class TestGeometry:
 @pytest.mark.order(2)
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(
-    depends=["test_begin", "TestPoint3D::test_end", "TestGeometry::test_end"]
+    depends=[
+        "test_begin",
+        "TestPoint2D::test_end",
+        "TestPoint3D::test_end",
+        "TestGeometry::test_end",
+    ]
 )
 def test_end():
     pass

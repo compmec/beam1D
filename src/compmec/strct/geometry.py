@@ -5,43 +5,36 @@ import numpy as np
 from compmec.strct.__classes__ import Point
 
 
-class Point3D(Point, Tuple):
+class PointBase(Point):
     @staticmethod
     def validation_creation(point: tuple[float]):
         if not isinstance(point, (list, tuple, np.ndarray)):
             raise TypeError("Point3D must be created from list/tuple/numpy array")
-        if len(point) != 3:
-            error_msg = "Point3D must be created with three float values. len(point) = {len(point)}"
-            raise ValueError(error_msg)
         for i, pi in enumerate(point):
             if not isinstance(pi, (int, float)):
                 error_msg = f"To search the point, every coordinate must be a float.\n"
                 error_msg += f"    type(point[{i}]) = {type(pi)}"
                 raise TypeError(error_msg)
 
-    def __new__(cls, point: tuple[float]):
-        Point3D.validation_creation(point)
-        return super(Point3D, cls).__new__(cls, tuple(point))
-
     def __add__(self, other: tuple[float]):
-        return tuple([pi + qi for pi, qi in zip(self, other)])
+        return self.__class__([pi + qi for pi, qi in zip(self, other)])
 
     def __sub__(self, other: tuple[float]):
-        return tuple([pi - qi for pi, qi in zip(self, other)])
+        return self.__class__([pi - qi for pi, qi in zip(self, other)])
 
     def __radd__(self, other: tuple[float]):
-        return tuple([pi + qi for pi, qi in zip(self, other)])
+        return self.__class__([pi + qi for pi, qi in zip(self, other)])
 
     def __rsub__(self, other: tuple[float]):
-        return tuple([qi - pi for pi, qi in zip(self, other)])
+        return self.__class__([qi - pi for pi, qi in zip(self, other)])
 
     def __eq__(self, other: tuple[float]):
-        if isinstance(other, Point3D):
+        if isinstance(other, self.__class__):
             pass
         elif not isinstance(other, (tuple, list, np.ndarray)):
             return False
         try:
-            other = Point3D(other)
+            other = self.__class__(other)
         except Exception as e:
             return False
         for pi, qi in zip(self, other):
@@ -51,6 +44,36 @@ class Point3D(Point, Tuple):
 
     def __ne__(self, other: tuple[float]):
         return not self.__eq__(other)
+
+
+class Point2D(PointBase, Tuple):
+    @staticmethod
+    def validation_creation(point: tuple[float]):
+        PointBase.validation_creation(point)
+        if len(point) != 2:
+            error_msg = "Point2D must be created with three float values. len(point) = {len(point)}"
+            raise ValueError(error_msg)
+
+    def __new__(cls, point: tuple[float]):
+        if isinstance(point, Point2D):
+            return point
+        Point2D.validation_creation(point)
+        return super(Point2D, cls).__new__(cls, tuple(point))
+
+
+class Point3D(PointBase, Tuple):
+    @staticmethod
+    def validation_creation(point: tuple[float]):
+        PointBase.validation_creation(point)
+        if len(point) != 3:
+            error_msg = "Point3D must be created with three float values. len(point) = {len(point)}"
+            raise ValueError(error_msg)
+
+    def __new__(cls, point: tuple[float]):
+        if isinstance(point, Point3D):
+            return point
+        Point3D.validation_creation(point)
+        return super(Point3D, cls).__new__(cls, tuple(point))
 
 
 class Geometry1D(object):

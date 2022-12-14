@@ -61,7 +61,7 @@ def test_example1():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example1"])
 def test_example2():
     A = (0, 0, 0)
@@ -98,7 +98,7 @@ def test_example2():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example2"])
 def test_example3():
     A = (0, 0, 0)
@@ -136,7 +136,7 @@ def test_example3():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example3"])
 def test_example4():
     A = (0, 0, 0)
@@ -176,7 +176,7 @@ def test_example4():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example4"])
 def test_example5():
     q0 = -0.1
@@ -216,7 +216,7 @@ def test_example5():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(5)
 @pytest.mark.dependency(depends=["test_example5"])
 def test_example6():
     A = (0, 0, 0)
@@ -253,7 +253,7 @@ def test_example6():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example6"])
 def test_example7():
     A = (0, 0, 0)
@@ -290,7 +290,7 @@ def test_example7():
 
 
 @pytest.mark.order(10)
-@pytest.mark.timeout(2)
+@pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example7"])
 def test_example8():
     A = (0, 0, 0)

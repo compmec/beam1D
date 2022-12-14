@@ -4,6 +4,7 @@ import matplotlib as mpl
 import numpy as np
 
 from compmec.strct.__classes__ import Element1D
+from compmec.strct.geometry import Point2D, Point3D
 from compmec.strct.profile import Circle, HollowCircle
 from compmec.strct.system import StaticSystem
 
@@ -72,7 +73,7 @@ class PerspectiveProjector(object):
     def __init__(self, name: str):
         raise NotImplementedError("Needs Implementation: TO DO")
 
-    def __call__(self, point3D: Tuple[float, float, float]) -> Tuple[float, float]:
+    def __call__(self, point3D: Point3D) -> Point2D:
         """
         Receives a 3D point and transform it to 2D point
         """
