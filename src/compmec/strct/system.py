@@ -2,7 +2,7 @@ from typing import Dict, Iterable, Tuple, Type, Union
 
 import numpy as np
 
-from compmec.strct.__classes__ import Element1D, Point
+from compmec.strct.__classes__ import Element1D, Point, System
 from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.geometry import Geometry1D
 from compmec.strct.solver import solve
@@ -144,7 +144,7 @@ class StaticStructure(object):
         self._elements.append(value)
 
 
-class StaticSystem:
+class StaticSystem(System):
     def __new__(cls):
         if not hasattr(cls, "instance"):
             cls.instance = super(StaticSystem, cls).__new__(cls)

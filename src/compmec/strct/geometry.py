@@ -51,7 +51,7 @@ class Point2D(PointBase, Tuple):
     def validation_creation(point: tuple[float]):
         PointBase.validation_creation(point)
         if len(point) != 2:
-            error_msg = "Point2D must be created with three float values. len(point) = {len(point)}"
+            error_msg = "Point2D must be created with two float values. len(point) = {len(point)}"
             raise ValueError(error_msg)
 
     def __new__(cls, point: tuple[float]):

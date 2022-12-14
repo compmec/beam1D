@@ -3,9 +3,8 @@ from typing import Iterable, List, Optional, Tuple
 import matplotlib as mpl
 import numpy as np
 
-from compmec.strct.__classes__ import Element1D
+from compmec.strct.__classes__ import Shower, System
 from compmec.strct.geometry import Point2D, Point3D
-from compmec.strct.profile import Circle, HollowCircle
 from compmec.strct.system import StaticSystem
 
 
@@ -26,36 +25,20 @@ class AxonometricProjector(object):
 
     def __init__(self, name: str):
         if name == "xy" or name == "parallel xy":
-            self.horizontal = (1, 0, 0)
-            self.vertical = (0, 1, 0)
+            self._horizontal = Point3D([1, 0, 0])
+            self._vertical = Point3D([0, 1, 0])
         elif name == "xz" or name == "parallel xz":
-            self.horizontal = (-1, 0, 0)
-            self.vertical = (0, 0, 1)
+            self._horizontal = Point3D([-1, 0, 0])
+            self._vertical = Point3D([0, 0, 1])
         elif name == "yz" or name == "parallel yz":
-            self.horizontal = (0, 1, 0)
-            self.vertical = (0, 0, 1)
-        self.horizontal = np.array(self.horizontal, dtype="float64")
-        self.vertical = np.array(self.vertical, dtype="float64")
+            self._horizontal = Point3D([0, 1, 0])
+            self._vertical = Point3D([0, 0, 1])
 
-    def __call__(
-        self, point3D: Tuple[float, float, float]
-    ) -> Tuple[float, float, float]:
-        point3D = np.array(point3D, dtype="float64")
-        if point3D.ndim != 1:
-            raise ValueError("Point3D must be a 1D-array")
-        if len(point3D) != 3:
-            raise ValueError("Point3D must have lenght = 3")
-        horizontal = self.horizontal
-        vertical = self.vertical
-        if np.abs(np.inner(horizontal, vertical)) > 0.01:  # cos 82 degrees
-            raise ValueError(
-                "The horizontal vector and the vertical are not perpendicular"
-            )
-        normal = np.cross(horizontal, vertical)
-        point3D -= np.inner(point3D, normal) * normal
-        x = np.inner(point3D, horizontal)
-        y = np.inner(point3D, vertical)
-        return x, y
+    def __call__(self, point: Point3D) -> Point2D:
+        point3D = Point3D(point)
+        x = np.inner(point3D, self._horizontal)
+        y = np.inner(point3D, self._vertical)
+        return Point2D([x, y])
 
 
 class PerspectiveProjector(object):
@@ -71,13 +54,13 @@ class PerspectiveProjector(object):
     ]
 
     def __init__(self, name: str):
-        raise NotImplementedError("Needs Implementation: TO DO")
+        raise NotImplementedError
 
-    def __call__(self, point3D: Point3D) -> Point2D:
+    def __call__(self, point: Point3D) -> Point2D:
         """
         Receives a 3D point and transform it to 2D point
         """
-        raise NotImplementedError("TO DO")
+        raise NotImplementedError
 
 
 class Projector(object):
@@ -111,28 +94,25 @@ class Projector(object):
         if projectionname in AxonometricProjector.names:
             self.projector = AxonometricProjector(projectionname)
         elif projectionname in PerspectiveProjector.names:
-            self.projector = AxonometricProjector(projectionname)
+            self.projector = PerspectiveProjector(projectionname)
         else:
-            raise ValueError(
-                f"The received projectionname is unknown. Must be in {Projector.axonometricnames+Projector.perspectivenames}"
-            )
+            projnames = Projector.axonometricnames + Projector.perspectivenames
+            error_msg = f"The received projectionname {projectionname} is unknown.\n"
+            error_msg += f"Must be in {projnames}"
+            raise ValueError(error_msg)
 
-    def __call__(self, point3D: Tuple[float, float, float]) -> Tuple[float, float]:
+    def __call__(self, point: Point3D) -> Point2D:
         """
         Receives a 3D point and transform it to 2D point
         """
-        return self.projector(point3D)
-
-
-class Shower(object):
-    def __init__(self):
-        pass
+        return self.projector(point)
 
 
 class ShowerStaticSystem(Shower):
-    def __init__(self, system: StaticSystem):
-        if not isinstance(system, StaticSystem):
-            raise TypeError(f"The given system is {type(system)}, not a StaticSystem")
+    def __init__(self, system: System):
+        if not isinstance(system, System):
+            error_msg = f"The given system is {type(system)}, not a System"
+            raise TypeError(error_msg)
         super().__init__()
         self.__system = system
 
@@ -245,6 +225,12 @@ class ShowerStaticSystem(Shower):
             if fieldname is None:
                 axes.plot(points3D[:, 0], points3D[:, 1], points3D[:, 2], color="k")
             else:
-                raise NotImplementedError("Field is not yet implemented")
-                fieldvalues = compute_field(fieldname, element)
-                axes.scatter(p[:, 0], p[:, 1], p[:, 2], cmap=cmap, c=fieldvalues)
+                fieldcurve = element.field(fieldname)
+                fieldvalues = fieldcurve(tplot)
+                axes.scatter(
+                    points3D[:, 0],
+                    points3D[:, 1],
+                    points3D[:, 2],
+                    cmap=cmap,
+                    c=fieldvalues,
+                )

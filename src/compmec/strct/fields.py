@@ -67,9 +67,8 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
     def _field(self, fieldname: str) -> nurbs.SplineCurve:
         keys = list(self.NAME2FUNCTIONS.keys())
         if fieldname not in keys:
-            error_msg = (
-                f"Received fieldname '{fieldname}' is not valid. They are {keys}"
-            )
+            error_msg = f"Received fieldname '{fieldname}' is not valid.\n"
+            error_msg += f"They are {keys}"
             raise ValueError(error_msg)
         function = self.NAME2FUNCTIONS[fieldname]
         curve = function()
