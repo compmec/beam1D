@@ -148,13 +148,82 @@ def test_fields():
 
 
 @pytest.mark.order(9)
-@pytest.mark.dependency(depends=["test_begin"])
+@pytest.mark.dependency(depends=["test_fields"])
+def test_all_axonometric():
+    projectornames = [
+        "xy",
+        "xz",
+        "yz",
+        "parallel xy",
+        "parallel xz",
+        "parallel yz",
+        "trimetric",
+        "dimetric",
+        "isometric",
+        "axonometric custom",
+    ]
+    system = StaticSystem()
+    beamAB = EulerBernoulli([(0, 0, 0), (10, 0, 0)])
+    beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
+    system.add_element(beamAB)
+    system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
+    system.add_load((0, 0, 0), {"Fy": -10})
+    with pytest.raises(ValueError):
+        shower = ShowerStaticSystem(system)
+    system.run()
+    shower = ShowerStaticSystem(system)
+    for name in projectornames:
+        try:
+            shower.plot2D(projector=name, deformed=False, fieldname="Ux")
+        except NotImplementedError as e:
+            pass
+
+
+@pytest.mark.order(9)
+@pytest.mark.dependency(depends=["test_fields"])
+def test_all_perspective():
+    projectornames = [
+        "military",
+        "cabinet",
+        "cavalier",
+        "one-point",
+        "two-point",
+        "three-point",
+        "perspective custom",
+    ]
+    system = StaticSystem()
+    beamAB = EulerBernoulli([(0, 0, 0), (10, 0, 0)])
+    beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
+    system.add_element(beamAB)
+    system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
+    system.add_load((0, 0, 0), {"Fy": -10})
+    with pytest.raises(ValueError):
+        shower = ShowerStaticSystem(system)
+    system.run()
+    shower = ShowerStaticSystem(system)
+    for name in projectornames:
+        try:
+            shower.plot2D(projector=name, deformed=False, fieldname="Ux")
+        except NotImplementedError as e:
+            pass
+
+
+@pytest.mark.order(9)
+@pytest.mark.dependency(depends=["test_fields"])
 def test_fails():
     system = StaticSystem()
+    beamAB = EulerBernoulli([(0, 0, 0), (10, 0, 0)])
+    beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
+    system.add_element(beamAB)
+    system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
+    system.add_load((0, 0, 0), {"Fy": -10})
     with pytest.raises(TypeError):
         ShowerStaticSystem(1)
     with pytest.raises(TypeError):
         ShowerStaticSystem("asd")
+    with pytest.raises(ValueError):
+        shower = ShowerStaticSystem(system)
+    system.run()
     shower = ShowerStaticSystem(system)
     with pytest.raises(TypeError):
         shower.plot2D(projector=1, deformed=False, fieldname="Ux")
@@ -164,7 +233,18 @@ def test_fails():
 
 @pytest.mark.order(9)
 @pytest.mark.dependency(
-    depends=["test_begin", "test_main1", "test_fields", "test_fails"]
+    depends=[
+        "test_begin",
+        "test_main1",
+        "test_fields",
+        "test_all_axonometric",
+        "test_all_perspective",
+        "test_fails",
+    ]
 )
 def test_end():
     pass
+
+
+def main():
+    test_all_axonometric()

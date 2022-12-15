@@ -33,6 +33,8 @@ class AxonometricProjector(object):
         elif name == "yz" or name == "parallel yz":
             self._horizontal = Point3D([0, 1, 0])
             self._vertical = Point3D([0, 0, 1])
+        else:
+            raise NotImplementedError
 
     def __call__(self, point: Point3D) -> Point2D:
         point3D = Point3D(point)
@@ -113,6 +115,8 @@ class ShowerStaticSystem(Shower):
             error_msg = f"The given system is {type(system)}, not a System"
             raise TypeError(error_msg)
         super().__init__()
+        if system._solution is None:
+            raise ValueError("You must run the simulation before put it in Shower")
         self.__system = system
 
     def getAll2DPoints(
@@ -148,22 +152,19 @@ class ShowerStaticSystem(Shower):
         all2Dpoints = self.getAll2DPoints(tplot, deformed, projector)
         allfieldvalues = []
         tmed = (tplot[1:] + tplot[:-1]) / 2
-        minfield = 1e9
-        maxfield = -1e9
         for element in self.__system._structure.elements:
             fieldcurve = element.field(fieldname)
-            fieldvalues = fieldcurve.evaluate(tmed).reshape(-1)
-            if np.min(fieldvalues) < minfield:
-                minfield = np.min(fieldvalues)
-            if np.max(fieldvalues) > maxfield:
-                maxfield = np.max(fieldvalues)
+            fieldvalues = fieldcurve.evaluate(tmed)
             allfieldvalues.append(fieldvalues)
         cmap = mpl.pyplot.get_cmap("viridis")  # viridis, plasma, jet
         minfield = np.min(allfieldvalues)
         maxfield = np.max(allfieldvalues)
+        invnormalize = (
+            1 if abs(maxfield - minfield) < 1e-3 else 1 / (maxfield - minfield)
+        )
         norm = mpl.colors.Normalize(vmin=minfield, vmax=maxfield)
         for points2D, fieldvalues in zip(all2Dpoints, allfieldvalues):
-            colors_ts = (fieldvalues - minfield) / (maxfield - minfield)  # Normalize
+            colors_ts = invnormalize * (fieldvalues - minfield)  # Normalize
             for i, c in enumerate(colors_ts):
                 axes.plot(
                     points2D[i : i + 2, 0],

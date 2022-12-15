@@ -167,9 +167,4 @@ class PerfilI(Profile):
 
     @property
     def area(self) -> PositiveFloat:
-        print("b, h, t, s = ")
-        print(self.b)
-        print(self.h)
-        print(self.t)
-        print(self.s)
         return 2 * self.b * self.t + self.s * (self.h - self.t)

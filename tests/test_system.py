@@ -31,6 +31,8 @@ class TestStaticSystem:
     @pytest.mark.dependency(depends=["TestStaticSystem::test_begin"])
     def test_main(self):
         system = StaticSystem()
+        with pytest.raises(ValueError):
+            system.run()
         with pytest.raises(TypeError):
             system.add_element(1)
         with pytest.raises(TypeError):

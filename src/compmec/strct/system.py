@@ -306,6 +306,9 @@ class StaticSystem(System):
         return K
 
     def run(self):
+        if len(self._structure.elements) == 0:
+            error_msg = "You must have at least one element to run the simulation"
+            raise ValueError(error_msg)
         for element in self._structure.elements:
             self.__getpointsfrom(element)
         K = self.mount_K()
