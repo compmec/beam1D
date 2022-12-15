@@ -70,6 +70,10 @@ def test_main1():
     shower.plot3D(deformed=False, axes=ax)
     shower.plot3D(deformed=True, axes=ax)
     plt.legend()
+    shower.plot2D(projector="xy", deformed=False)
+    shower.plot2D(projector="xy", deformed=True)
+    shower.plot3D(deformed=False)
+    shower.plot3D(deformed=True)
     # plt.show()
     plt.close("all")
 
@@ -147,10 +151,14 @@ def test_fields():
 @pytest.mark.dependency(depends=["test_begin"])
 def test_fails():
     system = StaticSystem()
+    with pytest.raises(TypeError):
+        ShowerStaticSystem(1)
+    with pytest.raises(TypeError):
+        ShowerStaticSystem("asd")
     shower = ShowerStaticSystem(system)
     with pytest.raises(TypeError):
         shower.plot2D(projector=1, deformed=False, fieldname="Ux")
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         shower.plot2D(projector="tt", deformed=False, fieldname="Ux")
 
 

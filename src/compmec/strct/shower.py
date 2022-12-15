@@ -95,8 +95,8 @@ class Projector(object):
         elif projectionname in PerspectiveProjector.names:
             self.projector = PerspectiveProjector(projectionname)
         else:
-            projnames = Projector.axonometricnames + Projector.perspectivenames
-            error_msg = f"The received projectionname {projectionname} is unknown.\n"
+            projnames = AxonometricProjector.names + PerspectiveProjector.names
+            error_msg = f"The received projectionname '{projectionname}' is unknown.\n"
             error_msg += f"Must be in {projnames}"
             raise ValueError(error_msg)
 
@@ -158,19 +158,9 @@ class ShowerStaticSystem(Shower):
             if np.max(fieldvalues) > maxfield:
                 maxfield = np.max(fieldvalues)
             allfieldvalues.append(fieldvalues)
-        if minfield >= 0:
-            minfield = 0
-            cmap = mpl.pyplot.get_cmap("viridis")  # viridis, plasma, jet
-        else:
-            cmap = mpl.pyplot.get_cmap("coolwarm")  # bwr, coolwarm
-            maxfield = max(abs(minfield), maxfield)
-            minfield = -maxfield
-        if minfield == maxfield:
-            if minfield == 0:
-                maxfield = 1
-            else:
-                maxfield = abs(maxfield)
-                minfield = -maxfield
+        cmap = mpl.pyplot.get_cmap("viridis")  # viridis, plasma, jet
+        minfield = np.min(allfieldvalues)
+        maxfield = np.max(allfieldvalues)
         norm = mpl.colors.Normalize(vmin=minfield, vmax=maxfield)
         for points2D, fieldvalues in zip(all2Dpoints, allfieldvalues):
             colors_ts = (fieldvalues - minfield) / (maxfield - minfield)  # Normalize

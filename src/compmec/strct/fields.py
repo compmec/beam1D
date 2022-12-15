@@ -76,13 +76,10 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
             error_msg = f"    With projection '{projection}'\n"
             error_msg += f"They are {keys}"
             raise ValueError(error_msg)
-        print("fieldname = ", fieldname)
         curve = self.NAME2FUNCTIONS[fieldname]()
         if projection is None:
             return curve
         if projection in ["x", "y", "z"]:
-            print("curve.ctrlpoints = ")
-            print(curve.ctrlpoints)
             if projection == "x":
                 curve.ctrlpoints = curve.ctrlpoints[:, 0]
             elif projection == "y":
@@ -90,8 +87,6 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
             elif projection == "z":
                 curve.ctrlpoints = curve.ctrlpoints[:, 2]
             return curve
-        print(" fieldname = ", fieldname)
-        print("projection = ", projection)
         raise NotImplementedError
 
     def displacement(self) -> nurbs.SplineCurve:
