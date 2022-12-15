@@ -9,7 +9,14 @@ from compmec.strct.section import CircleSection
 
 
 @pytest.mark.order(5)
-@pytest.mark.dependency()
+@pytest.mark.dependency(
+    depends=[
+        "tests/test_material.py::test_end",
+        "tests/test_geometry.py::test_end",
+        "tests/test_section.py::test_end",
+    ],
+    scope="session",
+)
 def test_begin():
     pass
 
@@ -46,9 +53,6 @@ class InitBeam(object):
         self.section = CircleSection(self.material, self.profile)
 
 
-@pytest.mark.order(5)
-@pytest.mark.timeout(2)
-@pytest.mark.dependency()
 class TestEulerBernoulli(InitBeam):
     def create_beam(self):
         A = (0, 0, 0)
@@ -56,16 +60,28 @@ class TestEulerBernoulli(InitBeam):
         path = [A, B]
         self.beam = EulerBernoulli(path)
 
-    @pytest.mark.dependency()
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
+    @pytest.mark.dependency(depends=["test_begin"])
+    def test_begin(self):
+        pass
+
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
+    @pytest.mark.dependency(depends=["TestEulerBernoulli::test_begin"])
     def test_creation(self):
         self.create_beam()
 
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
     @pytest.mark.dependency(depends=["TestEulerBernoulli::test_creation"])
     def test_set_section(self):
         self.create_random_circle_section()
         self.create_beam()
         self.beam.section = self.section
 
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
     @pytest.mark.dependency(depends=["TestEulerBernoulli::test_creation"])
     def test_set_tuple_material_profile(self):
         self.create_random_isotropic_material()
@@ -75,6 +91,8 @@ class TestEulerBernoulli(InitBeam):
         profile = self.profile
         self.beam.section = material, profile
 
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
     @pytest.mark.dependency(depends=["TestEulerBernoulli::test_creation"])
     def test_fail_creation_class(self):
         A = [[0, 0, 0]]
@@ -95,6 +113,8 @@ class TestEulerBernoulli(InitBeam):
         with pytest.raises(TypeError):
             self.beam = EulerBernoulli(1)
 
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
     @pytest.mark.dependency(depends=["TestEulerBernoulli::test_creation"])
     def test_fail_set_section(self):
         self.create_random_isotropic_material()
@@ -115,6 +135,8 @@ class TestEulerBernoulli(InitBeam):
         with pytest.raises(ValueError):
             self.beam.section = material, profile, 1
 
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
     @pytest.mark.dependency(depends=["TestEulerBernoulli::test_creation"])
     def test_set_from_curve(self):
         self.create_random_isotropic_material()
@@ -124,9 +146,30 @@ class TestEulerBernoulli(InitBeam):
         curve = SplineCurve(knotvector, ctrlpoints)
         self.beam = EulerBernoulli(curve)
 
+    @pytest.mark.order(5)
+    @pytest.mark.timeout(2)
+    @pytest.mark.dependency(
+        depends=[
+            "TestEulerBernoulli::test_creation",
+            "TestEulerBernoulli::test_set_section",
+            "TestEulerBernoulli::test_set_tuple_material_profile",
+            "TestEulerBernoulli::test_fail_creation_class",
+            "TestEulerBernoulli::test_fail_set_section",
+            "TestEulerBernoulli::test_set_from_curve",
+        ]
+    )
+    def test_end(self):
+        pass
+
 
 @pytest.mark.order(5)
 @pytest.mark.timeout(2)
-@pytest.mark.dependency(depends=["test_begin", "test_Structural1Dlinearpath"])
+@pytest.mark.dependency(
+    depends=[
+        "test_begin",
+        "test_Structural1Dlinearpath",
+        "TestEulerBernoulli::test_end",
+    ]
+)
 def test_end():
     pass

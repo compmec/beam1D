@@ -835,7 +835,7 @@ class TestOneRetangularBarBeamAllCharges(InitRetangularBarBeamEuler):
         pass
 
     @pytest.mark.order(7)
-    @pytest.mark.dependency(depends=["TestOneRodBeamAllCharges::test_begin"])
+    @pytest.mark.dependency(depends=["TestOneRetangularBarBeamAllCharges::test_begin"])
     def test_end(self):
         pass
 

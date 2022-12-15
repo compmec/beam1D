@@ -20,7 +20,9 @@ class TestPoint2D:
     @pytest.mark.timeout(1)
     @pytest.mark.dependency(depends=["TestPoint2D::test_begin"])
     def test_creation(self):
-        Point2D([3, 4])
+        A = Point2D([3, 4])
+        B = Point2D(A)
+        assert A is B
 
     @pytest.mark.order(2)
     @pytest.mark.timeout(1)
@@ -101,7 +103,9 @@ class TestPoint3D:
     @pytest.mark.timeout(1)
     @pytest.mark.dependency(depends=["TestPoint3D::test_begin"])
     def test_creation(self):
-        Point3D([3, 4, 5])
+        A = Point3D([3, 4, 5])
+        B = Point3D(A)
+        assert A is B
 
     @pytest.mark.order(2)
     @pytest.mark.timeout(1)

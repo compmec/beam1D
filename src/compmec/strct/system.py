@@ -1,10 +1,11 @@
-from typing import Dict, Iterable, Tuple, Type, Union
+from typing import Callable, Dict, Iterable, Tuple, Type, Union
 
 import numpy as np
 
+from compmec import nurbs
 from compmec.strct.__classes__ import Element1D, Point, System
 from compmec.strct.fields import ComputeFieldBeam
-from compmec.strct.geometry import Geometry1D
+from compmec.strct.geometry import Geometry1D, Point3D
 from compmec.strct.solver import solve
 
 
@@ -28,69 +29,30 @@ class StaticLoad(object):
     def _key2pos(self, key: str) -> int:
         return 3 * (["F", "M"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
-    def _pos2key(self, pos: int) -> str:
-        if pos == 0:
-            return "Fx"
-        elif pos == 1:
-            return "Fy"
-        elif pos == 2:
-            return "Fz"
-        elif pos == 3:
-            return "Mx"
-        elif pos == 4:
-            return "My"
-        elif pos == 5:
-            return "Mz"
-
-    def add_load(self, index: int, values: dict) -> None:
+    def add_conc_load(self, point: Point3D, values: Dict[str, float]) -> None:
+        index = point.femid
         if not isinstance(index, int):
             raise TypeError(f"Index must be an integer, not {type(index)}")
         if not isinstance(values, dict):
             raise TypeError(f"Values must be a dictionary, not {type(values)}")
         for key, item in values.items():
             if not isinstance(key, str):
-                raise TypeError(
-                    f"Every key in dictionary must be a string, not {type(key)}"
-                )
+                error_msg = f"Every key in dictionary must be 'str' , not {type(key)}"
+                raise TypeError(error_msg)
             if not isinstance(item, (float, int)):
-                raise TypeError(
-                    f"Every item in dictionary must be a float, not {type(item)}"
+                error_msg = (
+                    f"Every item in dictionary must be a 'float', not {type(item)}"
                 )
-        return self._add_load_at_index(index, values)
+                raise TypeError(error_msg)
+        return self._add_conc_load(index, values)
+
+    def _add_conc_load(self, index: int, values: Dict[str, float]) -> None:
+        return self._add_conc_load_at_index(index, values)
 
     def add_dist_load(self, indexs: Iterable[int], values: dict, Ls: Iterable[float]):
-        if not isinstance(indexs, (tuple, list)):
-            raise TypeError("Indexs must be tuple/list")
-        for index in indexs:
-            try:
-                int(index)
-            except Exception as e:
-                raise TypeError(f"Cannot convert index into int. Type = {type(index)}")
-        if not isinstance(values, dict):
-            raise TypeError("Values must be a dict")
-        if not isinstance(Ls, (tuple, list)):
-            raise TypeError("Ls must be a tuple/list")
-        for Li in Ls:
-            try:
-                float(Li)
-            except Exception as e:
-                raise TypeError(f"Cannot convert index into float. Type = {type(Li)}")
-        self._add_dist_load(indexs, values, Ls)
+        raise NotImplementedError
 
-    def _add_dist_load(self, indexs: Iterable[int], values: dict, Ls: Iterable[float]):
-        npts = len(indexs)
-        concload = np.zeros(npts)
-        for key, values in values.items():
-            position = self.key2pos(key)
-            concload[:] = 0
-            for i, Li in enumerate(Ls):
-                qa, qb = values[i], values[i + 1]
-                concload[i] += Li * (2 * qa + qb) / 6
-                concload[i + 1] += Li * (qa + 2 * qb) / 6
-            for i, index in enumerate(indexs):
-                self._loads.append((index, position, concload[i]))
-
-    def _add_load_at_index(self, index: int, values: dict):
+    def _add_conc_load_at_index(self, index: int, values: Dict[str, float]):
         for key, value in values.items():
             position = self.key2pos(key)
             self._loads.append((index, position, value))
@@ -160,34 +122,39 @@ class StaticSystem(System):
     def add_element(self, element: Element1D):
         self._structure.add_element(element)
 
-    def add_load(self, point: Point, loads: dict):
+    def add_conc_load(self, point: Point3D, loads: Dict[str, float]):
         """
         Add a load in a specific point.
         Example:
             point = (1.0, 3.5, -2.0)
-            system.add_load(point, {"Fx": -30})
+            system.add_conc_load(point, {"Fx": -30})
         The available loads are combinations of ("F", "M") and ("x", "y", "z", "n", "v", "w").
         Example:
             Fx: Force in x direction
             Mn: Momentum in normal direction
         """
-        index = self._geometry.find_point(point)
-        if index is None:
-            index = self._geometry.create_point(point)
-        self._loads.add_load(index, loads)
+        point = Point3D(point)
+        if point.femid is None:
+            point.femid = self._geometry.find_point(point)
+        if point.femid is None:
+            point.femid = self._geometry.create_point(point)
+        self._loads.add_conc_load(point, loads)
 
     def add_dist_load(
-        self, element: Element1D, interval: Iterable[float], values: dict
+        self,
+        element: Element1D,
+        function: Callable[[float], Tuple[float, float, float]],
     ):
         """
         Add a distribueted load in a interval.
         Example:
             beamAB = EulerBernoulli([A, B])
-            interval = (0.2, 0.5, 0.7)
-            loadsFy = (10, -30, 30)
+            def force(t: float):
+                interval = (0.2, 0.5, 0.7)
+                loadsFy = (10, -30, 30)
             system.add_dist_load(beamAB, interval, {"Fy": loadsFy})
         All the values inside interval must be in [0, 1]
-        The available loads are the same as 'add_load' function:
+        The available loads are the same as 'add_conc_load' function:
             ("Fx", "Fy", "Fz", "Fn", "Fv", "Fw",
              "Mx", "My", "Mz", "Mn", "Mv", "Mw")
         The quantities of the interval must be tha same as each load.
@@ -198,62 +165,9 @@ class StaticSystem(System):
         """
         if not isinstance(element, Element1D):
             raise TypeError("Element must be Element1D")
-        try:
-            for t in interval:
-                float(t)
-        except Exception as e:
-            raise TypeError("Interval must be a tuple of floats")
-
-        interval, values = self.__compute_dist_points(element.ts, interval, values)
-        points3D = np.array([element.path(t) for t in interval], dtype="float64")
-        npts, dim = points3D.shape
-        indexs = []
-        for point in points3D:
-            index = self._geometry.find_point(point)
-            if index is None:
-                index = self._geometry.create_point(point)
-            indexs.append(index)
-        Ls = [np.linalg.norm(points3D[i + 1] - points3D[i]) for i in range(npts - 1)]
-        self._loads.add_dist_load(indexs, values, Ls)
-
-    def __compute_dist_points(
-        self, ts: Iterable[float], interval: Iterable[float], values: dict
-    ):
-        """
-        There's an element with the ts values:
-            ts = [0, 0.2, 0.4, 0.6, 0.8, 1]
-        And then there are the inteval values like
-            interval = [0.1, 0.5, 0.7]
-        Then we want to make a new interval
-            newinterval = [0.1, 0.2, 0.4, 0.5, 0.6, 0.7]
-        And we have to adapt also the new values, at forces.
-        If we had
-            values = {"Fx": [2, 10, 6]}
-        Then we want
-            newvalues = {"Fx": [2, 4, 8, 10, 8, 6]}
-        """
-        ts = np.array(ts)
-        interval = list(interval)
-        newinterval = interval.copy()
-        mask = (ts - min(interval)) * (max(interval) - ts) > 0
-        newinterval.extend(ts[mask])
-        newinterval.sort()
-        npts = len(newinterval)
-        for key, vals in values.items():
-            newvals = np.zeros(npts)
-            for i, t in enumerate(newinterval):
-                if t in interval:
-                    indvalue = interval.index(t)
-                    newvals[i] = vals[indvalue]
-                else:
-                    indvalue = 0
-                    while not (interval[indvalue] < t < interval[indvalue + 1]):
-                        indvalue += 1
-                    ta, tb = interval[indvalue], interval[indvalue + 1]
-                    qa, qb = vals[indvalue], vals[indvalue + 1]
-                    newvals[i] = (qa * (tb - t) + qb * (t - ta)) / (tb - ta)
-            values[key] = newvals
-        return newinterval, values
+        if not callable(function):
+            raise TypeError("The function must be callable")
+        raise NotImplementedError
 
     def add_BC(self, point: Point, bcvals: dict):
         index = self._geometry.find_point(point)
@@ -272,8 +186,8 @@ class StaticSystem(System):
     def __getpointsfrom(self, element: Element1D):
         for t in element.ts:
             p = element.path(t)
-            index = self._geometry.find_point(p)
-            if index is None:
+            femid = self._geometry.find_point(p)
+            if femid is None:
                 self._geometry.create_point(p)
 
     def mount_U(self) -> np.ndarray:

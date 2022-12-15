@@ -33,10 +33,11 @@ class PointBase(Point):
             pass
         elif not isinstance(other, (tuple, list, np.ndarray)):
             return False
-        try:
-            other = self.__class__(other)
-        except Exception as e:
-            return False
+        else:
+            try:
+                other = self.__class__(other)
+            except Exception as e:
+                return False
         for pi, qi in zip(self, other):
             if pi != qi:
                 return False
@@ -73,7 +74,17 @@ class Point3D(PointBase, Tuple):
         if isinstance(point, Point3D):
             return point
         Point3D.validation_creation(point)
-        return super(Point3D, cls).__new__(cls, tuple(point))
+        self = super(Point3D, cls).__new__(cls, tuple(point))
+        self._femid = None
+        return self
+
+    @property
+    def femid(self) -> int:
+        return self._femid
+
+    @femid.setter
+    def femid(self, arg: int):
+        self._femid = arg
 
 
 class Geometry1D(object):
@@ -131,5 +142,7 @@ class Geometry1D(object):
         return self._create_point(point)
 
     def _create_point(self, point: Point3D) -> int:
+        index = self.npts
+        point.index = index
         self._all_points.append(point)
-        return self.npts - 1
+        return index

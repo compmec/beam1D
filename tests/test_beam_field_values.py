@@ -176,7 +176,7 @@ class TestFieldCantileverCircularEulerBeam:
         system.add_BC(A, boundary_conditions)
 
         self.applied_force = 10
-        system.add_load(B, {"Fy": self.applied_force})
+        system.add_conc_load(B, {"Fy": self.applied_force})
 
         self.npts = 101
         self.ts = np.linspace(0, 1, self.npts)
@@ -221,7 +221,10 @@ class TestFieldCantileverCircularEulerBeam:
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(
-        depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
+        depends=[
+            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_displacement",
+        ]
     )
     def test_deformed(self):
         self.setup_system()
@@ -237,7 +240,10 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.order(9)
     # @pytest.mark.skip()
     @pytest.mark.dependency(
-        depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
+        depends=[
+            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_displacement",
+        ]
     )
     def test_internal_force(self):
         self.setup_system()
@@ -249,7 +255,10 @@ class TestFieldCantileverCircularEulerBeam:
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(
-        depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
+        depends=[
+            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_displacement",
+        ]
     )
     def test_external_force(self):
         self.setup_system()
@@ -262,7 +271,10 @@ class TestFieldCantileverCircularEulerBeam:
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(
-        depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
+        depends=[
+            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_displacement",
+        ]
     )
     def test_internal_momentum(self):
         self.setup_system()
@@ -274,7 +286,10 @@ class TestFieldCantileverCircularEulerBeam:
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(
-        depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
+        depends=[
+            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_displacement",
+        ]
     )
     def test_external_momentum(self):
         self.setup_system()
@@ -321,7 +336,7 @@ class TestFailCases:
         self.system.add_BC(A, boundary_conditions)
 
         self.applied_force = 10
-        self.system.add_load(B, {"Fy": self.applied_force})
+        self.system.add_conc_load(B, {"Fy": self.applied_force})
 
         self.npts = 101
         self.ts = np.linspace(0, 1, self.npts)

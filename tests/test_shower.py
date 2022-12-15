@@ -46,7 +46,7 @@ def test_main1():
     system.add_BC(A, {"Ux": 0, "Uy": 0, "Uz": 0, "tx": 0, "ty": 0, "tz": 0})
     system.add_BC(B, {"Uz": 0})
     system.add_BC(C, {"Uz": 0})
-    system.add_load(D, {"Fz": 5000000})
+    system.add_conc_load(D, {"Fz": 5000000})
     system.run()
 
     shower = ShowerStaticSystem(system)
@@ -103,7 +103,7 @@ def test_fields():
     system.add_BC(A, {"Ux": 0, "Uy": 0, "Uz": 0, "tx": 0, "ty": 0, "tz": 0})
     system.add_BC(B, {"Uz": 0})
     system.add_BC(C, {"Uz": 0})
-    system.add_load(D, {"Fz": 5000000})
+    system.add_conc_load(D, {"Fz": 5000000})
     system.run()
 
     shower = ShowerStaticSystem(system)
@@ -167,7 +167,7 @@ def test_all_axonometric():
     beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
     system.add_element(beamAB)
     system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
-    system.add_load((0, 0, 0), {"Fy": -10})
+    system.add_conc_load((0, 0, 0), {"Fy": -10})
     with pytest.raises(ValueError):
         shower = ShowerStaticSystem(system)
     system.run()
@@ -196,7 +196,7 @@ def test_all_perspective():
     beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
     system.add_element(beamAB)
     system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
-    system.add_load((0, 0, 0), {"Fy": -10})
+    system.add_conc_load((0, 0, 0), {"Fy": -10})
     with pytest.raises(ValueError):
         shower = ShowerStaticSystem(system)
     system.run()
@@ -216,7 +216,7 @@ def test_fails():
     beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
     system.add_element(beamAB)
     system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
-    system.add_load((0, 0, 0), {"Fy": -10})
+    system.add_conc_load((0, 0, 0), {"Fy": -10})
     with pytest.raises(TypeError):
         ShowerStaticSystem(1)
     with pytest.raises(TypeError):
