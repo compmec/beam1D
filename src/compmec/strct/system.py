@@ -2,7 +2,6 @@ from typing import Callable, Dict, Iterable, Tuple, Type, Union
 
 import numpy as np
 
-from compmec import nurbs
 from compmec.strct.__classes__ import Element1D, Point, System
 from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.geometry import Geometry1D, Point3D
@@ -10,6 +9,28 @@ from compmec.strct.solver import solve
 
 
 class StaticLoad(object):
+    valid_keys = ["Fx", "Fy", "Fz", "Mx", "My", "Mz"]
+
+    @classmethod
+    def _verify_key(cls, key: str):
+        if not isinstance(key, str):
+            error_msg = f"Key must be an string. Received {type(key)}"
+            raise TypeError(error_msg)
+        if key not in cls.valid_keys:
+            error_msg = f"Received key is invalid: {key}. Must be in {cls.valid_keys}"
+            raise ValueError(error_msg)
+
+    @classmethod
+    def _verify_dict(cls, values: Dict[str, float]):
+        if not isinstance(values, dict):
+            error_msg = f"Values must be a dictionary, not {type(values)}"
+            raise TypeError(error_msg)
+        for key, item in values.items():
+            cls._verify_key(key)
+            if not isinstance(item, (float, int)):
+                error_msg = f"Item in dictionary must be a 'float', not {type(item)}"
+                raise TypeError(error_msg)
+
     def __init__(self):
         self._loads = []
 
@@ -18,32 +39,14 @@ class StaticLoad(object):
         return self._loads
 
     def key2pos(self, key: str) -> int:
-        if not isinstance(key, str):
-            raise TypeError(f"Key must be an string. Received {type(key)}")
-        if key not in ["Fx", "Fy", "Fz", "Mx", "My", "Mz"]:
-            raise ValueError(
-                f"Received key is invalid: {key}. Must be Fx, Fy, Fz, Mx, My, Mz"
-            )
+        self._verify_key(key)
         return self._key2pos(key)
 
     def _key2pos(self, key: str) -> int:
         return 3 * (["F", "M"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
-    def add_conc_load(self, point: Point3D, values: Dict[str, float]) -> None:
-        index = point.femid
-        if not isinstance(index, int):
-            raise TypeError(f"Index must be an integer, not {type(index)}")
-        if not isinstance(values, dict):
-            raise TypeError(f"Values must be a dictionary, not {type(values)}")
-        for key, item in values.items():
-            if not isinstance(key, str):
-                error_msg = f"Every key in dictionary must be 'str' , not {type(key)}"
-                raise TypeError(error_msg)
-            if not isinstance(item, (float, int)):
-                error_msg = (
-                    f"Every item in dictionary must be a 'float', not {type(item)}"
-                )
-                raise TypeError(error_msg)
+    def add_conc_load(self, index: int, values: Dict[str, float]) -> None:
+        self._verify_dict(values)
         return self._add_conc_load(index, values)
 
     def _add_conc_load(self, index: int, values: Dict[str, float]) -> None:
@@ -59,6 +62,27 @@ class StaticLoad(object):
 
 
 class StaticBoundaryCondition(object):
+    valid_keys = ["Ux", "Uy", "Uz", "tx", "ty", "tz"]
+
+    @classmethod
+    def _verify_key(cls, key: str):
+        if not isinstance(key, str):
+            raise TypeError(f"Key must be an string. Received {type(key)}")
+        if key not in cls.valid_keys:
+            error_msg = f"Received key is invalid: {key}. Must be in {cls.valid_keys}"
+            raise ValueError(error_msg)
+
+    @classmethod
+    def _verify_dict(cls, values: Dict[str, float]):
+        if not isinstance(values, dict):
+            error_msg = f"Values must be a dictionary, not {type(values)}"
+            raise TypeError(error_msg)
+        for key, item in values.items():
+            cls._verify_key(key)
+            if not isinstance(item, (float, int)):
+                error_msg = f"Item in dictionary must be a 'float', not {type(item)}"
+                raise TypeError(error_msg)
+
     def __init__(self):
         self._BCs = []
 
@@ -67,20 +91,14 @@ class StaticBoundaryCondition(object):
         return self._BCs
 
     def key2pos(self, key: str) -> int:
-        if not isinstance(key, str):
-            raise TypeError(f"Key must be an string. Received {type(key)}")
-        if key not in ["Ux", "Uy", "Uz", "tx", "ty", "tz"]:
-            raise ValueError(
-                f"Received key is invalid: {key}. Must be ux, uy, uz, tx, ty, tz"
-            )
+        self._verify_key(key)
         return self._key2pos(key)
 
     def _key2pos(self, key: str) -> int:
         return 3 * (["U", "t"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
     def add_BC(self, index: int, values: Dict[str, float]):
-        if not isinstance(values, dict):
-            raise TypeError("Values must be dict")
+        self._verify_dict(values)
         return self._add_BC(index, values)
 
     def _add_BC(self, index: int, values: Dict[str, float]):
@@ -90,6 +108,11 @@ class StaticBoundaryCondition(object):
 
 
 class StaticStructure(object):
+    @classmethod
+    def _verify_element(cls, element: Element1D):
+        if not isinstance(element, Element1D):
+            raise TypeError("To add an element, it must be a Structural 1D instance")
+
     def __init__(self):
         self._elements = []
 
@@ -98,8 +121,7 @@ class StaticStructure(object):
         return self._elements
 
     def add_element(self, value: Element1D) -> None:
-        if not isinstance(value, Element1D):
-            raise TypeError("To add an element, it must be a Structural 1D instance")
+        self._verify_element(value)
         return self._add_element(value)
 
     def _add_element(self, value: Element1D) -> None:
@@ -133,12 +155,9 @@ class StaticSystem(System):
             Fx: Force in x direction
             Mn: Momentum in normal direction
         """
-        point = Point3D(point)
-        if point.femid is None:
-            point.femid = self._geometry.find_point(point)
-        if point.femid is None:
-            point.femid = self._geometry.create_point(point)
-        self._loads.add_conc_load(point, loads)
+        StaticLoad._verify_dict(loads)
+        index = Point3D(point).get_index()
+        self._loads.add_conc_load(index, loads)
 
     def add_dist_load(
         self,
@@ -169,39 +188,32 @@ class StaticSystem(System):
             raise TypeError("The function must be callable")
         raise NotImplementedError
 
-    def add_BC(self, point: Point, bcvals: dict):
-        index = self._geometry.find_point(point)
-        if index is None:
-            index = self._geometry.create_point(point)
+    def add_BC(self, point: Point3D, bcvals: dict):
+        StaticBoundaryCondition._verify_dict(bcvals)
+        index = Point3D(point).get_index()
         self._boundarycondition.add_BC(index, bcvals)
-
-    @property
-    def solution(self):
-        if self._solution is None:
-            raise ValueError(
-                "You must run the simulation before getting the solution values"
-            )
-        return self._solution
 
     def __getpointsfrom(self, element: Element1D):
         for t in element.ts:
-            p = element.path(t)
-            femid = self._geometry.find_point(p)
-            if femid is None:
-                self._geometry.create_point(p)
+            point = element.path(t)
+            point = Point3D(point)
+            if point not in self._geometry:
+                self._geometry.add_point(point)
 
     def mount_U(self) -> np.ndarray:
         npts = self._geometry.npts
         U = np.empty((npts, 6), dtype="object")
-        for index, position, displacement in self._boundarycondition.bcvals:
-            U[index, position] = displacement
+        for global_index, position, displacement in self._boundarycondition.bcvals:
+            local_index = self._geometry._global_indexs.index(global_index)
+            U[local_index, position] = displacement
         return U
 
     def mount_F(self) -> np.ndarray:
         npts = self._geometry.npts
         F = np.zeros((npts, 6))
-        for index, position, loads in self._loads.loads:
-            F[index, position] += loads
+        for global_index, position, loads in self._loads.loads:
+            local_index = self._geometry._global_indexs.index(global_index)
+            F[local_index, position] += loads
         return F
 
     def mount_K(self) -> np.ndarray:
@@ -209,13 +221,13 @@ class StaticSystem(System):
         K = np.zeros((npts, 6, npts, 6))
         for element in self._structure.elements:
             Kloc = element.stiffness_matrix()
-            inds = []
+            local_indexs = []
             for t in element.ts:
                 searchpoint = element.path(t)
-                newind = self._geometry.find_point(searchpoint)
-                inds.append(newind)
-            for i, indi in enumerate(inds):
-                for j, indj in enumerate(inds):
+                local_index = self._geometry.find_point(searchpoint)
+                local_indexs.append(local_index)
+            for i, indi in enumerate(local_indexs):
+                for j, indj in enumerate(local_indexs):
                     K[indi, :, indj, :] += Kloc[i, :, j, :]
         return K
 
@@ -225,6 +237,12 @@ class StaticSystem(System):
             raise ValueError(error_msg)
         for element in self._structure.elements:
             self.__getpointsfrom(element)
+        print("Point3D.all_index_points = ")
+        print(Point3D.all_indexed_instances)
+        print("Geometry global indexs = ")
+        print(self._geometry._global_indexs)
+        print("Geometry local points = ")
+        print(self._geometry.points)
         K = self.mount_K()
         F = self.mount_F()
         U = self.mount_U()

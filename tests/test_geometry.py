@@ -191,17 +191,17 @@ class TestGeometry:
     @pytest.mark.order(2)
     @pytest.mark.timeout(2)
     @pytest.mark.dependency(depends=["TestGeometry::test_creation"])
-    def test_create_point(self):
+    def test_add_point(self):
         geometry = Geometry1D()
-        geometry.create_point([2, 3, 4])
+        geometry.add_point([2, 3, 4])
 
     @pytest.mark.order(2)
     @pytest.mark.timeout(2)
-    @pytest.mark.dependency(depends=["TestGeometry::test_create_point"])
+    @pytest.mark.dependency(depends=["TestGeometry::test_add_point"])
     def test_find_point(self):
         geometry = Geometry1D()
-        geometry.create_point([2, 3, 4])
-        geometry.create_point([-2, 3.0, 5])
+        geometry.add_point([2, 3, 4])
+        geometry.add_point([-2, 3.0, 5])
         assert geometry.find_point([2, 3, 4]) == 0
         assert geometry.find_point([-2, 3.0, 5]) == 1
         assert geometry.find_point([0, 0, 0]) is None
@@ -215,20 +215,18 @@ class TestGeometry:
     @pytest.mark.order(2)
     @pytest.mark.timeout(2)
     @pytest.mark.dependency(
-        depends=["TestGeometry::test_create_point", "TestGeometry::test_find_point"]
+        depends=["TestGeometry::test_add_point", "TestGeometry::test_find_point"]
     )
     def test_fail(self):
         geometry = Geometry1D()
-        geometry.create_point([2, 3, 4])
-        geometry.create_point([4, 3, 4])
+        geometry.add_point([2, 3, 4])
+        geometry.add_point([4, 3, 4])
         with pytest.raises(TypeError):
             geometry.find_point([2, 3, 4], tolerance="asd")
         with pytest.raises(ValueError):
             geometry.find_point([2, 3, 4], tolerance=-1)
         with pytest.raises(ValueError):
             geometry.find_point([2, 3, 4], tolerance=0)
-        with pytest.raises(ValueError):
-            geometry.create_point([2, 3, 4])
         with pytest.raises(ValueError):
             geometry.find_point([3, 3, 4], tolerance=2)
 

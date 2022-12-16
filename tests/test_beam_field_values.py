@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 
 from compmec.strct.element import EulerBernoulli
 from compmec.strct.fields import ComputeFieldBeam
+from compmec.strct.geometry import Point3D
 from compmec.strct.material import Isotropic
 from compmec.strct.profile import Circle
 from compmec.strct.system import StaticSystem
@@ -65,6 +66,11 @@ class TestFieldSingleBeamUncharged:
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    def test_setup_system(self):
+        self.setup_system()
+
+    @pytest.mark.order(9)
+    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_setup_system"])
     @pytest.mark.timeout(5)
     def test_position(self):
         self.setup_system()
@@ -78,7 +84,7 @@ class TestFieldSingleBeamUncharged:
         np.testing.assert_allclose(values_test[:, 2], self.beam.field("pz")(self.ts))
 
     @pytest.mark.order(9)
-    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_setup_system"])
     def test_displacement(self):
         self.setup_system()
         curve = self.beam.field("U")  # Displacement curve
@@ -90,7 +96,7 @@ class TestFieldSingleBeamUncharged:
         np.testing.assert_allclose(values_test[:, 2], self.beam.field("Uz")(self.ts))
 
     @pytest.mark.order(9)
-    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_setup_system"])
     def test_deformed(self):
         self.setup_system()
         curve = self.beam.field("d")  # Deformed curve
@@ -103,7 +109,7 @@ class TestFieldSingleBeamUncharged:
         np.testing.assert_allclose(values_test[:, 2], self.beam.field("dz")(self.ts))
 
     @pytest.mark.order(9)
-    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_setup_system"])
     def test_internal_force(self):
         self.setup_system()
         curve = self.beam.field("FI")  # Internal Force
@@ -112,7 +118,7 @@ class TestFieldSingleBeamUncharged:
         np.testing.assert_allclose(values_test, values_good)
 
     @pytest.mark.order(9)
-    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_setup_system"])
     def test_external_force(self):
         self.setup_system()
         curve = self.beam.field("FE")  # External Force
@@ -121,7 +127,7 @@ class TestFieldSingleBeamUncharged:
         np.testing.assert_allclose(values_test, values_good)
 
     @pytest.mark.order(9)
-    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_setup_system"])
     def test_internal_momentum(self):
         self.setup_system()
         curve = self.beam.field("MI")  # Internal Momentum
@@ -130,7 +136,7 @@ class TestFieldSingleBeamUncharged:
         np.testing.assert_allclose(values_test, values_good)
 
     @pytest.mark.order(9)
-    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_begin"])
+    @pytest.mark.dependency(depends=["TestFieldSingleBeamUncharged::test_setup_system"])
     def test_external_momentum(self):
         self.setup_system()
         curve = self.beam.field("ME")  # External Momentum
@@ -142,6 +148,7 @@ class TestFieldSingleBeamUncharged:
     @pytest.mark.dependency(
         depends=[
             "TestFieldSingleBeamUncharged::test_begin",
+            "TestFieldSingleBeamUncharged::test_setup_system",
             "TestFieldSingleBeamUncharged::test_displacement",
             "TestFieldSingleBeamUncharged::test_position",
             "TestFieldSingleBeamUncharged::test_deformed",
@@ -197,6 +204,13 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.dependency(
         depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
     )
+    def test_setup_system(self):
+        self.setup_system()
+
+    @pytest.mark.order(9)
+    @pytest.mark.dependency(
+        depends=["TestFieldCantileverCircularEulerBeam::test_setup_system"]
+    )
     def test_position(self):
         self.setup_system()
         curve = self.beam.field("p")  # Position curve
@@ -207,7 +221,7 @@ class TestFieldCantileverCircularEulerBeam:
 
     @pytest.mark.order(9)
     @pytest.mark.dependency(
-        depends=["TestFieldCantileverCircularEulerBeam::test_begin"]
+        depends=["TestFieldCantileverCircularEulerBeam::test_setup_system"]
     )
     def test_displacement(self):
         self.setup_system()
@@ -222,7 +236,7 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.order(9)
     @pytest.mark.dependency(
         depends=[
-            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_setup_system",
             "TestFieldCantileverCircularEulerBeam::test_displacement",
         ]
     )
@@ -241,7 +255,7 @@ class TestFieldCantileverCircularEulerBeam:
     # @pytest.mark.skip()
     @pytest.mark.dependency(
         depends=[
-            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_setup_system",
             "TestFieldCantileverCircularEulerBeam::test_displacement",
         ]
     )
@@ -256,7 +270,7 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.order(9)
     @pytest.mark.dependency(
         depends=[
-            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_setup_system",
             "TestFieldCantileverCircularEulerBeam::test_displacement",
         ]
     )
@@ -272,7 +286,7 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.order(9)
     @pytest.mark.dependency(
         depends=[
-            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_setup_system",
             "TestFieldCantileverCircularEulerBeam::test_displacement",
         ]
     )
@@ -287,7 +301,7 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.order(9)
     @pytest.mark.dependency(
         depends=[
-            "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_setup_system",
             "TestFieldCantileverCircularEulerBeam::test_displacement",
         ]
     )
@@ -303,6 +317,7 @@ class TestFieldCantileverCircularEulerBeam:
     @pytest.mark.dependency(
         depends=[
             "TestFieldCantileverCircularEulerBeam::test_begin",
+            "TestFieldCantileverCircularEulerBeam::test_setup_system",
             "TestFieldCantileverCircularEulerBeam::test_displacement",
             "TestFieldCantileverCircularEulerBeam::test_position",
             "TestFieldCantileverCircularEulerBeam::test_deformed",
