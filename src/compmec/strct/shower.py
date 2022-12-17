@@ -1,11 +1,10 @@
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, Optional
 
 import matplotlib as mpl
 import numpy as np
 
 from compmec.strct.__classes__ import Shower, System
 from compmec.strct.geometry import Point2D, Point3D
-from compmec.strct.system import StaticSystem
 
 
 class AxonometricProjector(object):

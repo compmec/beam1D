@@ -2,7 +2,7 @@
 Each point has 6 unknowns:
 
 """
-from typing import Callable, Iterable, List, Tuple, Union
+from typing import Callable, Tuple, Union
 
 import compmec.nurbs as nurbs
 import numpy as np
@@ -63,11 +63,15 @@ class Structural1D(Element1D):
 
     @property
     def field(self) -> Callable[[str], nurbs.SplineCurve]:
-        """Returns function which receives a string and returns an nurbs.SplineCurve"""
+        """
+        Returns function which receives a string
+        and returns an nurbs.SplineCurve
+        """
         try:
             return self._field
-        except AttributeError as e:
-            raise ValueError("You must run the simulation before calling 'field'")
+        except AttributeError:
+            error_msg = "You must run the simulation before calling 'field'"
+            raise ValueError(error_msg)
 
     def set_field(self, value: ComputeField):
         if not isinstance(value, ComputeField):
@@ -92,12 +96,14 @@ class Structural1D(Element1D):
             self._section = value
             return
         if not isinstance(value, (tuple, list)):
-            error_msg = f"The section must be <Section> or (<Material>, <Profile>)."
-            error_msg += f"Received type = {type(value)}"
+            error_msg = "The section must be <Section>"
+            error_msg += " or (<Material>, <Profile>)."
+            error_msg += f" Received type = {type(value)}"
             raise TypeError(error_msg)
         if len(value) != 2:
-            error_msg = f"The section must be <Section> or (<Material>, <Profile>)."
-            error_msg += f"Received {str(value)[:400]}"
+            error_msg = "The section must be <Section>"
+            error_msg += " or (<Material>, <Profile>)."
+            error_msg += f" Received {str(value)[:400]}"
             raise ValueError(error_msg)
         material, profile = value
         value = create_section_from_material_profile(material, profile)
@@ -110,7 +116,7 @@ class Truss(Structural1D):
 
 class Beam(Structural1D):
     def local_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
-        raise NotImplementedError("This function must be overwritten by the child")
+        raise NotImplementedError
 
     def global_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
         Kloc = self.local_stiffness_matrix(p0, p1)

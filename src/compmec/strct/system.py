@@ -2,7 +2,7 @@ from typing import Callable, Tuple
 
 import numpy as np
 
-from compmec.strct.__classes__ import Element1D, Point, System
+from compmec.strct.__classes__ import Element1D, System
 from compmec.strct.fields import ComputeFieldBeam
 from compmec.strct.geometry import Geometry1D, Point3D
 from compmec.strct.solver import solve

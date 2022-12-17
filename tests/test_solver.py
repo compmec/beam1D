@@ -14,7 +14,7 @@ def test_begin():
 @pytest.mark.timeout(2)
 @pytest.mark.dependency(depends=["test_begin"])
 def test_cantilever2pts():
-    TOLERANCE = 1e-6
+    TOLERANCE = 1e-3
     Korig = [
         [
             [[10555.7513, 0, 0, 0, 0, 0], [-10555.7513, 0, 0, 0, 0, 0]],

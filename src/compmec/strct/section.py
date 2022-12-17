@@ -3,8 +3,8 @@ from typing import Optional, Tuple
 
 import numpy as np
 
+from compmec.strct import profile as prof
 from compmec.strct.__classes__ import Material, Profile, Section
-from compmec.strct.profile import *
 
 
 class HomogeneousSection(Section):
@@ -117,11 +117,11 @@ class HollowCircleSection(HomogeneousSectionFromMaterialProfile):
     def compute_inertias(self):
         Ri4 = self.profile.Ri**4
         Re4 = self.profile.Re**4
-        I = np.zeros(3, dtype="float64")
-        I[0] = np.pi * (Re4 - Ri4) / 2
-        I[1] = np.pi * (Re4 - Ri4) / 4
-        I[2] = np.pi * (Re4 - Ri4) / 4
-        return I
+        inertia = np.zeros(3, dtype="float64")
+        inertia[0] = np.pi * (Re4 - Ri4) / 2
+        inertia[1] = np.pi * (Re4 - Ri4) / 4
+        inertia[2] = np.pi * (Re4 - Ri4) / 4
+        return inertia
 
 
 class PerfilISection(HomogeneousSectionFromMaterialProfile):
@@ -143,11 +143,11 @@ class PerfilISection(HomogeneousSectionFromMaterialProfile):
         t, s = self.profile.t, self.profile.s
         Iz = (b * t / 6) * (t**2 + 3 * h**2) + s * (h - t) ** 3 / 12  # int z^2
         Iy = t * b**3 / 6 + (h - t) * s**3 / 12  # int y^2
-        I = np.zeros(3, dtype="float64")
-        I[0] = Iy + Iz
-        I[1] = Iy
-        I[2] = Iz
-        return I
+        inertia = np.zeros(3, dtype="float64")
+        inertia[0] = Iy + Iz
+        inertia[1] = Iy
+        inertia[2] = Iz
+        return inertia
 
 
 class GeneralSection(HomogeneousSection):
@@ -194,10 +194,10 @@ def create_section_from_material_profile(
     if not isinstance(profile, Profile):
         raise TypeError
     mapto = {
-        Retangular: RetangularSection,
-        HollowRetangular: HollowRetangularSection,
-        Circle: CircleSection,
-        HollowCircle: HollowCircleSection,
+        prof.Retangular: RetangularSection,
+        prof.HollowRetangular: HollowRetangularSection,
+        prof.Circle: CircleSection,
+        prof.HollowCircle: HollowCircleSection,
     }
     for profileclass, sectionclass in mapto.items():
         if type(profile) == profileclass:
