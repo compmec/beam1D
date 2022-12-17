@@ -31,19 +31,21 @@ class StaticLoad(object):
                 error_msg = f"Item in dictionary must be a 'float', not {type(item)}"
                 raise TypeError(error_msg)
 
+    @classmethod
+    def key2pos(cls, key: str) -> int:
+        cls._verify_key(key)
+        return cls._key2pos(key)
+
+    @classmethod
+    def _key2pos(cls, key: str) -> int:
+        return 3 * (["F", "M"].index(key[0])) + ["x", "y", "z"].index(key[1])
+
     def __init__(self):
         self._loads = []
 
     @property
     def loads(self):
         return self._loads
-
-    def key2pos(self, key: str) -> int:
-        self._verify_key(key)
-        return self._key2pos(key)
-
-    def _key2pos(self, key: str) -> int:
-        return 3 * (["F", "M"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
     def add_conc_load(self, index: int, values: Dict[str, float]) -> None:
         self._verify_dict(values)
@@ -160,9 +162,7 @@ class StaticSystem(System):
         self._loads.add_conc_load(index, loads)
 
     def add_dist_load(
-        self,
-        element: Element1D,
-        function: Callable[[float], Tuple[float, float, float]],
+        self, element: Element1D, functions: Dict[str, Callable[[float], float]]
     ):
         """
         Add a distribueted load in a interval.
@@ -184,9 +184,91 @@ class StaticSystem(System):
         """
         if not isinstance(element, Element1D):
             raise TypeError("Element must be Element1D")
-        if not callable(function):
-            raise TypeError("The function must be callable")
-        raise NotImplementedError
+        if not isinstance(functions, dict):
+            error_msg = f"Functions must be a dictionary, not {type(functions)}"
+            raise TypeError(error_msg)
+        for key, func in functions.items():
+            StaticLoad._verify_key(key)
+            if not callable(func):
+                error_msg = f"Each function must be callable, type = {type(func)}"
+                raise TypeError(error_msg)
+        return self._add_dist_load(element, functions)
+
+    def _refine_vector(self, vector: Tuple[float], ndiv: int):
+        """
+        Receives a vector like (0, 0.2, 0.8, 1)
+        And divides each interval in other points, like:
+        _refine_vector([0, 0.2, 0.8, 1], 1) -> [0, 0.1, 0.2, 0.5, 0.8, 0.9, 1]
+        """
+        npts = len(vector)
+        newts = vector[0] * np.ones((ndiv + 1) * (npts - 1) + 1)
+        for i in range(npts - 1):
+            for k in range(1, ndiv + 1):
+                alpha = k / (ndiv + 2)
+                newts[k + i * (ndiv + 1)] = (1 - alpha) * vector[i] + alpha * vector[
+                    i + 1
+                ]
+            newts[(i + 1) * (ndiv + 1)] = vector[i + 1]
+        return tuple(newts)
+
+    def _add_dist_load(
+        self, element: Element1D, functions: Dict[str, Callable[[float], float]]
+    ):
+        """
+        This functions receive a distributed load and uses numerical integration
+        to compute the force applied on each point.
+        We take acount the knots of the neutral line, like:
+            element.ts = [0.0, 0.2, 0.4, 0.5, 0.8, 1.0]
+        Then for each element we use linear approximation for the shape
+        But we use 4 values of evaluation for each point
+        """
+        ts = element.ts
+        points = element.path.evaluate(ts)
+        for j, point in enumerate(points):
+            self._geometry.add_point(point)
+        forceknots = np.zeros((len(ts), 3), dtype="float64")
+        momenknots = np.zeros((len(ts), 3), dtype="float64")
+        ndiv = 3
+        allts = self._refine_vector(ts, ndiv)
+        allpoints = element.path.evaluate(allts)
+        allfuncvals = np.zeros((len(allts), 6), dtype="float64")
+        for key, function in functions.items():
+            position = StaticLoad.key2pos(key)
+            for j, tj in enumerate(allts):
+                allfuncvals[j, position] += function(tj)
+        # Now we compute the integral of each force
+        for z, (ta, tb) in enumerate(zip(ts[:-1], ts[1:])):
+            pa, pb = points[z], points[z + 1]
+            Fa, Fb = np.zeros(3, "float64"), np.zeros(3, "float64")
+            pbpa = pb - pa
+            for k in range(ndiv + 1):  # Integration of each subinterval
+                Fatemp = np.zeros(Fa.shape)
+                Fbtemp = np.zeros(Fb.shape)
+                i = allts.index(ta) + k
+                pi = allpoints[i]
+                pi1 = allpoints[i + 1]
+                pbpi = pb - pi
+                dpi = pi1 - pi
+                absdpi = np.linalg.norm(dpi)
+                termo1 = np.inner(pbpi, pbpa) / 2
+                termo3 = np.inner(pi - pa, pbpa) / 2
+                termo2 = np.inner(dpi, pbpa) / 6
+                Fatemp += (termo1 - termo2) * allfuncvals[i, :3]
+                Fatemp += (termo1 - 2 * termo2) * allfuncvals[i + 1, :3]
+                Fatemp *= absdpi
+                Fbtemp += (termo3 + termo2) * allfuncvals[i, :3]
+                Fbtemp += (termo3 + 2 * termo2) * allfuncvals[i + 1, :3]
+                Fbtemp *= absdpi
+                Fa += Fatemp / sum(pbpa**2)
+                Fb += Fbtemp / sum(pbpa**2)
+            forceknots[z] += Fa
+            forceknots[z + 1] += Fb
+        for z, tz in enumerate(ts):
+            point = Point3D(points[z])
+            index = point.get_index()
+            self._loads.add_conc_load(index, {"Fx": forceknots[z, 0]})
+            self._loads.add_conc_load(index, {"Fy": forceknots[z, 1]})
+            self._loads.add_conc_load(index, {"Fz": forceknots[z, 2]})
 
     def add_BC(self, point: Point3D, bcvals: dict):
         StaticBoundaryCondition._verify_dict(bcvals)

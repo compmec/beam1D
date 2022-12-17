@@ -178,7 +178,6 @@ def test_example4():
 
 
 @pytest.mark.order(10)
-@pytest.mark.skip(reason="Needs implementation of add_dist_load")
 @pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example4"])
 def test_example5():
@@ -195,10 +194,10 @@ def test_example5():
     system.add_element(beamAB)
     system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
 
-    def distributed_load(t: float) -> Tuple[float, float, float]:
-        return (0, q0, 0)
+    def distributed_load(t: float) -> float:
+        return q0
 
-    system.add_dist_load(beamAB, distributed_load)
+    system.add_dist_load(beamAB, {"Fy": distributed_load})
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -223,7 +222,6 @@ def test_example5():
 
 
 @pytest.mark.order(10)
-@pytest.mark.skip(reason="Needs implementation of add_dist_load")
 @pytest.mark.timeout(5)
 @pytest.mark.dependency(depends=["test_example5"])
 def test_example6():
@@ -237,14 +235,14 @@ def test_example6():
     system.add_element(beamAB)
     system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
 
-    def distributed_load(t: float) -> Tuple[float, float, float]:
+    def distributed_load(t: float) -> float:
+        if t < 0.3:
+            return 0
         if 0.3 <= t <= 0.7:
-            Fy = -10
-        else:
-            Fy = 0
-        return (0, Fy, 0)
+            return -10
+        return 0
 
-    system.add_dist_load(beamAB, distributed_load)
+    system.add_dist_load(beamAB, {"Fy": distributed_load})
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -269,7 +267,6 @@ def test_example6():
 
 
 @pytest.mark.order(10)
-@pytest.mark.skip(reason="Needs implementation of add_dist_load")
 @pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example6"])
 def test_example7():
@@ -284,9 +281,9 @@ def test_example7():
     system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
 
     def distributed_load(t: float) -> Tuple[float, float, float]:
-        return (0, -10 * (1 - t), 0)
+        return -10 * (1 - t)
 
-    system.add_dist_load(beamAB, distributed_load)
+    system.add_dist_load(beamAB, {"Fy": distributed_load})
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -311,7 +308,6 @@ def test_example7():
 
 
 @pytest.mark.order(10)
-@pytest.mark.skip(reason="Needs implementation of add_dist_load")
 @pytest.mark.timeout(10)
 @pytest.mark.dependency(depends=["test_example7"])
 def test_example8():
@@ -327,14 +323,13 @@ def test_example8():
 
     def distributed_load(t: float) -> Tuple[float, float, float]:
         if 0.3 <= t <= 0.7:
-            Fy = -10
+            return -10
         elif 0.0 <= t <= 0.3:
-            Fy = -10 * t / 0.3
+            return -10 * t / 0.3
         elif 0.7 <= t <= 1:
-            Fy = -10 * (1 - t) / 0.3
-        return (0, Fy, 0)
+            return -10 * (1 - t) / 0.3
 
-    system.add_dist_load(beamAB, distributed_load)
+    system.add_dist_load(beamAB, {"Fy": distributed_load})
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -424,13 +419,13 @@ def test_example10():
     system.add_BC(B, {"Ux": 0, "Uy": 0, "tz": 0})
 
     def distributed_load_beamBC(t: float) -> Tuple[float, float, float]:
-        return (0, -0.1, 0)
+        return -0.1
 
     def distributed_load_beamAC(t: float) -> Tuple[float, float, float]:
-        return (-0.1, 0, 0)
+        return -0.1
 
-    system.add_dist_load(beamBC, distributed_load_beamBC)
-    system.add_dist_load(beamBC, distributed_load_beamAC)
+    system.add_dist_load(beamBC, {"Fy": distributed_load_beamBC})
+    system.add_dist_load(beamAC, {"Fx": distributed_load_beamAC})
     system.run()
 
     tsample = np.linspace(0, 1, 129)
