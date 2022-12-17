@@ -29,8 +29,6 @@ class InitRetangularBarBeamEuler(object):
     def get_random_unit_vector(
         self, directionstr: str, perpendicular_to: Optional[Tuple[float]] = None
     ):
-        if not isinstance(directionstr, str):
-            raise TypeError
         vector = np.random.uniform(-1, 1, 3)
         vector = vector.astype("float64")
         for i, s in enumerate(["x", "y", "z"]):

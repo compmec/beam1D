@@ -48,6 +48,8 @@ class StaticLoad(object):
         return self._add_conc_load_at_index(index, key, value)
 
     def _add_conc_load_at_index(self, index: int, key: str, value: float):
+        if value == 0:
+            return
         position = self.key2pos(key)
         self._loads.append((index, position, value))
 
@@ -247,18 +249,12 @@ class StaticSystem(System):
         for z, tz in enumerate(ts):  # Apply as concentrated load on each point
             point = Point3D(points[z])
             index = point.get_index()
-            if forceknots[z, 0]:
-                self._loads.add_conc_load_at_index(index, "Fx", forceknots[z, 0])
-            if forceknots[z, 1]:
-                self._loads.add_conc_load_at_index(index, "Fy", forceknots[z, 1])
-            if forceknots[z, 2]:
-                self._loads.add_conc_load_at_index(index, "Fz", forceknots[z, 2])
-            if momenknots[z, 0]:
-                self._loads.add_conc_load_at_index(index, "Mx", momenknots[z, 0])
-            if momenknots[z, 1]:
-                self._loads.add_conc_load_at_index(index, "My", momenknots[z, 1])
-            if momenknots[z, 2]:
-                self._loads.add_conc_load_at_index(index, "Mz", momenknots[z, 2])
+            self._loads.add_conc_load_at_index(index, "Fx", forceknots[z, 0])
+            self._loads.add_conc_load_at_index(index, "Fy", forceknots[z, 1])
+            self._loads.add_conc_load_at_index(index, "Fz", forceknots[z, 2])
+            self._loads.add_conc_load_at_index(index, "Mx", momenknots[z, 0])
+            self._loads.add_conc_load_at_index(index, "My", momenknots[z, 1])
+            self._loads.add_conc_load_at_index(index, "Mz", momenknots[z, 2])
 
     def add_BC(self, point: Point3D, key: str, value: float):
         StaticBoundaryCondition._verify_key(key)

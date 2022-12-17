@@ -263,7 +263,3 @@ def test_fails():
 )
 def test_end():
     pass
-
-
-def main():
-    test_all_axonometric()

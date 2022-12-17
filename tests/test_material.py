@@ -94,7 +94,3 @@ def test_fails():
 @pytest.mark.dependency(depends=["test_begin", "test_main", "test_fails"])
 def test_end():
     pass
-
-
-if __name__ == "__main__":
-    pytest.main()
