@@ -143,6 +143,21 @@ class TestPoint3D:
     @pytest.mark.order(2)
     @pytest.mark.timeout(1)
     @pytest.mark.dependency(
+        depends=["TestPoint3D::test_begin", "TestPoint3D::test_comparation"]
+    )
+    def test_morethanonepoint(self):
+        A = Point3D([4, 5, 3.2])
+        B = Point3D([4, 5, 3.2])
+        assert A.get_index() == B.get_index()
+        B.new_index()
+        assert A.get_index() != B.get_index()
+        C = Point3D([4, 5, 3.2])
+        with pytest.raises(ValueError):
+            C.get_index()
+
+    @pytest.mark.order(2)
+    @pytest.mark.timeout(1)
+    @pytest.mark.dependency(
         depends=[
             "TestPoint3D::test_begin",
             "TestPoint3D::test_creation",

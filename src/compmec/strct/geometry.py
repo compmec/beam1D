@@ -96,7 +96,7 @@ class Point3D(PointBase, Tuple):
         indexs = self._find_index_within_tolerance(1e-6)
         if len(indexs) == 0:
             return None
-        if len(indexs) > 2:
+        if len(indexs) > 1:
             raise ValueError("To get point, must have less than 2 points")
         self._femid = indexs[0]
         return self._femid
