@@ -43,21 +43,40 @@ class TestStaticSystem:
         beamAB = EulerBernoulli([(0, 0, 0), (1000, 0, 0)])
         system.add_element(beamAB)
         with pytest.raises(TypeError):
-            system.add_BC("asd", {"Ux": 0, "Uy": 0})
+            system.add_BC("asd", "Ux", 0)
         with pytest.raises(TypeError):
-            system.add_BC(3.4, {"Ux": 0, "Uy": 0})
+            system.add_BC(3.4, "Ux", 0)
         with pytest.raises(TypeError):
-            system.add_BC((0, 0, 0), "asd")
+            system.add_BC((0, 0, 0), "Ux", "asd")
         with pytest.raises(TypeError):
-            system.add_BC((0, 0, 0), {1: 2, 3: 4})
+            system.add_BC((0, 0, 0), 1, 2)
         with pytest.raises(ValueError):
-            system.add_BC((0, 0, 0), {"uf": 2, "mk": 4})
-        system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0})
+            system.add_BC((0, 0, 0), "uf", 2)
+        with pytest.raises(TypeError):
+            system.add_BC((0, 0, 0), "Ux", "asd")
+        system.add_BC((0, 0, 0), "Ux", 0)
+        system.add_BC((0, 0, 0), "Uy", 0)
 
         with pytest.raises(TypeError):
-            system.add_dist_load(1, 1)
+            system.add_conc_load(1, 1, 1)
         with pytest.raises(TypeError):
-            system.add_dist_load(beamAB, 3)
+            system.add_conc_load((0, 0, 0), "Fy", "sad")
+        with pytest.raises(TypeError):
+            system.add_conc_load((0, 0, 0), 1, 1)
+        with pytest.raises(ValueError):
+            system.add_conc_load((0, 0, 0), "asd", 1)
+        with pytest.raises(TypeError):
+            system.add_conc_load((0, 0, 0), "Fx", "asd")
+        system.add_conc_load((1000, 0, 0), "Fy", 1)
+
+        with pytest.raises(TypeError):
+            system.add_dist_load(1, 1, 1)
+        with pytest.raises(TypeError):
+            system.add_dist_load(beamAB, 3, 3)
+        with pytest.raises(TypeError):
+            system.add_dist_load(beamAB, "Fz", "asd")
+        with pytest.raises(ValueError):
+            system.add_dist_load(beamAB, "Ft", 1)
 
     @pytest.mark.order(5)
     @pytest.mark.dependency(

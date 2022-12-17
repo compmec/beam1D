@@ -37,8 +37,10 @@ def test_example1():
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
-    system.add_conc_load(B, {"Fx": 10})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
+    system.add_conc_load(B, "Fx", 10)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -74,8 +76,10 @@ def test_example2():
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
-    system.add_conc_load(B, {"Fy": -10})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
+    system.add_conc_load(B, "Fy", 10)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -112,8 +116,10 @@ def test_example3():
     C = beamAB.path(0.6)
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
-    system.add_conc_load(C, {"Fy": -10})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
+    system.add_conc_load(C, "Fy", -10)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -151,9 +157,11 @@ def test_example4():
     D = beamAB.path(0.7)
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
-    system.add_conc_load(C, {"Fy": -12})
-    system.add_conc_load(D, {"Fy": -24})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
+    system.add_conc_load(C, "Fy", -12)
+    system.add_conc_load(D, "Fy", -24)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -192,12 +200,14 @@ def test_example5():
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
 
     def distributed_load(t: float) -> float:
         return q0
 
-    system.add_dist_load(beamAB, {"Fy": distributed_load})
+    system.add_dist_load(beamAB, "Fy", distributed_load)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -233,7 +243,9 @@ def test_example6():
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
 
     def distributed_load(t: float) -> float:
         if t < 0.3:
@@ -242,7 +254,7 @@ def test_example6():
             return -10
         return 0
 
-    system.add_dist_load(beamAB, {"Fy": distributed_load})
+    system.add_dist_load(beamAB, "Fy", distributed_load)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -278,12 +290,14 @@ def test_example7():
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
 
     def distributed_load(t: float) -> Tuple[float, float, float]:
         return -10 * (1 - t)
 
-    system.add_dist_load(beamAB, {"Fy": distributed_load})
+    system.add_dist_load(beamAB, "Fy", distributed_load)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -319,7 +333,9 @@ def test_example8():
     beamAB.section = steel, circle
     system = StaticSystem()
     system.add_element(beamAB)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
 
     def distributed_load(t: float) -> Tuple[float, float, float]:
         if 0.3 <= t <= 0.7:
@@ -329,7 +345,7 @@ def test_example8():
         elif 0.7 <= t <= 1:
             return -10 * (1 - t) / 0.3
 
-    system.add_dist_load(beamAB, {"Fy": distributed_load})
+    system.add_dist_load(beamAB, "Fy", distributed_load)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -373,9 +389,11 @@ def test_example9():
     system.add_element(beamAB)
     system.add_element(beamBC)
     system.add_element(beamAC)
-    system.add_BC(A, {"Ux": 0, "Uy": 0})
-    system.add_BC(B, {"Uy": 0})
-    system.add_conc_load(C, {"Fx": 1500000, "Fy": -1000000})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(B, "Uy", 0)
+    system.add_conc_load(C, "Fx", 1500000)
+    system.add_conc_load(C, "Fy", -1000000)
     system.run()
 
     tsample = np.linspace(0, 1, 129)
@@ -415,8 +433,12 @@ def test_example10():
     system = StaticSystem()
     system.add_element(beamAC)
     system.add_element(beamBC)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "tz": 0})
-    system.add_BC(B, {"Ux": 0, "Uy": 0, "tz": 0})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "tz", 0)
+    system.add_BC(B, "Ux", 0)
+    system.add_BC(B, "Uy", 0)
+    system.add_BC(B, "tz", 0)
 
     def distributed_load_beamBC(t: float) -> Tuple[float, float, float]:
         return -0.1
@@ -424,8 +446,8 @@ def test_example10():
     def distributed_load_beamAC(t: float) -> Tuple[float, float, float]:
         return -0.1
 
-    system.add_dist_load(beamBC, {"Fy": distributed_load_beamBC})
-    system.add_dist_load(beamAC, {"Fx": distributed_load_beamAC})
+    system.add_dist_load(beamBC, "Fy", distributed_load_beamBC)
+    system.add_dist_load(beamAC, "Fx", distributed_load_beamAC)
     system.run()
 
     tsample = np.linspace(0, 1, 129)

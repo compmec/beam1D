@@ -52,8 +52,9 @@ class TestFieldSingleBeamUncharged:
         system = StaticSystem()
         system.add_element(self.beam)
         A = self.beam.path(0)
-        boundary_conditions = {"Ux": 0, "Uy": 0, "tz": 0}
-        system.add_BC(A, boundary_conditions)
+        system.add_BC(A, "Ux", 0)
+        system.add_BC(A, "Uy", 0)
+        system.add_BC(A, "tz", 0)
         self.npts = 11
         self.ts = np.linspace(0, 1, self.npts)
         self.beam.path.knot_insert(self.ts)
@@ -179,11 +180,12 @@ class TestFieldCantileverCircularEulerBeam:
 
         system = StaticSystem()
         system.add_element(self.beam)
-        boundary_conditions = {"Ux": 0, "Uy": 0, "tz": 0}
-        system.add_BC(A, boundary_conditions)
+        system.add_BC(A, "Ux", 0)
+        system.add_BC(A, "Uy", 0)
+        system.add_BC(A, "tz", 0)
 
         self.applied_force = 10
-        system.add_conc_load(B, {"Fy": self.applied_force})
+        system.add_conc_load(B, "Fy", self.applied_force)
 
         self.npts = 101
         self.ts = np.linspace(0, 1, self.npts)
@@ -347,11 +349,12 @@ class TestFailCases:
 
         self.system = StaticSystem()
         self.system.add_element(self.beam)
-        boundary_conditions = {"Ux": 0, "Uy": 0, "tz": 0}
-        self.system.add_BC(A, boundary_conditions)
+        self.system.add_BC(A, "Ux", 0)
+        self.system.add_BC(A, "Uy", 0)
+        self.system.add_BC(A, "tz", 0)
 
         self.applied_force = 10
-        self.system.add_conc_load(B, {"Fy": self.applied_force})
+        self.system.add_conc_load(B, "Fy", self.applied_force)
 
         self.npts = 101
         self.ts = np.linspace(0, 1, self.npts)

@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, Tuple, Type, Union
+from typing import Callable, Tuple
 
 import numpy as np
 
@@ -21,15 +21,10 @@ class StaticLoad(object):
             raise ValueError(error_msg)
 
     @classmethod
-    def _verify_dict(cls, values: Dict[str, float]):
-        if not isinstance(values, dict):
-            error_msg = f"Values must be a dictionary, not {type(values)}"
+    def _verify_load_value(cls, value: float):
+        if not isinstance(value, (float, int)):
+            error_msg = f"Value of force/momentum must be a 'float', not {type(value)}"
             raise TypeError(error_msg)
-        for key, item in values.items():
-            cls._verify_key(key)
-            if not isinstance(item, (float, int)):
-                error_msg = f"Item in dictionary must be a 'float', not {type(item)}"
-                raise TypeError(error_msg)
 
     @classmethod
     def key2pos(cls, key: str) -> int:
@@ -47,20 +42,14 @@ class StaticLoad(object):
     def loads(self):
         return self._loads
 
-    def add_conc_load(self, index: int, values: Dict[str, float]) -> None:
-        self._verify_dict(values)
-        return self._add_conc_load(index, values)
+    def add_conc_load_at_index(self, index: int, key: str, value: float) -> None:
+        self._verify_key(key)
+        self._verify_load_value(value)
+        return self._add_conc_load_at_index(index, key, value)
 
-    def _add_conc_load(self, index: int, values: Dict[str, float]) -> None:
-        return self._add_conc_load_at_index(index, values)
-
-    def add_dist_load(self, indexs: Iterable[int], values: dict, Ls: Iterable[float]):
-        raise NotImplementedError
-
-    def _add_conc_load_at_index(self, index: int, values: Dict[str, float]):
-        for key, value in values.items():
-            position = self.key2pos(key)
-            self._loads.append((index, position, value))
+    def _add_conc_load_at_index(self, index: int, key: str, value: float):
+        position = self.key2pos(key)
+        self._loads.append((index, position, value))
 
 
 class StaticBoundaryCondition(object):
@@ -75,15 +64,21 @@ class StaticBoundaryCondition(object):
             raise ValueError(error_msg)
 
     @classmethod
-    def _verify_dict(cls, values: Dict[str, float]):
-        if not isinstance(values, dict):
-            error_msg = f"Values must be a dictionary, not {type(values)}"
+    def _verify_bc_value(cls, value: float):
+        if not isinstance(value, (float, int)):
+            error_msg = (
+                f"Value of boundary condition must be a 'float', not {type(value)}"
+            )
             raise TypeError(error_msg)
-        for key, item in values.items():
-            cls._verify_key(key)
-            if not isinstance(item, (float, int)):
-                error_msg = f"Item in dictionary must be a 'float', not {type(item)}"
-                raise TypeError(error_msg)
+
+    @classmethod
+    def key2pos(cls, key: str) -> int:
+        cls._verify_key(key)
+        return cls._key2pos(key)
+
+    @classmethod
+    def _key2pos(cls, key: str) -> int:
+        return 3 * (["U", "t"].index(key[0])) + ["x", "y", "z"].index(key[1])
 
     def __init__(self):
         self._BCs = []
@@ -92,21 +87,13 @@ class StaticBoundaryCondition(object):
     def bcvals(self):
         return self._BCs
 
-    def key2pos(self, key: str) -> int:
-        self._verify_key(key)
-        return self._key2pos(key)
+    def add_BC_at_index(self, index: int, key: str, value: float):
+        self._verify_bc_value(value)
+        return self._add_BC_at_index(index, key, value)
 
-    def _key2pos(self, key: str) -> int:
-        return 3 * (["U", "t"].index(key[0])) + ["x", "y", "z"].index(key[1])
-
-    def add_BC(self, index: int, values: Dict[str, float]):
-        self._verify_dict(values)
-        return self._add_BC(index, values)
-
-    def _add_BC(self, index: int, values: Dict[str, float]):
-        for key, value in values.items():
-            bcpos = self.key2pos(key)
-            self._BCs.append((index, bcpos, value))
+    def _add_BC_at_index(self, index: int, key: str, value: float):
+        bcpos = self.key2pos(key)
+        self._BCs.append((index, bcpos, value))
 
 
 class StaticStructure(object):
@@ -146,7 +133,7 @@ class StaticSystem(System):
     def add_element(self, element: Element1D):
         self._structure.add_element(element)
 
-    def add_conc_load(self, point: Point3D, loads: Dict[str, float]):
+    def add_conc_load(self, point: Point3D, key: str, load: float):
         """
         Add a load in a specific point.
         Example:
@@ -157,12 +144,28 @@ class StaticSystem(System):
             Fx: Force in x direction
             Mn: Momentum in normal direction
         """
-        StaticLoad._verify_dict(loads)
+        StaticLoad._verify_key(key)
         index = Point3D(point).get_index()
-        self._loads.add_conc_load(index, loads)
+        self._loads.add_conc_load_at_index(index, key, load)
+
+    def _refine_vector(self, vector: Tuple[float], ndiv: int):
+        """
+        Receives a vector like (0, 0.2, 0.8, 1)
+        And divides each interval in other points, like:
+        _refine_vector([0, 0.2, 0.8, 1], 1) -> [0, 0.1, 0.2, 0.5, 0.8, 0.9, 1]
+        """
+        npts = len(vector)
+        newts = vector[0] * np.ones((ndiv + 1) * (npts - 1) + 1)
+        for i in range(npts - 1):
+            for k in range(1, ndiv + 1):
+                alpha = k / (ndiv + 2)
+                newts[k + i * (ndiv + 1)] = (1 - alpha) * vector[i]
+                newts[k + i * (ndiv + 1)] += alpha * vector[i + 1]
+            newts[(i + 1) * (ndiv + 1)] = vector[i + 1]
+        return tuple(newts)
 
     def add_dist_load(
-        self, element: Element1D, functions: Dict[str, Callable[[float], float]]
+        self, element: Element1D, key: str, function: Callable[[float], float]
     ):
         """
         Add a distribueted load in a interval.
@@ -184,35 +187,14 @@ class StaticSystem(System):
         """
         if not isinstance(element, Element1D):
             raise TypeError("Element must be Element1D")
-        if not isinstance(functions, dict):
-            error_msg = f"Functions must be a dictionary, not {type(functions)}"
+        StaticLoad._verify_key(key)
+        if not callable(function):
+            error_msg = f"Each function must be callable, type = {type(function)}"
             raise TypeError(error_msg)
-        for key, func in functions.items():
-            StaticLoad._verify_key(key)
-            if not callable(func):
-                error_msg = f"Each function must be callable, type = {type(func)}"
-                raise TypeError(error_msg)
-        return self._add_dist_load(element, functions)
-
-    def _refine_vector(self, vector: Tuple[float], ndiv: int):
-        """
-        Receives a vector like (0, 0.2, 0.8, 1)
-        And divides each interval in other points, like:
-        _refine_vector([0, 0.2, 0.8, 1], 1) -> [0, 0.1, 0.2, 0.5, 0.8, 0.9, 1]
-        """
-        npts = len(vector)
-        newts = vector[0] * np.ones((ndiv + 1) * (npts - 1) + 1)
-        for i in range(npts - 1):
-            for k in range(1, ndiv + 1):
-                alpha = k / (ndiv + 2)
-                newts[k + i * (ndiv + 1)] = (1 - alpha) * vector[i] + alpha * vector[
-                    i + 1
-                ]
-            newts[(i + 1) * (ndiv + 1)] = vector[i + 1]
-        return tuple(newts)
+        return self._add_dist_load(element, key, function)
 
     def _add_dist_load(
-        self, element: Element1D, functions: Dict[str, Callable[[float], float]]
+        self, element: Element1D, key: str, function: Callable[[float], float]
     ):
         """
         This functions receive a distributed load and uses numerical integration
@@ -232,10 +214,9 @@ class StaticSystem(System):
         allts = self._refine_vector(ts, ndiv)
         allpoints = element.path.evaluate(allts)
         allfuncvals = np.zeros((len(allts), 6), dtype="float64")
-        for key, function in functions.items():
-            position = StaticLoad.key2pos(key)
-            for j, tj in enumerate(allts):
-                allfuncvals[j, position] += function(tj)
+        position = StaticLoad.key2pos(key)
+        for j, tj in enumerate(allts):
+            allfuncvals[j, position] += function(tj)
         # Now we compute the integral of each force
         for z, (ta, tb) in enumerate(zip(ts[:-1], ts[1:])):
             pa, pb = points[z], points[z + 1]
@@ -263,17 +244,27 @@ class StaticSystem(System):
                 Fb += Fbtemp / sum(pbpa**2)
             forceknots[z] += Fa
             forceknots[z + 1] += Fb
-        for z, tz in enumerate(ts):
+        for z, tz in enumerate(ts):  # Apply as concentrated load on each point
             point = Point3D(points[z])
             index = point.get_index()
-            self._loads.add_conc_load(index, {"Fx": forceknots[z, 0]})
-            self._loads.add_conc_load(index, {"Fy": forceknots[z, 1]})
-            self._loads.add_conc_load(index, {"Fz": forceknots[z, 2]})
+            if forceknots[z, 0]:
+                self._loads.add_conc_load_at_index(index, "Fx", forceknots[z, 0])
+            if forceknots[z, 1]:
+                self._loads.add_conc_load_at_index(index, "Fy", forceknots[z, 1])
+            if forceknots[z, 2]:
+                self._loads.add_conc_load_at_index(index, "Fz", forceknots[z, 2])
+            if momenknots[z, 0]:
+                self._loads.add_conc_load_at_index(index, "Mx", momenknots[z, 0])
+            if momenknots[z, 1]:
+                self._loads.add_conc_load_at_index(index, "My", momenknots[z, 1])
+            if momenknots[z, 2]:
+                self._loads.add_conc_load_at_index(index, "Mz", momenknots[z, 2])
 
-    def add_BC(self, point: Point3D, bcvals: dict):
-        StaticBoundaryCondition._verify_dict(bcvals)
+    def add_BC(self, point: Point3D, key: str, value: float):
+        StaticBoundaryCondition._verify_key(key)
+        StaticBoundaryCondition._verify_bc_value(value)
         index = Point3D(point).get_index()
-        self._boundarycondition.add_BC(index, bcvals)
+        self._boundarycondition.add_BC_at_index(index, key, value)
 
     def __getpointsfrom(self, element: Element1D):
         for t in element.ts:
@@ -319,12 +310,6 @@ class StaticSystem(System):
             raise ValueError(error_msg)
         for element in self._structure.elements:
             self.__getpointsfrom(element)
-        print("Point3D.all_index_points = ")
-        print(Point3D.all_indexed_instances)
-        print("Geometry global indexs = ")
-        print(self._geometry._global_indexs)
-        print("Geometry local points = ")
-        print(self._geometry.points)
         K = self.mount_K()
         F = self.mount_F()
         U = self.mount_U()

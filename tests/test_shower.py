@@ -43,10 +43,15 @@ def test_main1():
         beam.section = steel, circle
         system.add_element(beam)
     E = beamBC.path(0.5)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "Uz": 0, "tx": 0, "ty": 0, "tz": 0})
-    system.add_BC(B, {"Uz": 0})
-    system.add_BC(C, {"Uz": 0})
-    system.add_conc_load(D, {"Fz": 5000000})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "Uz", 0)
+    system.add_BC(A, "tx", 0)
+    system.add_BC(A, "ty", 0)
+    system.add_BC(A, "tz", 0)
+    system.add_BC(B, "Uz", 0)
+    system.add_BC(C, "Uz", 0)
+    system.add_conc_load(D, "Fz", 5000000)
     system.run()
 
     shower = ShowerStaticSystem(system)
@@ -100,10 +105,15 @@ def test_fields():
         beam.section = steel, circle
         system.add_element(beam)
     E = beamBC.path(0.5)
-    system.add_BC(A, {"Ux": 0, "Uy": 0, "Uz": 0, "tx": 0, "ty": 0, "tz": 0})
-    system.add_BC(B, {"Uz": 0})
-    system.add_BC(C, {"Uz": 0})
-    system.add_conc_load(D, {"Fz": 5000000})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "Uz", 0)
+    system.add_BC(A, "tx", 0)
+    system.add_BC(A, "ty", 0)
+    system.add_BC(A, "tz", 0)
+    system.add_BC(B, "Uz", 0)
+    system.add_BC(C, "Uz", 0)
+    system.add_conc_load(D, "Fz", 5000000)
     system.run()
 
     shower = ShowerStaticSystem(system)
@@ -163,11 +173,14 @@ def test_all_axonometric():
         "axonometric custom",
     ]
     system = StaticSystem()
-    beamAB = EulerBernoulli([(0, 0, 0), (10, 0, 0)])
+    A, B = (0, 0, 0), (10, 0, 0)
+    beamAB = EulerBernoulli([A, B])
     beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
     system.add_element(beamAB)
-    system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
-    system.add_conc_load((0, 0, 0), {"Fy": -10})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "Uz", 0)
+    system.add_conc_load(B, "Fy", -10)
     with pytest.raises(ValueError):
         shower = ShowerStaticSystem(system)
     system.run()
@@ -192,11 +205,14 @@ def test_all_perspective():
         "perspective custom",
     ]
     system = StaticSystem()
-    beamAB = EulerBernoulli([(0, 0, 0), (10, 0, 0)])
+    A, B = (0, 0, 0), (10, 0, 0)
+    beamAB = EulerBernoulli([A, B])
     beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
     system.add_element(beamAB)
-    system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
-    system.add_conc_load((0, 0, 0), {"Fy": -10})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "Uz", 0)
+    system.add_conc_load(B, "Fy", -10)
     with pytest.raises(ValueError):
         shower = ShowerStaticSystem(system)
     system.run()
@@ -212,11 +228,14 @@ def test_all_perspective():
 @pytest.mark.dependency(depends=["test_fields"])
 def test_fails():
     system = StaticSystem()
-    beamAB = EulerBernoulli([(0, 0, 0), (10, 0, 0)])
+    A, B = (0, 0, 0), (10, 0, 0)
+    beamAB = EulerBernoulli([A, B])
     beamAB.section = Isotropic(E=210e3, nu=0.3), Circle(diameter=2)
     system.add_element(beamAB)
-    system.add_BC((0, 0, 0), {"Ux": 0, "Uy": 0, "Uz": 0})
-    system.add_conc_load((0, 0, 0), {"Fy": -10})
+    system.add_BC(A, "Ux", 0)
+    system.add_BC(A, "Uy", 0)
+    system.add_BC(A, "Uz", 0)
+    system.add_conc_load(B, "Fy", -10)
     with pytest.raises(TypeError):
         ShowerStaticSystem(1)
     with pytest.raises(TypeError):
