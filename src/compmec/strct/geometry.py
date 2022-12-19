@@ -7,7 +7,7 @@ from compmec.strct.__classes__ import Point
 
 class PointBase(Point):
     @staticmethod
-    def validation_creation(point: tuple[float]):
+    def validation_creation(point: Tuple[float]):
         if not isinstance(point, (list, tuple, np.ndarray)):
             raise TypeError("Point3D must be created from list/tuple/numpy array")
         for i, pi in enumerate(point):
@@ -16,19 +16,19 @@ class PointBase(Point):
                 error_msg += f"    type(point[{i}]) = {type(pi)}"
                 raise TypeError(error_msg)
 
-    def __add__(self, other: tuple[float]):
+    def __add__(self, other: Tuple[float]):
         return self.__class__([pi + qi for pi, qi in zip(self, other)])
 
-    def __sub__(self, other: tuple[float]):
+    def __sub__(self, other: Tuple[float]):
         return self.__class__([pi - qi for pi, qi in zip(self, other)])
 
-    def __radd__(self, other: tuple[float]):
+    def __radd__(self, other: Tuple[float]):
         return self.__class__([pi + qi for pi, qi in zip(self, other)])
 
-    def __rsub__(self, other: tuple[float]):
+    def __rsub__(self, other: Tuple[float]):
         return self.__class__([qi - pi for pi, qi in zip(self, other)])
 
-    def __eq__(self, other: tuple[float]):
+    def __eq__(self, other: Tuple[float]):
         if isinstance(other, self.__class__):
             pass
         elif not isinstance(other, (tuple, list, np.ndarray)):
@@ -43,19 +43,19 @@ class PointBase(Point):
                 return False
         return True
 
-    def __ne__(self, other: tuple[float]):
+    def __ne__(self, other: Tuple[float]):
         return not self.__eq__(other)
 
 
 class Point2D(PointBase, Tuple):
     @staticmethod
-    def validation_creation(point: tuple[float]):
+    def validation_creation(point: Tuple[float]):
         PointBase.validation_creation(point)
         if len(point) != 2:
             error_msg = "Point2D must be created with two float values. len(point) = {len(point)}"
             raise ValueError(error_msg)
 
-    def __new__(cls, point: tuple[float]):
+    def __new__(cls, point: Tuple[float]):
         if isinstance(point, Point2D):
             return point
         Point2D.validation_creation(point)
@@ -67,13 +67,13 @@ class Point3D(PointBase, Tuple):
     all_indexed_instances = []
 
     @staticmethod
-    def validation_creation(point: tuple[float]):
+    def validation_creation(point: Tuple[float]):
         PointBase.validation_creation(point)
         if len(point) != 3:
             error_msg = "Point3D must be created with three float values. len(point) = {len(point)}"
             raise ValueError(error_msg)
 
-    def __new__(cls, point: tuple[float]):
+    def __new__(cls, point: Tuple[float]):
         if isinstance(point, Point3D):
             return point
         Point3D.validation_creation(point)

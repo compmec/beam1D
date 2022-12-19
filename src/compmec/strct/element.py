@@ -19,7 +19,7 @@ from compmec.strct.geometry import Point3D
 from compmec.strct.section import create_section_from_material_profile
 
 
-def compute_rvw(p0: tuple, p1: tuple) -> np.ndarray:
+def compute_rvw(p0: Point3D, p1: Point3D) -> np.ndarray:
     np0 = np.zeros(3)
     np1 = np.zeros(3)
     np0[: len(p0)] = p0
@@ -115,10 +115,10 @@ class Truss(Structural1D):
 
 
 class Beam(Structural1D):
-    def local_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
+    def local_stiffness_matrix(self, p0: Point3D, p1: Point3D) -> np.ndarray:
         raise NotImplementedError
 
-    def global_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
+    def global_stiffness_matrix(self, p0: Point3D, p1: Point3D) -> np.ndarray:
         Kloc = self.local_stiffness_matrix(p0, p1)
         R33 = compute_rvw(p0, p1)
         Kglo = np.zeros((2, 6, 2, 6), dtype="float64")
@@ -182,7 +182,7 @@ class EulerBernoulli(Beam):
         )
         return (E * Iy / L**3) * Kz
 
-    def local_stiffness_matrix(self, p0: tuple, p1: tuple) -> np.ndarray:
+    def local_stiffness_matrix(self, p0: Point3D, p1: Point3D) -> np.ndarray:
         """
         With two points we will have a matrix [12 x 12]
         But we are going to divide the matrix into [x, y, z] coordinates
