@@ -111,7 +111,37 @@ class Structural1D(Element1D):
 
 
 class Truss(Structural1D):
-    pass
+    def local_stiffness_matrix(self, p0: Point3D, p1: Point3D) -> np.ndarray:
+        p0 = np.array(p0, dtype="float64")
+        p1 = np.array(p1, dtype="float64")
+        L = np.linalg.norm(p1 - p0)
+        E = self.section.material.E
+        A = self.section.A[0]
+        K = np.zeros((2, 6, 2, 6), dtype="float64")
+        K[:, 0, :, 0] = (E * A / L) * (2 * np.eye(2, dtype="float64") - 1)
+        return K
+
+    def global_stiffness_matrix(self, p0: Point3D, p1: Point3D) -> np.ndarray:
+        Kloc = self.local_stiffness_matrix(p0, p1)
+        R33 = compute_rvw(p0, p1)
+        Kglo = np.zeros((2, 6, 2, 6), dtype="float64")
+        for i in range(2):
+            for j in range(2):
+                Kglo[i, :3, j, :3] = R33.T @ Kloc[i, :3, j, :3] @ R33
+                Kglo[i, :3, j, 3:] = R33.T @ Kloc[i, :3, j, 3:] @ R33
+                Kglo[i, 3:, j, :3] = R33.T @ Kloc[i, 3:, j, :3] @ R33
+                Kglo[i, 3:, j, 3:] = R33.T @ Kloc[i, 3:, j, 3:] @ R33
+        return Kglo
+
+    def stiffness_matrix(self) -> np.ndarray:
+        points = [self.path(ti) for ti in self.ts]
+        npts = len(points)
+        Kglobal = np.zeros((npts, 6, npts, 6))
+        for i in range(npts - 1):
+            p0, p1 = points[i], points[i + 1]
+            Kgloone = self.global_stiffness_matrix(p0, p1)
+            Kglobal[i : i + 2, :, i : i + 2, :] += Kgloone
+        return Kglobal
 
 
 class Beam(Structural1D):

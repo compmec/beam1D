@@ -63,7 +63,6 @@ class InitRodBeamEuler(object):
         self.beam = EulerBernoulli([A, B])
 
         self.set_random_section()
-        self.beam.material = self.material
         self.beam.section = self.section
 
     def run_test(self):

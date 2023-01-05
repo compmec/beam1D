@@ -14,6 +14,7 @@ from compmec.strct.system import StaticSystem
 @pytest.mark.order(10)
 @pytest.mark.dependency(
     depends=[
+        "tests/test_one_circle_truss_charges.py::test_end",
         "tests/test_one_circle_beam_charges.py::test_end",
         # "tests/test_one_retangular_beam_charges.py::test_end",
         "tests/test_beam_field_values.py::test_end",
