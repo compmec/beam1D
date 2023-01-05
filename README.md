@@ -5,30 +5,18 @@
 
 # Structures
 
-Solves struture problems using FEM. 
+Compute fields (displacement/force/momentum) of structures using Finite Element Method. 
 
 * 1D Elements
-    * Cable (Only traction)
     * Truss (Traction/Compression)
     * Beam
         * Euler-Bernoulli
-        * Timoshenko
-* 2D Elements
-    * Plate
+        * Timoshenko (Needs implementation)
 
 ## How to use it
 
 There are many **Python Notebooks** in the folder  ```examples```.
 
-For simple examples, see
-* 1D Elements
-    * Cable
-    * Truss
-    * Beam
-        * Euler-Bernoulli
-        * Timoshenko
-* 2D Elements
-    * Plate
 
 ## Install
 
@@ -46,15 +34,9 @@ cd strct
 pip install -e .
 ```
 
-To verify if everything works in your machine, type the command in the main folder
-
-```
-pytest
-```
-
 ## Documentation
 
-In progress
+In progress. See the examples.
 
 ## Contribute
 

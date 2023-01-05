@@ -73,7 +73,7 @@ class ComputeFieldBeam(ComputeFieldBeamInterface):
         keys = list(self.NAME2FUNCTIONS.keys())
         if fieldname not in keys:
             error_msg = f"Received fieldname '{fieldname}' is not valid.\n"
-            error_msg = f"    With projection '{projection}'\n"
+            error_msg += f"    With projection '{projection}'\n"
             error_msg += f"They are {keys}"
             raise ValueError(error_msg)
         curve = self.NAME2FUNCTIONS[fieldname]()
